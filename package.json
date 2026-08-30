@@ -1,0 +1,27 @@
+{
+  "name": "etokicchi",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.17.0",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4173",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint src tests vite.config.ts",
+    "format": "biome format --write src tests vite.config.ts",
+    "format:check": "biome format src tests vite.config.ts",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build"
+  },
+  "dependencies": {
+    "pixi.js": "8.19.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.7",
+    "typescript": "7.0.2",
+    "vite": "7.1.2",
+    "vitest": "4.1.10"
+  }
+}

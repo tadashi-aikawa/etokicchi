@@ -1,0 +1,237 @@
+import type { SceneDefinition, SceneId, TimeBand } from "../game/types.ts";
+
+export const SCENES: readonly SceneDefinition[] = [
+  {
+    id: "sleeping",
+    band: "deepNight",
+    title: "すやすや眠っている",
+    description: "部屋の音が消えて、エトキチの寝息だけが聞こえる。",
+    lines: ["むにゃ……あしたも、たのしみ……", "すー……すー……まだ食べられるよ……"],
+    details: ["枕元に読みかけの本が伏せてある", "小さなコップに水が残っている"],
+    characterPose: "sleep",
+    accent: "#6f76a8",
+  },
+  {
+    id: "kickedBlanket",
+    band: "deepNight",
+    title: "布団を蹴飛ばしている",
+    description: "元気な寝相で、布団がすっかり足元へ落ちている。",
+    lines: ["むにゃ……ぼくにまかせて……キチ……", "うーん……おおきなプリン……"],
+    details: ["窓から少し冷たい風が入っている", "布団がベッドの端に引っかかっている"],
+    choices: [
+      {
+        id: "cover",
+        label: "そっと布団を掛ける",
+        immediate: "エトキチは目を覚まさず、ほっとした顔になった。",
+        later: "布団にくるまり、さっきより静かな寝息を立てている。",
+        nextDay: "あれ？ きのう、だれかが布団を掛けてくれたのかな。よく眠れたよ！",
+      },
+      {
+        id: "extraBlanket",
+        label: "予備の毛布を置く",
+        immediate: "手の届く場所へ、やわらかい毛布を置いた。",
+        later: "いつの間にか予備の毛布まで抱えて眠っている。",
+        nextDay: "毛布が二枚もあった！ ふかふかだったよ。ありがとう！",
+      },
+      {
+        id: "warmRoom",
+        label: "部屋を少し暖かくする",
+        immediate: "部屋の空気が、ほんのりやわらかくなった。",
+        later: "大の字のまま、満足そうな寝顔を見せている。",
+        nextDay: "きのうの夜、なんだか春みたいにあったかかったね！",
+      },
+    ],
+    characterPose: "sleep",
+    accent: "#7770a5",
+  },
+  {
+    id: "tooMuchBreakfast",
+    band: "earlyMorning",
+    title: "朝食を作りすぎた",
+    description: "食卓に、どう見ても二人では食べきれない朝食が並んでいる。",
+    lines: ["おはよう！ ちょっとだけ作るつもりだったんだけど……", "いい匂いでしょ？ 気づいたらこんなにできてたキチ！"],
+    details: ["焼きたてのパンが山盛りになっている", "おにぎりの形が全部ちがう"],
+    choices: [
+      {
+        id: "eatTogether",
+        label: "一緒に食べる",
+        immediate: "やった！ 朝は一緒に食べると、もっとおいしいね！",
+        later: "洗い終えた二人分の食器が、仲良く並んで乾いている。",
+        nextDay: "きのうの朝ごはん、楽しかったね。今日はちょうどよく作るよ！",
+      },
+      {
+        id: "makeLunch",
+        label: "お弁当に詰める",
+        immediate: "なるほど！ お昼の楽しみに変身させるキチ！",
+        later: "空っぽのお弁当箱に、小さな星のメモが入っている。",
+        nextDay: "お弁当、ぴかぴかに食べたよ！ また一緒に詰めたいな。",
+      },
+      {
+        id: "saveForNight",
+        label: "夜の分に取っておく",
+        immediate: "いい考え！ 夜にもう一回うれしくなれるね。",
+        later: "取り分けた小皿が、夜食の準備をして待っている。",
+        nextDay: "朝のぼくが夜のぼくを助けたんだ。すごい連係プレーだったよ！",
+      },
+    ],
+    characterPose: "busy",
+    accent: "#f2ad4f",
+  },
+  {
+    id: "overslept",
+    band: "earlyMorning",
+    title: "寝坊して大あわて",
+    description: "靴下を片方だけ履いて、部屋の中を行ったり来たりしている。",
+    lines: ["あれっ、ぼくの靴下どこ！？ さっきまで持ってたのに！", "まだ間に合う！ たぶん！ きっと！"],
+    details: ["帽子がなぜか台所の椅子に掛かっている", "鞄の中から昨日のおやつが出てきた"],
+    characterPose: "busy",
+    accent: "#ed9e52",
+  },
+  {
+    id: "foundOldToy",
+    band: "daytime",
+    title: "昔のおもちゃを発見",
+    description: "掃除の途中で見つけたおもちゃに、すっかり夢中になっている。",
+    lines: ["見て！ これ、ずっと探してたんだ！", "掃除してたら宝物が出てきたキチ！ ……掃除はあとで！"],
+    details: ["小さな星形のコマがくるくる回っている", "箱の底に昔描いた絵が入っている"],
+    choices: [
+      {
+        id: "playTogether",
+        label: "一緒に遊ぶ",
+        immediate: "ほんと？ じゃあ三回勝負しよう！ 三回とも面白いよ！",
+        later: "遊び終えたおもちゃが、床の真ん中でまだ出番を待っている。",
+        nextDay: "きのうの勝負、楽しかったね！ 次は新しい遊び方を考えたよ。",
+      },
+      {
+        id: "displayIt",
+        label: "きれいに飾る",
+        immediate: "ここなら毎日見えるね。なんだか誇らしいな！",
+        later: "棚の一番よい場所に、おもちゃが飾られている。",
+        nextDay: "飾った宝物を見ると、昨日のことを思い出すんだ。",
+      },
+      {
+        id: "helpCleaning",
+        label: "掃除を手伝う",
+        immediate: "よーし、二人なら宝物も部屋もぴかぴかにできるキチ！",
+        later: "床がきれいになり、見つけた品が小箱にまとまっている。",
+        nextDay: "きれいな部屋って気持ちいいね！ 手伝ってくれてありがとう。",
+      },
+    ],
+    characterPose: "busy",
+    accent: "#73b47d",
+  },
+  {
+    id: "windowNap",
+    band: "daytime",
+    title: "窓辺でお昼寝",
+    description: "日の当たる床へクッションを運び、丸くなって眠っている。",
+    lines: ["あと五分だけ……おひさまが、ふかふか……", "むにゃ……雲に乗ったら、どこまで行けるかな……"],
+    details: ["読みかけの本が胸の上で開いている", "カーテンの影がゆっくり動いている"],
+    characterPose: "sleep",
+    accent: "#7fba76",
+  },
+  {
+    id: "muddyReturn",
+    band: "evening",
+    title: "泥だらけで帰宅",
+    description: "誰かを手伝ってきたらしく、満足そうな顔まで泥だらけだ。",
+    lines: [
+      "ただいま！ 水たまりに落ちたボールを取ってたら、ぼくも落ちちゃった！",
+      "ちゃんと助けられたよ！ ……この泥は、その勲章かな？",
+    ],
+    details: ["頭に小さな葉っぱが一枚乗っている", "片方の靴だけ、ずっしり重そうだ"],
+    choices: [
+      {
+        id: "giveTowel",
+        label: "タオルを渡す",
+        immediate: "助かった！ まず顔を拭けば、どこが顔か分かるね！",
+        later: "洗ったタオルが、夕方の風に揺れている。",
+        nextDay: "きのうはタオルありがとう。今日は泥のない道を選ぶよ！",
+      },
+      {
+        id: "suggestBath",
+        label: "お風呂を勧める",
+        immediate: "賛成！ お湯が茶色くなるか、ちょっと見てみたいキチ！",
+        later: "湯上がりのエトキチが、ほかほかの顔でくつろいでいる。",
+        nextDay: "お風呂でぴかぴかになったよ。昨日より一段明るい気がする！",
+      },
+      {
+        id: "hearStory",
+        label: "何があったか聞く",
+        immediate: "それがね、道の向こうで困ってる子がいて……最初から話すね！",
+        later: "拾ってきた葉っぱを手に、冒険の続きを身振りで話している。",
+        nextDay: "話を聞いてくれてありがとう。思い出すと、また誰かを助けたくなるよ。",
+      },
+    ],
+    characterPose: "stand",
+    accent: "#d58457",
+  },
+  {
+    id: "simmeringDinner",
+    band: "evening",
+    title: "夕食をことこと煮込む",
+    description: "鍋の前から離れず、何度も味見をしている。",
+    lines: ["あと少しで完成！ ……今の味も確認しておこうかな。", "一口ずつ味見してるのに、どうして減っていくんだろう？"],
+    details: ["星形に切ったにんじんが浮かんでいる", "湯気が部屋いっぱいにやさしく広がっている"],
+    characterPose: "busy",
+    accent: "#ca7651",
+  },
+  {
+    id: "packingTomorrow",
+    band: "night",
+    title: "明日の持ち物を準備",
+    description: "鞄の中身を出しては戻し、真剣に明日のことを考えている。",
+    lines: [
+      "明日はちょっと遠くまで行くんだ。忘れ物は……たぶん、ない！",
+      "必要そうなものは全部入れたいけど、鞄が閉まらないキチ……",
+    ],
+    details: ["地図に丸い印がいくつも付いている", "おやつだけで鞄の半分を使っている"],
+    choices: [
+      {
+        id: "checkTogether",
+        label: "一緒に確認する",
+        immediate: "心強い！ ひとつずつ声に出して確認しよう。",
+        later: "整理された鞄が、玄関の横で明日を待っている。",
+        nextDay: "忘れ物なしだったよ！ 一緒に確認したおかげだね。",
+      },
+      {
+        id: "addTreat",
+        label: "差し入れを入れる",
+        immediate: "あっ、これは明日のお楽しみだね。見なかったことにする！",
+        later: "鞄の隙間から、差し入れの包みが少しだけ見えている。",
+        nextDay: "差し入れ、すごくうれしかった！ 半分はお土産に取ってあるよ。",
+      },
+      {
+        id: "trustHim",
+        label: "自分で任せる",
+        immediate: "うん、自分で最後までやってみる。終わったら見せるね！",
+        later: "何度もやり直した跡はあるが、鞄はきちんと閉じている。",
+        nextDay: "自分で準備できたよ！ 任せてもらえると、ちょっと大人になった気分だね。",
+      },
+    ],
+    characterPose: "busy",
+    accent: "#586b91",
+  },
+  {
+    id: "littleNightSnack",
+    band: "night",
+    title: "小さな夜食を楽しむ",
+    description: "静かな台所で、一皿だけの夜食を大事そうに食べている。",
+    lines: ["しーっ。これは夜だけの、小さな楽しみなんだ。", "一口だけのつもりだったけど、二口目のほうがおいしいかも。"],
+    details: ["小さなプリンをゆっくり味わっている", "温かいミルクから白い湯気が上がっている"],
+    characterPose: "stand",
+    accent: "#536589",
+  },
+] as const;
+
+const sceneById = new Map<SceneId, SceneDefinition>(SCENES.map((scene) => [scene.id, scene]));
+
+export function getScene(sceneId: SceneId): SceneDefinition {
+  const scene = sceneById.get(sceneId);
+  if (!scene) throw new Error(`Unknown scene: ${sceneId}`);
+  return scene;
+}
+
+export function getScenesForBand(band: TimeBand): readonly SceneDefinition[] {
+  return SCENES.filter((scene) => scene.band === band);
+}
