@@ -1,4 +1,5 @@
 import "./styles.css";
+import { countDiscoveries, getCollectionEntries } from "./game/collection.ts";
 import { isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
 import { formatLocalDate, TIME_BAND_LABELS } from "./game/time.ts";
@@ -47,7 +48,79 @@ function createParagraph(className: string, text: string): HTMLParagraphElement 
   return paragraph;
 }
 
-function createShell(root: HTMLElement, visit: VisitView, now: Date, debugRandom: boolean): ShellElements {
+function formatFirstSeen(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "発見日時を記録済み";
+  return new Intl.DateTimeFormat("ja-JP", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function createCollectionLayer(state: GameState): { layer: HTMLElement; closeButton: HTMLButtonElement } {
+  const entries = getCollectionEntries(state.discoveries);
+  const discoveredCount = countDiscoveries(state.discoveries);
+  const layer = document.createElement("section");
+  layer.className = "collection-layer";
+  layer.hidden = true;
+  layer.setAttribute("role", "dialog");
+  layer.setAttribute("aria-modal", "true");
+  layer.setAttribute("aria-labelledby", "collection-title");
+
+  const header = document.createElement("header");
+  header.className = "collection-header";
+  const heading = document.createElement("div");
+  const kicker = createParagraph("collection-kicker", "ETO LIFE ARCHIVE");
+  const title = document.createElement("h2");
+  title.id = "collection-title";
+  title.textContent = "暮らし図鑑";
+  const progress = createParagraph("collection-progress", `${discoveredCount} / ${entries.length} 発見`);
+  heading.append(kicker, title, progress);
+  const closeButton = document.createElement("button");
+  closeButton.className = "collection-close";
+  closeButton.type = "button";
+  closeButton.textContent = "部屋へ戻る";
+  header.append(heading, closeButton);
+
+  const cards = document.createElement("div");
+  cards.className = "collection-grid";
+  for (const { scene, discovery } of entries) {
+    const card = document.createElement("article");
+    card.className = `collection-card ${discovery ? "is-discovered" : "is-locked"}`;
+    card.style.setProperty("--card-accent", scene.accent);
+    const band = createParagraph("collection-band", TIME_BAND_LABELS[scene.band]);
+    const emblem = document.createElement("div");
+    emblem.className = "collection-emblem";
+    emblem.setAttribute("aria-hidden", "true");
+    emblem.textContent = discovery ? "★" : "？";
+    const cardTitle = document.createElement("h3");
+    cardTitle.textContent = discovery ? scene.title : "？？？";
+    card.append(band, emblem, cardTitle);
+    if (discovery) {
+      card.append(
+        createParagraph("collection-first-seen", `初発見 ${formatFirstSeen(discovery.firstSeenAt)}`),
+        createParagraph("collection-seen-count", `${discovery.seenCount}回 出会った`),
+      );
+    } else {
+      card.append(createParagraph("collection-locked-label", "まだ出会っていない暮らし"));
+    }
+    cards.append(card);
+  }
+
+  layer.append(header, cards);
+  return { layer, closeButton };
+}
+
+function createShell(
+  root: HTMLElement,
+  visit: VisitView,
+  now: Date,
+  debugRandom: boolean,
+  state: GameState,
+): ShellElements {
   const shell = document.createElement("section");
   shell.className = "game-shell";
   shell.style.setProperty("--scene-accent", visit.scene.accent);
@@ -64,6 +137,14 @@ function createShell(root: HTMLElement, visit: VisitView, now: Date, debugRandom
   const brandName = document.createElement("strong");
   brandName.textContent = "エトキっち";
   brand.append(brandSmall, brandName);
+  const collectionButton = document.createElement("button");
+  collectionButton.className = "collection-button";
+  collectionButton.type = "button";
+  collectionButton.textContent = `図鑑 ${countDiscoveries(state.discoveries)}/10`;
+  collectionButton.setAttribute("aria-haspopup", "dialog");
+  const topMenu = document.createElement("div");
+  topMenu.className = "top-menu";
+  topMenu.append(brand, collectionButton);
 
   const clock = document.createElement("div");
   clock.className = "clock";
@@ -73,7 +154,7 @@ function createShell(root: HTMLElement, visit: VisitView, now: Date, debugRandom
   time.dateTime = now.toISOString();
   time.textContent = formatClock(now);
   clock.append(dateLabel, time);
-  topBar.append(brand, clock);
+  topBar.append(topMenu, clock);
 
   const hud = document.createElement("article");
   hud.className = "scene-hud";
@@ -134,6 +215,8 @@ function createShell(root: HTMLElement, visit: VisitView, now: Date, debugRandom
   sheet.append(sheetHeader, description, detail, sheetSpeech, echoBox, choices, result);
   sheetLayer.append(scrim, sheet);
 
+  const collection = createCollectionLayer(state);
+
   const toast = document.createElement("div");
   toast.className = "toast";
   toast.hidden = true;
@@ -148,14 +231,27 @@ function createShell(root: HTMLElement, visit: VisitView, now: Date, debugRandom
     shell.classList.remove("sheet-open");
     openButton.focus();
   };
+  const openCollection = (): void => {
+    sheetLayer.hidden = true;
+    collection.layer.hidden = false;
+    collection.closeButton.focus();
+  };
+  const closeCollection = (): void => {
+    collection.layer.hidden = true;
+    collectionButton.focus();
+  };
   openButton.addEventListener("click", openSheet);
   closeButton.addEventListener("click", closeSheet);
   scrim.addEventListener("click", closeSheet);
+  collectionButton.addEventListener("click", openCollection);
+  collection.closeButton.addEventListener("click", closeCollection);
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !sheetLayer.hidden) closeSheet();
+    if (event.key !== "Escape") return;
+    if (!collection.layer.hidden) closeCollection();
+    else if (!sheetLayer.hidden) closeSheet();
   });
 
-  shell.append(roomHost, topBar, hud, sheetLayer, toast);
+  shell.append(roomHost, topBar, hud, sheetLayer, collection.layer, toast);
   root.replaceChildren(shell);
   return { roomHost, summarySpeech, sheetSpeech, choices, result, toast, openButton, openSheet };
 }
@@ -190,7 +286,7 @@ async function bootstrap(): Promise<void> {
   state = resolved.state;
   await loaded.repository.save(state);
 
-  const elements = createShell(root, resolved.visit, options.now, options.debugRandom);
+  const elements = createShell(root, resolved.visit, options.now, options.debugRandom, state);
   const showObservation = (text: string): void => {
     elements.summarySpeech.textContent = text;
     elements.sheetSpeech.textContent = text;
@@ -209,11 +305,16 @@ async function bootstrap(): Promise<void> {
   }
 
   if (resolved.visit.discoveredNow && !options.debugRandom) {
-    elements.toast.textContent = `はじめての暮らし「${resolved.visit.scene.title}」`;
+    const label = createParagraph("achievement-label", "実績解除");
+    const title = document.createElement("strong");
+    title.textContent = "新しい暮らしを発見！";
+    const scene = createParagraph("achievement-scene", resolved.visit.scene.title);
+    const progress = createParagraph("achievement-progress", `暮らし図鑑 ${countDiscoveries(state.discoveries)} / 10`);
+    elements.toast.replaceChildren(label, title, scene, progress);
     elements.toast.hidden = false;
     window.setTimeout(() => {
       elements.toast.hidden = true;
-    }, 3200);
+    }, 4500);
   }
 
   const existingInteraction = resolved.visit.interaction;
