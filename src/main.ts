@@ -302,10 +302,11 @@ async function bootstrap(): Promise<void> {
     elements.summarySpeech.textContent = text;
     elements.sheetSpeech.textContent = text;
   };
-  await renderRoom(elements.roomHost, resolved.visit, {
+  const roomCallbacks = {
     onObservation: showObservation,
     onCharacterTap: elements.openSheet,
-  });
+  };
+  let roomApp = await renderRoom(elements.roomHost, resolved.visit, roomCallbacks);
 
   if (!loaded.persistent) {
     const warning = createParagraph(
@@ -348,6 +349,13 @@ async function bootstrap(): Promise<void> {
         elements.result.hidden = false;
         elements.summarySpeech.textContent = applied.interaction.immediate;
         elements.openButton.textContent = "結果";
+        const previousRoomApp = roomApp;
+        roomApp = await renderRoom(
+          elements.roomHost,
+          { ...resolved.visit, interaction: applied.interaction },
+          roomCallbacks,
+        );
+        previousRoomApp.destroy({ removeView: true }, { children: true });
       });
       elements.choices.append(button);
     }

@@ -77,6 +77,8 @@ describe("meaningful interactions", () => {
         expect.objectContaining({ targetSlotKey: "2026-08-31:earlyMorning", kind: "nextDay" }),
       ]),
     );
+    const revisited = resolveVisit(new Date(2026, 7, 30, 6, 31), result.state);
+    expect(revisited.visit.interaction).toEqual(result.interaction);
   });
 
   it("does not replace an interaction selected for the same slot", () => {

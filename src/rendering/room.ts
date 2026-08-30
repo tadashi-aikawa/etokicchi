@@ -1,6 +1,7 @@
 import { AnimatedSprite, Application, Assets, Container, Graphics, Rectangle, Sprite, Texture } from "pixi.js";
 import "pixi.js/browser";
 import type { SceneId, TimeBand, VisitView } from "../game/types.ts";
+import { getRoomPresentation } from "./room-presentation.ts";
 
 const WIDTH = 195;
 const HEIGHT = 422;
@@ -89,22 +90,8 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
 };
 
 const actionAssetNames: Partial<Record<SceneId, string>> = {
-  packingTomorrow: "etokichi-packing-pixel.png",
-  littleNightSnack: "etokichi-night-snack-pixel.png",
-};
-
-const sleeperAssetNames: Partial<Record<SceneId, string>> = {
-  sleeping: "etokichi-sleep-tucked-pixel.png",
-  kickedBlanket: "etokichi-sleep-kicked-pixel.png",
-};
-
-const backgroundAssetNames: Partial<Record<SceneId, string>> = {
-  kickedBlanket: "room-background-kicked-blanket-pixel.png",
-};
-
-const sleeperHeights: Partial<Record<SceneId, number>> = {
-  sleeping: 30,
-  kickedBlanket: 39,
+  packingTomorrow: "etokichi-packing-pixel.webp",
+  littleNightSnack: "etokichi-night-snack-pixel.webp",
 };
 
 function interactive(graphics: Graphics, label: string, message: string, onObservation: (text: string) => void): void {
@@ -325,12 +312,18 @@ function createWalker(
   return actor;
 }
 
-function createSleeper(app: Application, texture: Texture, visit: VisitView, callbacks: RoomCallbacks): Sprite {
+function createSleeper(
+  app: Application,
+  texture: Texture,
+  visit: VisitView,
+  height: number,
+  callbacks: RoomCallbacks,
+): Sprite {
   texture.source.scaleMode = "nearest";
   const sleeper = new Sprite(texture);
   const position = routes[visit.scene.id][0] ?? { x: 30, y: 154 };
   sleeper.anchor.set(0.5, 1);
-  sleeper.scale.set((sleeperHeights[visit.scene.id] ?? 42) / texture.height);
+  sleeper.scale.set(height / texture.height);
   sleeper.roundPixels = true;
   sleeper.position.set(position.x, position.y);
   sleeper.eventMode = "dynamic";
@@ -364,16 +357,14 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
   });
   app.canvas.className = "room-canvas";
   app.canvas.setAttribute("aria-label", `${visit.scene.title}。${visit.scene.description}`);
-  host.replaceChildren(app.canvas);
 
   const actionAssetName = actionAssetNames[visit.scene.id];
-  const sleeperAssetName = sleeperAssetNames[visit.scene.id] ?? "etokichi-sleep-pixel.png";
-  const backgroundAssetName = backgroundAssetNames[visit.scene.id] ?? "room-background-pixel.png";
+  const presentation = getRoomPresentation(visit);
   const [backgroundTexture, characterTexture, actionTexture] = await Promise.all([
-    Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${backgroundAssetName}`),
+    Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.backgroundAssetName}`),
     Assets.load<Texture>(
       `${import.meta.env.BASE_URL}assets/${
-        visit.scene.characterPose === "sleep" ? sleeperAssetName : "etokichi-walk-pixel-v2.png"
+        visit.scene.characterPose === "sleep" ? presentation.sleeperAssetName : "etokichi-walk-pixel-v2.webp"
       }`,
     ),
     actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
@@ -381,8 +372,9 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
   const room = createRoom(backgroundTexture, visit, callbacks);
   const character =
     visit.scene.characterPose === "sleep"
-      ? createSleeper(app, characterTexture, visit, callbacks)
+      ? createSleeper(app, characterTexture, visit, presentation.sleeperHeight, callbacks)
       : createWalker(app, characterTexture, actionTexture, visit, callbacks);
   app.stage.addChild(room, character);
+  host.replaceChildren(app.canvas);
   return app;
 }
