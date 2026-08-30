@@ -60,10 +60,10 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
     { x: 116, y: 244, pauseMs: 550 },
   ],
   morningTea: [
-    { x: 132, y: 202, pauseMs: 4600, action: true },
-    { x: 112, y: 229, pauseMs: 700 },
-    { x: 83, y: 205, pauseMs: 650 },
-    { x: 108, y: 174, pauseMs: 800 },
+    { x: 68, y: 272, pauseMs: 6800, action: true },
+    { x: 91, y: 220, pauseMs: 650 },
+    { x: 126, y: 202, pauseMs: 900 },
+    { x: 82, y: 252, pauseMs: 650 },
   ],
   foundOldToy: [
     { x: 98, y: 224, pauseMs: 3000, action: true },
@@ -206,12 +206,14 @@ function createGridFrames(
   columns: number,
   rows: number,
   bottomTrimByRow: readonly number[] = [],
+  topBleedByRow: readonly number[] = [],
 ): Texture[][] {
   sheet.source.scaleMode = "nearest";
   return Array.from({ length: rows }, (_, row) =>
     Array.from({ length: columns }, (_, column) => {
       const left = Math.round((column * sheet.width) / columns);
-      const top = Math.round((row * sheet.height) / rows);
+      const baseTop = Math.round((row * sheet.height) / rows);
+      const top = baseTop - (topBleedByRow[row] ?? 0);
       const right = Math.round(((column + 1) * sheet.width) / columns);
       const fullBottom = Math.round(((row + 1) * sheet.height) / rows);
       const bottomTrim = bottomTrimByRow[row] ?? 0;
@@ -228,7 +230,7 @@ function createGridFrames(
 }
 
 function createDirectionFrames(sheet: Texture): Record<Direction, Texture[]> {
-  const grid = createGridFrames(sheet, 3, 4, [0, 2, 17, 0]);
+  const grid = createGridFrames(sheet, 3, 4, [0, 2, 17, 0], [0, 0, 0, 17]);
   return Object.fromEntries(
     Object.entries(directionRows).map(([direction, row]) => [direction, grid[row] ?? []]),
   ) as Record<Direction, Texture[]>;
