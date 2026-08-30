@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { countDiscoveries, getCollectionEntries } from "../src/game/collection.ts";
+import { countDiscoveries, getCollectionEntries, getCollectionImagePath, SCENE_COUNT } from "../src/game/collection.ts";
 import type { DiscoveryRecord, SceneId } from "../src/game/types.ts";
 
 describe("scene collection", () => {
   it("lists every scene as undiscovered for an empty history", () => {
     const entries = getCollectionEntries({});
 
-    expect(entries).toHaveLength(10);
+    expect(entries).toHaveLength(15);
+    expect(SCENE_COUNT).toBe(15);
     expect(entries.every((entry) => entry.discovery === undefined)).toBe(true);
-    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(10);
+    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(15);
     expect(entries.every((entry) => entry.imagePath.endsWith(".webp"))).toBe(true);
+    expect(getCollectionImagePath("watchingStars")).toBe("assets/collection/watching-stars.webp");
     expect(countDiscoveries({})).toBe(0);
   });
 

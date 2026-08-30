@@ -3,14 +3,19 @@ export type TimeBand = "deepNight" | "earlyMorning" | "daytime" | "evening" | "n
 export type SceneId =
   | "sleeping"
   | "kickedBlanket"
+  | "watchingStars"
   | "tooMuchBreakfast"
   | "overslept"
+  | "morningTea"
   | "foundOldToy"
   | "windowNap"
+  | "wateringPlants"
   | "muddyReturn"
   | "simmeringDinner"
+  | "foldingLaundry"
   | "packingTomorrow"
-  | "littleNightSnack";
+  | "littleNightSnack"
+  | "readingComics";
 
 export interface ChoiceDefinition {
   id: string;

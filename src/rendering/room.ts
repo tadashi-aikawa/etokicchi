@@ -42,32 +42,56 @@ const timeTints: Record<TimeBand, { color: number; alpha: number }> = {
 const routes: Record<SceneId, readonly Waypoint[]> = {
   sleeping: [{ x: 29, y: 124, pauseMs: 5000 }],
   kickedBlanket: [{ x: 31, y: 156, pauseMs: 5000 }],
+  watchingStars: [
+    { x: 54, y: 128, pauseMs: 4800, action: true },
+    { x: 83, y: 164, pauseMs: 700 },
+    { x: 68, y: 211, pauseMs: 650 },
+    { x: 103, y: 238, pauseMs: 750 },
+  ],
   tooMuchBreakfast: [
     { x: 103, y: 193, pauseMs: 1100 },
-    { x: 132, y: 190, pauseMs: 2200 },
+    { x: 132, y: 190, pauseMs: 3000, action: true },
     { x: 98, y: 225, pauseMs: 1500 },
   ],
   overslept: [
-    { x: 96, y: 220, pauseMs: 450 },
+    { x: 96, y: 220, pauseMs: 1800, action: true },
     { x: 123, y: 151, pauseMs: 650 },
     { x: 64, y: 193, pauseMs: 500 },
     { x: 116, y: 244, pauseMs: 550 },
   ],
+  morningTea: [
+    { x: 132, y: 202, pauseMs: 4600, action: true },
+    { x: 112, y: 229, pauseMs: 700 },
+    { x: 83, y: 205, pauseMs: 650 },
+    { x: 108, y: 174, pauseMs: 800 },
+  ],
   foundOldToy: [
-    { x: 98, y: 224, pauseMs: 1800 },
+    { x: 98, y: 224, pauseMs: 3000, action: true },
     { x: 93, y: 242, pauseMs: 1300 },
     { x: 111, y: 194, pauseMs: 1100 },
   ],
   windowNap: [{ x: 54, y: 128, pauseMs: 5000 }],
+  wateringPlants: [
+    { x: 70, y: 112, pauseMs: 2700, action: true },
+    { x: 161, y: 287, pauseMs: 2700, action: true },
+    { x: 136, y: 230, pauseMs: 2200, action: true },
+    { x: 104, y: 198, pauseMs: 650 },
+  ],
   muddyReturn: [
-    { x: 138, y: 149, pauseMs: 1800 },
+    { x: 138, y: 149, pauseMs: 3000, action: true },
     { x: 106, y: 205, pauseMs: 1200 },
     { x: 126, y: 174, pauseMs: 900 },
   ],
   simmeringDinner: [
     { x: 125, y: 211, pauseMs: 900 },
-    { x: 133, y: 202, pauseMs: 2300 },
+    { x: 133, y: 202, pauseMs: 3200, action: true },
     { x: 112, y: 229, pauseMs: 1000 },
+  ],
+  foldingLaundry: [
+    { x: 40, y: 157, pauseMs: 4700, action: true },
+    { x: 65, y: 191, pauseMs: 700 },
+    { x: 93, y: 221, pauseMs: 650 },
+    { x: 70, y: 248, pauseMs: 800 },
   ],
   packingTomorrow: [
     { x: 93, y: 241, pauseMs: 4800, action: true },
@@ -87,11 +111,27 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
     { x: 117, y: 244, pauseMs: 800 },
     { x: 137, y: 226, pauseMs: 550 },
   ],
+  readingComics: [
+    { x: 63, y: 242, pauseMs: 4900, action: true },
+    { x: 92, y: 219, pauseMs: 700 },
+    { x: 116, y: 186, pauseMs: 700 },
+    { x: 87, y: 166, pauseMs: 800 },
+  ],
 };
 
 const actionAssetNames: Partial<Record<SceneId, string>> = {
+  watchingStars: "etokichi-watching-stars-pixel.webp",
+  tooMuchBreakfast: "etokichi-breakfast-pixel.webp",
+  overslept: "etokichi-overslept-pixel.webp",
+  morningTea: "etokichi-morning-tea-pixel.webp",
+  foundOldToy: "etokichi-old-toy-pixel.webp",
+  wateringPlants: "etokichi-watering-plants-pixel.webp",
+  muddyReturn: "etokichi-muddy-return-pixel.webp",
+  simmeringDinner: "etokichi-simmering-dinner-pixel.webp",
+  foldingLaundry: "etokichi-folding-laundry-pixel.webp",
   packingTomorrow: "etokichi-packing-pixel.webp",
   littleNightSnack: "etokichi-night-snack-pixel.webp",
+  readingComics: "etokichi-reading-comics-pixel.webp",
 };
 
 function interactive(graphics: Graphics, label: string, message: string, onObservation: (text: string) => void): void {

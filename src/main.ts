@@ -1,5 +1,5 @@
 import "./styles.css";
-import { countDiscoveries, getCollectionEntries } from "./game/collection.ts";
+import { countDiscoveries, getCollectionEntries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
 import { isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
 import { formatLocalDate, TIME_BAND_LABELS } from "./game/time.ts";
@@ -150,7 +150,7 @@ function createShell(
   const collectionButton = document.createElement("button");
   collectionButton.className = "collection-button";
   collectionButton.type = "button";
-  collectionButton.textContent = `図鑑 ${countDiscoveries(state.discoveries)}/10`;
+  collectionButton.textContent = `図鑑 ${countDiscoveries(state.discoveries)}/${SCENE_COUNT}`;
   collectionButton.setAttribute("aria-haspopup", "dialog");
   const topMenu = document.createElement("div");
   topMenu.className = "top-menu";
@@ -317,12 +317,22 @@ async function bootstrap(): Promise<void> {
   }
 
   if (resolved.visit.discoveredNow && !options.debugRandom) {
+    const illustration = document.createElement("img");
+    illustration.className = "achievement-illustration";
+    illustration.src = `${import.meta.env.BASE_URL}${getCollectionImagePath(resolved.visit.scene.id)}`;
+    illustration.alt = "";
     const label = createParagraph("achievement-label", "実績解除");
     const title = document.createElement("strong");
     title.textContent = "新しい暮らしを発見！";
     const scene = createParagraph("achievement-scene", resolved.visit.scene.title);
-    const progress = createParagraph("achievement-progress", `暮らし図鑑 ${countDiscoveries(state.discoveries)} / 10`);
-    elements.toast.replaceChildren(label, title, scene, progress);
+    const progress = createParagraph(
+      "achievement-progress",
+      `暮らし図鑑 ${countDiscoveries(state.discoveries)} / ${SCENE_COUNT}`,
+    );
+    const body = document.createElement("div");
+    body.className = "achievement-body";
+    body.append(label, title, scene, progress);
+    elements.toast.replaceChildren(illustration, body);
     elements.toast.hidden = false;
     window.setTimeout(() => {
       elements.toast.hidden = true;
