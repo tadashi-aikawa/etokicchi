@@ -194,8 +194,7 @@ button {
 }
 
 .hud-action:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 #8c5531;
+  background: #ffd17e;
 }
 
 .sheet-layer {
@@ -224,7 +223,7 @@ button {
   padding: 16px 16px max(18px, env(safe-area-inset-bottom));
   background: var(--paper);
   box-shadow: 0 -8px 0 rgba(34, 21, 14, 0.2);
-  animation: sheet-in 180ms steps(4, end) both;
+  animation: sheet-in 160ms cubic-bezier(0.22, 0.7, 0.3, 1) both;
 }
 
 .sheet-header {

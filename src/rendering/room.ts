@@ -6,6 +6,7 @@ const WIDTH = 195;
 const HEIGHT = 422;
 const BACKGROUND_HEIGHT = 347;
 const WALK_SPEED = 19;
+const WALKER_FRAME_HEIGHT = 43;
 
 type Direction = "down" | "left" | "right" | "up";
 
@@ -146,18 +147,19 @@ function createRoom(backgroundTexture: Texture, visit: VisitView, callbacks: Roo
 
 function createDirectionFrames(sheet: Texture): Record<Direction, Texture[]> {
   sheet.source.scaleMode = "nearest";
-  const cellWidth = sheet.width / 3;
-  const cellHeight = sheet.height / 4;
   return Object.fromEntries(
     Object.entries(directionRows).map(([direction, row]) => [
       direction,
-      [0, 1, 2].map(
-        (column) =>
-          new Texture({
-            source: sheet.source,
-            frame: new Rectangle(column * cellWidth, row * cellHeight, cellWidth, cellHeight),
-          }),
-      ),
+      [0, 1, 2].map((column) => {
+        const left = Math.round((column * sheet.width) / 3);
+        const top = Math.round((row * sheet.height) / 4);
+        const right = Math.round(((column + 1) * sheet.width) / 3);
+        const bottom = Math.round(((row + 1) * sheet.height) / 4);
+        return new Texture({
+          source: sheet.source,
+          frame: new Rectangle(left, top, right - left, bottom - top),
+        });
+      }),
     ]),
   ) as Record<Direction, Texture[]>;
 }
@@ -173,9 +175,11 @@ function createWalker(app: Application, sheet: Texture, visit: VisitView, callba
   const route = routes[visit.scene.id];
   const frames = createDirectionFrames(sheet);
   const character = new AnimatedSprite(frames.down);
+  const baseFrame = frames.down.at(0);
+  if (!baseFrame) throw new Error("歩行アニメーションのフレームがありません");
   character.anchor.set(0.5, 1);
-  character.width = 43;
-  character.height = 43;
+  character.scale.set(WALKER_FRAME_HEIGHT / baseFrame.height);
+  character.roundPixels = true;
   character.animationSpeed = 0.13;
   character.loop = true;
 
@@ -263,6 +267,7 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
     antialias: false,
     autoDensity: false,
     resolution: 1,
+    roundPixels: true,
     preference: "webgl",
   });
   app.canvas.className = "room-canvas";
