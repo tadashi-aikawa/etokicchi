@@ -19,6 +19,7 @@ html,
 body {
   min-height: 100%;
   margin: 0;
+  overflow-anchor: none;
 }
 
 body {
@@ -226,6 +227,7 @@ button {
   position: absolute;
   z-index: 12;
   inset: 0;
+  contain: layout paint;
 }
 
 .sheet-scrim {
@@ -242,6 +244,7 @@ button {
   inset: auto 0 0;
   max-height: 70%;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border: 3px solid #4d3326;
   border-bottom: 0;
   border-radius: 18px 18px 0 0;
@@ -249,6 +252,7 @@ button {
   background: var(--paper);
   box-shadow: 0 -8px 0 rgba(34, 21, 14, 0.2);
   animation: sheet-in 160ms cubic-bezier(0.22, 0.7, 0.3, 1) both;
+  will-change: transform;
 }
 
 .sheet-header {
@@ -422,54 +426,90 @@ button {
   position: relative;
   display: flex;
   min-width: 0;
-  min-height: 168px;
+  min-height: 220px;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
+  isolation: isolate;
+  overflow: hidden;
   border: 3px solid color-mix(in srgb, var(--card-accent) 48%, #533727);
   border-radius: 11px;
-  padding: 9px 8px 10px;
+  padding: 128px 8px 10px;
   background: #fffaf0;
   box-shadow: 0 4px 0 rgba(73, 44, 29, 0.23);
   text-align: center;
 }
 
-.collection-card.is-discovered::before {
+.collection-card::after {
   position: absolute;
-  inset: 0 0 auto;
-  height: 6px;
-  border-radius: 7px 7px 0 0;
-  background: var(--card-accent);
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(28, 20, 16, 0.04) 0%,
+    rgba(28, 20, 16, 0.08) 38%,
+    rgba(255, 250, 240, 0.9) 59%,
+    #fffaf0 72%
+  );
   content: "";
 }
 
 .collection-card.is-locked {
   border-style: dashed;
   border-color: #ad9e8e;
-  background: rgba(235, 225, 211, 0.76);
+  background: #d8cfc3;
   color: #8b8178;
   box-shadow: none;
 }
 
+.collection-card.is-locked::after {
+  background: linear-gradient(to bottom, rgba(54, 49, 45, 0.62), rgba(226, 218, 208, 0.93) 58%, #e2dad0 72%);
+}
+
+.collection-illustration {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.is-locked .collection-illustration {
+  transform: scale(1.06);
+  filter: grayscale(1) brightness(0.42) blur(5px);
+}
+
 .collection-band {
-  align-self: flex-start;
+  position: absolute;
+  top: 9px;
+  left: 8px;
   margin: 0;
-  color: color-mix(in srgb, var(--card-accent) 68%, #503a2e);
+  border: 1px solid rgba(255, 248, 233, 0.82);
+  border-radius: 5px;
+  padding: 3px 5px;
+  background: rgba(47, 31, 24, 0.78);
+  color: #fff8e9;
   font-size: 9px;
   font-weight: 900;
 }
 
 .collection-emblem {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   display: grid;
-  width: 42px;
-  height: 42px;
-  margin: 8px 0 5px;
+  width: 30px;
+  height: 30px;
+  margin: 0;
   place-items: center;
   background: color-mix(in srgb, var(--card-accent) 18%, #fff8e9);
   box-shadow:
     3px 0 color-mix(in srgb, var(--card-accent) 55%, #76513b),
     0 3px color-mix(in srgb, var(--card-accent) 55%, #76513b);
   color: var(--card-accent);
-  font-size: 25px;
+  font-size: 18px;
   line-height: 1;
 }
 
@@ -482,7 +522,7 @@ button {
 }
 
 .collection-card h3 {
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 13px;
   line-height: 1.35;
 }
@@ -582,7 +622,11 @@ button {
 
 @keyframes sheet-in {
   from {
-    transform: translateY(100%);
+    transform: translate3d(0, 100%, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
   }
 }
 

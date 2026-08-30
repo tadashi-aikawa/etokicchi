@@ -28,6 +28,11 @@ http://127.0.0.1:4173/etokicchi/?time=2026-08-31T06:00:00&debug=random
 
 初めて見た暮らしは実績として解除され、左上の「図鑑」から発見済みシーンと遭遇回数を確認できます。
 
+## ドキュメント
+
+- [ゲームデザイン](./docs/game-design.md)
+- [初期プロト仕様](./docs/prototype-spec.md)
+
 ## 検証
 
 ```console

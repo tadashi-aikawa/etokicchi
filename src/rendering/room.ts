@@ -246,7 +246,8 @@ function createWalker(
   actor.addChild(shadow, character);
   if (action) actor.addChild(action);
   actor.position.set(route[0]?.x ?? 98, route[0]?.y ?? 220);
-  actor.eventMode = "static";
+  actor.eventMode = "dynamic";
+  actor.hitArea = new Rectangle(-30, -64, 60, 66);
   actor.cursor = "pointer";
   actor.on("pointertap", callbacks.onCharacterTap);
 
@@ -318,7 +319,7 @@ function createSleeper(app: Application, texture: Texture, visit: VisitView, cal
   sleeper.width = 63;
   sleeper.height = 42;
   sleeper.position.set(position.x, position.y);
-  sleeper.eventMode = "static";
+  sleeper.eventMode = "dynamic";
   sleeper.cursor = "pointer";
   sleeper.on("pointertap", callbacks.onCharacterTap);
 

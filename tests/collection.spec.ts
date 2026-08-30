@@ -8,6 +8,8 @@ describe("scene collection", () => {
 
     expect(entries).toHaveLength(10);
     expect(entries.every((entry) => entry.discovery === undefined)).toBe(true);
+    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(10);
+    expect(entries.every((entry) => entry.imagePath.endsWith(".webp"))).toBe(true);
     expect(countDiscoveries({})).toBe(0);
   });
 

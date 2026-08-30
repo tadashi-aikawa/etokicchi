@@ -48,6 +48,10 @@ function createParagraph(className: string, text: string): HTMLParagraphElement 
   return paragraph;
 }
 
+function focusWithoutScroll(element: HTMLElement): void {
+  element.focus({ preventScroll: true });
+}
+
 function formatFirstSeen(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "発見日時を記録済み";
@@ -87,10 +91,16 @@ function createCollectionLayer(state: GameState): { layer: HTMLElement; closeBut
 
   const cards = document.createElement("div");
   cards.className = "collection-grid";
-  for (const { scene, discovery } of entries) {
+  for (const { scene, discovery, imagePath } of entries) {
     const card = document.createElement("article");
     card.className = `collection-card ${discovery ? "is-discovered" : "is-locked"}`;
     card.style.setProperty("--card-accent", scene.accent);
+    const illustration = document.createElement("img");
+    illustration.className = "collection-illustration";
+    illustration.src = `${import.meta.env.BASE_URL}${imagePath}`;
+    illustration.alt = "";
+    illustration.loading = "lazy";
+    illustration.decoding = "async";
     const band = createParagraph("collection-band", TIME_BAND_LABELS[scene.band]);
     const emblem = document.createElement("div");
     emblem.className = "collection-emblem";
@@ -98,7 +108,7 @@ function createCollectionLayer(state: GameState): { layer: HTMLElement; closeBut
     emblem.textContent = discovery ? "★" : "？";
     const cardTitle = document.createElement("h3");
     cardTitle.textContent = discovery ? scene.title : "？？？";
-    card.append(band, emblem, cardTitle);
+    card.append(illustration, band, emblem, cardTitle);
     if (discovery) {
       card.append(
         createParagraph("collection-first-seen", `初発見 ${formatFirstSeen(discovery.firstSeenAt)}`),
@@ -224,21 +234,22 @@ function createShell(
   const openSheet = (): void => {
     sheetLayer.hidden = false;
     shell.classList.add("sheet-open");
-    closeButton.focus();
+    focusWithoutScroll(closeButton);
   };
   const closeSheet = (): void => {
     sheetLayer.hidden = true;
     shell.classList.remove("sheet-open");
-    openButton.focus();
+    focusWithoutScroll(openButton);
   };
   const openCollection = (): void => {
     sheetLayer.hidden = true;
+    shell.classList.remove("sheet-open");
     collection.layer.hidden = false;
-    collection.closeButton.focus();
+    focusWithoutScroll(collection.closeButton);
   };
   const closeCollection = (): void => {
     collection.layer.hidden = true;
-    collectionButton.focus();
+    focusWithoutScroll(collectionButton);
   };
   openButton.addEventListener("click", openSheet);
   closeButton.addEventListener("click", closeSheet);
