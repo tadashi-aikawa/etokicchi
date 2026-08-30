@@ -93,6 +93,20 @@ const actionAssetNames: Partial<Record<SceneId, string>> = {
   littleNightSnack: "etokichi-night-snack-pixel.png",
 };
 
+const sleeperAssetNames: Partial<Record<SceneId, string>> = {
+  sleeping: "etokichi-sleep-tucked-pixel.png",
+  kickedBlanket: "etokichi-sleep-kicked-pixel.png",
+};
+
+const backgroundAssetNames: Partial<Record<SceneId, string>> = {
+  kickedBlanket: "room-background-kicked-blanket-pixel.png",
+};
+
+const sleeperHeights: Partial<Record<SceneId, number>> = {
+  sleeping: 47,
+  kickedBlanket: 39,
+};
+
 function interactive(graphics: Graphics, label: string, message: string, onObservation: (text: string) => void): void {
   graphics.eventMode = "static";
   graphics.cursor = "pointer";
@@ -316,8 +330,8 @@ function createSleeper(app: Application, texture: Texture, visit: VisitView, cal
   const sleeper = new Sprite(texture);
   const position = routes[visit.scene.id][0] ?? { x: 30, y: 154 };
   sleeper.anchor.set(0.5, 1);
-  sleeper.width = 63;
-  sleeper.height = 42;
+  sleeper.scale.set((sleeperHeights[visit.scene.id] ?? 42) / texture.height);
+  sleeper.roundPixels = true;
   sleeper.position.set(position.x, position.y);
   sleeper.eventMode = "dynamic";
   sleeper.cursor = "pointer";
@@ -351,11 +365,13 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
   host.replaceChildren(app.canvas);
 
   const actionAssetName = actionAssetNames[visit.scene.id];
+  const sleeperAssetName = sleeperAssetNames[visit.scene.id] ?? "etokichi-sleep-pixel.png";
+  const backgroundAssetName = backgroundAssetNames[visit.scene.id] ?? "room-background-pixel.png";
   const [backgroundTexture, characterTexture, actionTexture] = await Promise.all([
-    Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/room-background-pixel.png`),
+    Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${backgroundAssetName}`),
     Assets.load<Texture>(
       `${import.meta.env.BASE_URL}assets/${
-        visit.scene.characterPose === "sleep" ? "etokichi-sleep-pixel.png" : "etokichi-walk-pixel-v2.png"
+        visit.scene.characterPose === "sleep" ? sleeperAssetName : "etokichi-walk-pixel-v2.png"
       }`,
     ),
     actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
