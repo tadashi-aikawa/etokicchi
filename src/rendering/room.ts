@@ -6,7 +6,8 @@ const WIDTH = 195;
 const HEIGHT = 422;
 const BACKGROUND_HEIGHT = 347;
 const WALK_SPEED = 19;
-const WALKER_FRAME_HEIGHT = 43;
+const WALKER_FRAME_HEIGHT = 52;
+const ACTION_FRAME_HEIGHT = 60;
 
 type Direction = "down" | "left" | "right" | "up";
 
@@ -14,6 +15,7 @@ interface Waypoint {
   x: number;
   y: number;
   pauseMs: number;
+  action?: boolean;
 }
 
 interface RoomCallbacks {
@@ -67,15 +69,20 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
     { x: 112, y: 229, pauseMs: 1000 },
   ],
   packingTomorrow: [
-    { x: 104, y: 222, pauseMs: 1300 },
-    { x: 126, y: 150, pauseMs: 2100 },
-    { x: 93, y: 241, pauseMs: 900 },
+    { x: 93, y: 241, pauseMs: 4800, action: true },
+    { x: 112, y: 218, pauseMs: 800 },
+    { x: 101, y: 229, pauseMs: 700 },
   ],
   littleNightSnack: [
-    { x: 96, y: 218, pauseMs: 1000 },
-    { x: 92, y: 242, pauseMs: 2600 },
-    { x: 108, y: 205, pauseMs: 900 },
+    { x: 132, y: 202, pauseMs: 5000, action: true },
+    { x: 108, y: 220, pauseMs: 800 },
+    { x: 123, y: 210, pauseMs: 700 },
   ],
+};
+
+const actionAssetNames: Partial<Record<SceneId, string>> = {
+  packingTomorrow: "etokichi-packing-pixel.png",
+  littleNightSnack: "etokichi-night-snack-pixel.png",
 };
 
 function interactive(graphics: Graphics, label: string, message: string, onObservation: (text: string) => void): void {
@@ -145,22 +152,26 @@ function createRoom(backgroundTexture: Texture, visit: VisitView, callbacks: Roo
   return room;
 }
 
-function createDirectionFrames(sheet: Texture): Record<Direction, Texture[]> {
+function createGridFrames(sheet: Texture, columns: number, rows: number): Texture[][] {
   sheet.source.scaleMode = "nearest";
+  return Array.from({ length: rows }, (_, row) =>
+    Array.from({ length: columns }, (_, column) => {
+      const left = Math.round((column * sheet.width) / columns);
+      const top = Math.round((row * sheet.height) / rows);
+      const right = Math.round(((column + 1) * sheet.width) / columns);
+      const bottom = Math.round(((row + 1) * sheet.height) / rows);
+      return new Texture({
+        source: sheet.source,
+        frame: new Rectangle(left, top, right - left, bottom - top),
+      });
+    }),
+  );
+}
+
+function createDirectionFrames(sheet: Texture): Record<Direction, Texture[]> {
+  const grid = createGridFrames(sheet, 3, 4);
   return Object.fromEntries(
-    Object.entries(directionRows).map(([direction, row]) => [
-      direction,
-      [0, 1, 2].map((column) => {
-        const left = Math.round((column * sheet.width) / 3);
-        const top = Math.round((row * sheet.height) / 4);
-        const right = Math.round(((column + 1) * sheet.width) / 3);
-        const bottom = Math.round(((row + 1) * sheet.height) / 4);
-        return new Texture({
-          source: sheet.source,
-          frame: new Rectangle(left, top, right - left, bottom - top),
-        });
-      }),
-    ]),
+    Object.entries(directionRows).map(([direction, row]) => [direction, grid[row] ?? []]),
   ) as Record<Direction, Texture[]>;
 }
 
@@ -171,7 +182,13 @@ function directionTo(fromX: number, fromY: number, toX: number, toY: number): Di
   return dy < 0 ? "up" : "down";
 }
 
-function createWalker(app: Application, sheet: Texture, visit: VisitView, callbacks: RoomCallbacks): Container {
+function createWalker(
+  app: Application,
+  sheet: Texture,
+  actionSheet: Texture | undefined,
+  visit: VisitView,
+  callbacks: RoomCallbacks,
+): Container {
   const route = routes[visit.scene.id];
   const frames = createDirectionFrames(sheet);
   const character = new AnimatedSprite(frames.down);
@@ -183,9 +200,33 @@ function createWalker(app: Application, sheet: Texture, visit: VisitView, callba
   character.animationSpeed = 0.13;
   character.loop = true;
 
+  const actionFrames = actionSheet ? createGridFrames(actionSheet, 3, 1)[0] : undefined;
+  const actionLoop = actionFrames
+    ? [
+        actionFrames[0],
+        actionFrames[0],
+        actionFrames[1],
+        actionFrames[1],
+        actionFrames[2],
+        actionFrames[2],
+        actionFrames[2],
+      ].filter((frame): frame is Texture => Boolean(frame))
+    : [];
+  const action = actionLoop.length > 0 ? new AnimatedSprite(actionLoop) : undefined;
+  if (action) {
+    const baseActionFrame = actionLoop[0];
+    if (!baseActionFrame) throw new Error("行動アニメーションのフレームがありません");
+    action.anchor.set(0.5, 1);
+    action.scale.set(ACTION_FRAME_HEIGHT / baseActionFrame.height);
+    action.roundPixels = true;
+    action.animationSpeed = 0.08;
+    action.loop = true;
+  }
+
   const actor = new Container();
   const shadow = new Graphics().ellipse(0, -2, 13, 4).fill({ color: 0x2a160d, alpha: 0.32 });
   actor.addChild(shadow, character);
+  if (action) actor.addChild(action);
   actor.position.set(route[0]?.x ?? 98, route[0]?.y ?? 220);
   actor.eventMode = "static";
   actor.cursor = "pointer";
@@ -194,6 +235,20 @@ function createWalker(app: Application, sheet: Texture, visit: VisitView, callba
   let targetIndex = route.length > 1 ? 1 : 0;
   let pauseRemaining = route[0]?.pauseMs ?? 800;
   let direction: Direction = "down";
+
+  const showAction = (enabled: boolean): void => {
+    const active = enabled && Boolean(action);
+    character.visible = !active;
+    if (!action) return;
+    action.visible = active;
+    if (active) {
+      if (!action.playing) action.gotoAndPlay(0);
+    } else {
+      action.stop();
+    }
+  };
+
+  showAction(Boolean(route[0]?.action));
 
   app.ticker.add((ticker) => {
     if (route.length < 2) return;
@@ -219,9 +274,11 @@ function createWalker(app: Application, sheet: Texture, visit: VisitView, callba
       targetIndex = (targetIndex + 1) % route.length;
       character.stop();
       character.gotoAndStop(1);
+      showAction(Boolean(target.action));
       return;
     }
 
+    showAction(false);
     const nextDirection = directionTo(actor.x, actor.y, target.x, target.y);
     if (nextDirection !== direction) {
       direction = nextDirection;
@@ -274,19 +331,21 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
   app.canvas.setAttribute("aria-label", `${visit.scene.title}。${visit.scene.description}`);
   host.replaceChildren(app.canvas);
 
-  const [backgroundTexture, characterTexture] = await Promise.all([
+  const actionAssetName = actionAssetNames[visit.scene.id];
+  const [backgroundTexture, characterTexture, actionTexture] = await Promise.all([
     Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/room-background-pixel.png`),
     Assets.load<Texture>(
       `${import.meta.env.BASE_URL}assets/${
-        visit.scene.characterPose === "sleep" ? "etokichi-sleep-pixel.png" : "etokichi-walk-pixel.png"
+        visit.scene.characterPose === "sleep" ? "etokichi-sleep-pixel.png" : "etokichi-walk-pixel-v2.png"
       }`,
     ),
+    actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
   ]);
   const room = createRoom(backgroundTexture, visit, callbacks);
   const character =
     visit.scene.characterPose === "sleep"
       ? createSleeper(app, characterTexture, visit, callbacks)
-      : createWalker(app, characterTexture, visit, callbacks);
+      : createWalker(app, characterTexture, actionTexture, visit, callbacks);
   app.stage.addChild(room, character);
   return app;
 }
