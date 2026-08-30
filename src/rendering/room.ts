@@ -39,7 +39,7 @@ const timeTints: Record<TimeBand, { color: number; alpha: number }> = {
 };
 
 const routes: Record<SceneId, readonly Waypoint[]> = {
-  sleeping: [{ x: 29, y: 154, pauseMs: 5000 }],
+  sleeping: [{ x: 29, y: 124, pauseMs: 5000 }],
   kickedBlanket: [{ x: 31, y: 156, pauseMs: 5000 }],
   tooMuchBreakfast: [
     { x: 103, y: 193, pauseMs: 1100 },
@@ -103,7 +103,7 @@ const backgroundAssetNames: Partial<Record<SceneId, string>> = {
 };
 
 const sleeperHeights: Partial<Record<SceneId, number>> = {
-  sleeping: 47,
+  sleeping: 30,
   kickedBlanket: 39,
 };
 
@@ -337,13 +337,15 @@ function createSleeper(app: Application, texture: Texture, visit: VisitView, cal
   sleeper.cursor = "pointer";
   sleeper.on("pointertap", callbacks.onCharacterTap);
 
+  const baseScaleX = sleeper.scale.x;
   const baseScaleY = sleeper.scale.y;
   let elapsed = 0;
   app.ticker.add((ticker) => {
     elapsed += ticker.deltaMS;
     const breath = Math.sin(elapsed / 620);
-    sleeper.scale.y = baseScaleY * (1 + breath * 0.015);
-    sleeper.y = position.y + breath * 0.45;
+    sleeper.scale.x = baseScaleX * (1 + breath * 0.018);
+    sleeper.scale.y = baseScaleY * (1 + breath * 0.045);
+    sleeper.y = position.y + breath * 0.8;
   });
   return sleeper;
 }
