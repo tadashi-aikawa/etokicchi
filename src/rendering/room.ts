@@ -70,13 +70,21 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
   ],
   packingTomorrow: [
     { x: 93, y: 241, pauseMs: 4800, action: true },
-    { x: 112, y: 218, pauseMs: 800 },
-    { x: 101, y: 229, pauseMs: 700 },
+    { x: 118, y: 250, pauseMs: 500 },
+    { x: 130, y: 222, pauseMs: 650 },
+    { x: 116, y: 186, pauseMs: 700 },
+    { x: 83, y: 166, pauseMs: 850 },
+    { x: 66, y: 190, pauseMs: 650 },
+    { x: 87, y: 219, pauseMs: 600 },
   ],
   littleNightSnack: [
     { x: 132, y: 202, pauseMs: 5000, action: true },
-    { x: 108, y: 220, pauseMs: 800 },
-    { x: 123, y: 210, pauseMs: 700 },
+    { x: 126, y: 174, pauseMs: 600 },
+    { x: 105, y: 153, pauseMs: 750 },
+    { x: 70, y: 174, pauseMs: 850 },
+    { x: 91, y: 205, pauseMs: 600 },
+    { x: 117, y: 244, pauseMs: 800 },
+    { x: 137, y: 226, pauseMs: 550 },
   ],
 };
 
@@ -152,24 +160,34 @@ function createRoom(backgroundTexture: Texture, visit: VisitView, callbacks: Roo
   return room;
 }
 
-function createGridFrames(sheet: Texture, columns: number, rows: number): Texture[][] {
+function createGridFrames(
+  sheet: Texture,
+  columns: number,
+  rows: number,
+  bottomTrimByRow: readonly number[] = [],
+): Texture[][] {
   sheet.source.scaleMode = "nearest";
   return Array.from({ length: rows }, (_, row) =>
     Array.from({ length: columns }, (_, column) => {
       const left = Math.round((column * sheet.width) / columns);
       const top = Math.round((row * sheet.height) / rows);
       const right = Math.round(((column + 1) * sheet.width) / columns);
-      const bottom = Math.round(((row + 1) * sheet.height) / rows);
+      const fullBottom = Math.round(((row + 1) * sheet.height) / rows);
+      const bottomTrim = bottomTrimByRow[row] ?? 0;
+      const frameWidth = right - left;
+      const frameHeight = fullBottom - top - bottomTrim;
       return new Texture({
         source: sheet.source,
-        frame: new Rectangle(left, top, right - left, bottom - top),
+        frame: new Rectangle(left, top, frameWidth, frameHeight),
+        orig: bottomTrim > 0 ? new Rectangle(0, 0, frameWidth, fullBottom - top) : undefined,
+        trim: bottomTrim > 0 ? new Rectangle(0, 0, frameWidth, frameHeight) : undefined,
       });
     }),
   );
 }
 
 function createDirectionFrames(sheet: Texture): Record<Direction, Texture[]> {
-  const grid = createGridFrames(sheet, 3, 4);
+  const grid = createGridFrames(sheet, 3, 4, [0, 2, 17, 0]);
   return Object.fromEntries(
     Object.entries(directionRows).map(([direction, row]) => [direction, grid[row] ?? []]),
   ) as Record<Direction, Texture[]>;
