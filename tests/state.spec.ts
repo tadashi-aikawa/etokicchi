@@ -50,6 +50,19 @@ describe("visit resolution", () => {
     const expectedTotal = first.visit.scene.id === second.visit.scene.id ? 2 : 1;
     expect(second.state.discoveries[first.visit.scene.id]?.seenCount).toBe(expectedTotal);
   });
+
+  it("uses a debug seed to redraw scene and variants without reusing the saved slot", () => {
+    const now = new Date(2026, 7, 30, 6);
+    const state = resolveVisit(now, createInitialState()).state;
+    const variants = new Set(
+      Array.from({ length: 20 }, (_, index) => {
+        const result = resolveVisit(now, state, { randomSeed: `reload-${index}` });
+        return `${result.visit.scene.id}:${result.visit.line}:${result.visit.detail}`;
+      }),
+    );
+
+    expect(variants.size).toBeGreaterThan(1);
+  });
 });
 
 describe("meaningful interactions", () => {

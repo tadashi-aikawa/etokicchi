@@ -1,15 +1,35 @@
 import "./styles.css";
-import { applyInteraction, pruneOldSlots, resolveVisit } from "./game/state.ts";
+import { isRandomDebugMode } from "./game/debug.ts";
+import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
 import { formatLocalDate, TIME_BAND_LABELS } from "./game/time.ts";
 import type { GameState, StateRepository, VisitView } from "./game/types.ts";
 import { IndexedDbStateRepository, MemoryStateRepository } from "./persistence/indexed-db-repository.ts";
 import { renderRoom } from "./rendering/room.ts";
 
-function getRequestedTime(): Date {
-  const requested = new URLSearchParams(window.location.search).get("time");
-  if (!requested) return new Date();
-  const parsed = new Date(requested);
-  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+interface LaunchOptions {
+  now: Date;
+  debugRandom: boolean;
+}
+
+interface ShellElements {
+  roomHost: HTMLElement;
+  summarySpeech: HTMLElement;
+  sheetSpeech: HTMLElement;
+  choices: HTMLElement;
+  result: HTMLElement;
+  toast: HTMLElement;
+  openButton: HTMLButtonElement;
+  openSheet: () => void;
+}
+
+function getLaunchOptions(): LaunchOptions {
+  const parameters = new URLSearchParams(window.location.search);
+  const requested = parameters.get("time");
+  const parsed = requested ? new Date(requested) : new Date();
+  return {
+    now: Number.isNaN(parsed.getTime()) ? new Date() : parsed,
+    debugRandom: isRandomDebugMode(parameters),
+  };
 }
 
 function formatClock(date: Date): string {
@@ -20,17 +40,14 @@ function formatDateLabel(date: Date): string {
   return new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", weekday: "short" }).format(date);
 }
 
-function createShell(
-  root: HTMLElement,
-  visit: VisitView,
-  now: Date,
-): {
-  roomHost: HTMLElement;
-  speech: HTMLElement;
-  choices: HTMLElement;
-  result: HTMLElement;
-  toast: HTMLElement;
-} {
+function createParagraph(className: string, text: string): HTMLParagraphElement {
+  const paragraph = document.createElement("p");
+  paragraph.className = className;
+  paragraph.textContent = text;
+  return paragraph;
+}
+
+function createShell(root: HTMLElement, visit: VisitView, now: Date, debugRandom: boolean): ShellElements {
   const shell = document.createElement("section");
   shell.className = "game-shell";
   shell.style.setProperty("--scene-accent", visit.scene.accent);
@@ -43,7 +60,7 @@ function createShell(
   const brand = document.createElement("div");
   brand.className = "brand";
   const brandSmall = document.createElement("small");
-  brandSmall.textContent = "ETO LIFE";
+  brandSmall.textContent = debugRandom ? "DEBUG RANDOM" : "ETO LIFE";
   const brandName = document.createElement("strong");
   brandName.textContent = "エトキっち";
   brand.append(brandSmall, brandName);
@@ -58,46 +75,89 @@ function createShell(
   clock.append(dateLabel, time);
   topBar.append(brand, clock);
 
-  const panel = document.createElement("article");
-  panel.className = "scene-panel";
-  const kicker = document.createElement("p");
-  kicker.className = "scene-kicker";
-  kicker.textContent = `${TIME_BAND_LABELS[visit.assignment.band]}の暮らし`;
+  const hud = document.createElement("article");
+  hud.className = "scene-hud";
+  const hudText = document.createElement("div");
+  hudText.className = "hud-text";
+  const kicker = createParagraph("scene-kicker", `${TIME_BAND_LABELS[visit.assignment.band]}の暮らし`);
   const title = document.createElement("h1");
   title.className = "scene-title";
   title.textContent = visit.scene.title;
-  const description = document.createElement("p");
-  description.className = "scene-description";
-  description.textContent = visit.scene.description;
-  const detail = document.createElement("p");
-  detail.className = "scene-detail";
-  detail.textContent = visit.detail;
-  const speech = document.createElement("p");
-  speech.className = "speech";
-  speech.textContent = visit.line;
+  const summarySpeech = createParagraph("summary-speech", visit.line);
+  hudText.append(kicker, title, summarySpeech);
+  const openButton = document.createElement("button");
+  openButton.className = "hud-action";
+  openButton.type = "button";
+  openButton.textContent = visit.scene.choices?.length ? "関わる" : "見る";
+  openButton.setAttribute("aria-haspopup", "dialog");
+  hud.append(hudText, openButton);
+
+  const sheetLayer = document.createElement("div");
+  sheetLayer.className = "sheet-layer";
+  sheetLayer.hidden = true;
+  const scrim = document.createElement("button");
+  scrim.className = "sheet-scrim";
+  scrim.type = "button";
+  scrim.setAttribute("aria-label", "閉じる");
+  const sheet = document.createElement("article");
+  sheet.className = "scene-sheet";
+  sheet.setAttribute("role", "dialog");
+  sheet.setAttribute("aria-modal", "true");
+  sheet.setAttribute("aria-labelledby", "scene-sheet-title");
+  const sheetHeader = document.createElement("header");
+  sheetHeader.className = "sheet-header";
+  const sheetHeading = document.createElement("div");
+  const sheetKicker = createParagraph("scene-kicker", `${TIME_BAND_LABELS[visit.assignment.band]}の暮らし`);
+  const sheetTitle = document.createElement("h2");
+  sheetTitle.id = "scene-sheet-title";
+  sheetTitle.className = "sheet-title";
+  sheetTitle.textContent = visit.scene.title;
+  sheetHeading.append(sheetKicker, sheetTitle);
+  const closeButton = document.createElement("button");
+  closeButton.className = "sheet-close";
+  closeButton.type = "button";
+  closeButton.textContent = "閉じる";
+  sheetHeader.append(sheetHeading, closeButton);
+
+  const description = createParagraph("scene-description", visit.scene.description);
+  const detail = createParagraph("scene-detail", visit.detail);
+  const sheetSpeech = createParagraph("speech", visit.line);
   const echoBox = document.createElement("div");
+  echoBox.className = "echo-list";
   for (const echo of visit.echoes) {
-    const echoText = document.createElement("p");
-    echoText.className = "echo";
-    echoText.textContent = echo.text;
-    echoBox.append(echoText);
+    echoBox.append(createParagraph("echo", echo.text));
   }
   const choices = document.createElement("div");
   choices.className = "choice-list";
-  const result = document.createElement("p");
-  result.className = "interaction-result";
+  const result = createParagraph("interaction-result", "");
   result.hidden = true;
-  const hint = document.createElement("p");
-  hint.className = "hint";
-  hint.textContent = "エトキチや部屋のものをタップしてみてね";
-  panel.append(kicker, title, description, detail, speech, echoBox, choices, result, hint);
+  sheet.append(sheetHeader, description, detail, sheetSpeech, echoBox, choices, result);
+  sheetLayer.append(scrim, sheet);
 
   const toast = document.createElement("div");
   toast.className = "toast";
   toast.hidden = true;
-  shell.append(roomHost, topBar, panel, toast);
+
+  const openSheet = (): void => {
+    sheetLayer.hidden = false;
+    shell.classList.add("sheet-open");
+    closeButton.focus();
+  };
+  const closeSheet = (): void => {
+    sheetLayer.hidden = true;
+    shell.classList.remove("sheet-open");
+    openButton.focus();
+  };
+  openButton.addEventListener("click", openSheet);
+  closeButton.addEventListener("click", closeSheet);
+  scrim.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !sheetLayer.hidden) closeSheet();
+  });
+
+  shell.append(roomHost, topBar, hud, sheetLayer, toast);
   root.replaceChildren(shell);
-  return { roomHost, speech, choices, result, toast };
+  return { roomHost, summarySpeech, sheetSpeech, choices, result, toast, openButton, openSheet };
 }
 
 async function loadRepository(): Promise<{ repository: StateRepository; state: GameState; persistent: boolean }> {
@@ -111,32 +171,44 @@ async function loadRepository(): Promise<{ repository: StateRepository; state: G
   }
 }
 
+async function loadDebugRepository(): Promise<{ repository: StateRepository; state: GameState; persistent: boolean }> {
+  const repository = new MemoryStateRepository(createInitialState());
+  return { repository, state: await repository.load(), persistent: true };
+}
+
 async function bootstrap(): Promise<void> {
   const root = document.querySelector<HTMLElement>("#app");
   if (!root) throw new Error("Application root is missing");
   root.innerHTML = '<p class="loading">エトキチの暮らしを見に行っています……</p>';
 
-  const now = getRequestedTime();
-  const loaded = await loadRepository();
-  let state = pruneOldSlots(loaded.state, formatLocalDate(now));
-  const resolved = resolveVisit(now, state);
+  const options = getLaunchOptions();
+  const loaded = options.debugRandom ? await loadDebugRepository() : await loadRepository();
+  let state = pruneOldSlots(loaded.state, formatLocalDate(options.now));
+  const resolved = resolveVisit(options.now, state, {
+    randomSeed: options.debugRandom ? crypto.randomUUID() : undefined,
+  });
   state = resolved.state;
   await loaded.repository.save(state);
 
-  const elements = createShell(root, resolved.visit, now);
+  const elements = createShell(root, resolved.visit, options.now, options.debugRandom);
   const showObservation = (text: string): void => {
-    elements.speech.textContent = text;
+    elements.summarySpeech.textContent = text;
+    elements.sheetSpeech.textContent = text;
   };
-  await renderRoom(elements.roomHost, resolved.visit, showObservation);
+  await renderRoom(elements.roomHost, resolved.visit, {
+    onObservation: showObservation,
+    onCharacterTap: elements.openSheet,
+  });
 
   if (!loaded.persistent) {
-    const warning = document.createElement("p");
-    warning.className = "storage-warning";
-    warning.textContent = "ブラウザ保存を利用できないため、このタブを閉じると記録が消えます。";
+    const warning = createParagraph(
+      "storage-warning",
+      "ブラウザ保存を利用できないため、このタブを閉じると記録が消えます。",
+    );
     elements.roomHost.parentElement?.append(warning);
   }
 
-  if (resolved.visit.discoveredNow) {
+  if (resolved.visit.discoveredNow && !options.debugRandom) {
     elements.toast.textContent = `はじめての暮らし「${resolved.visit.scene.title}」`;
     elements.toast.hidden = false;
     window.setTimeout(() => {
@@ -148,6 +220,7 @@ async function bootstrap(): Promise<void> {
   if (existingInteraction) {
     elements.result.textContent = existingInteraction.immediate;
     elements.result.hidden = false;
+    elements.openButton.textContent = "結果";
   } else {
     for (const choice of resolved.visit.scene.choices ?? []) {
       const button = document.createElement("button");
@@ -155,12 +228,14 @@ async function bootstrap(): Promise<void> {
       button.type = "button";
       button.textContent = choice.label;
       button.addEventListener("click", async () => {
-        const applied = applyInteraction(state, resolved.visit.assignment.slotKey, choice.id, now);
+        const applied = applyInteraction(state, resolved.visit.assignment.slotKey, choice.id, options.now);
         state = applied.state;
         await loaded.repository.save(state);
         elements.choices.replaceChildren();
         elements.result.textContent = applied.interaction.immediate;
         elements.result.hidden = false;
+        elements.summarySpeech.textContent = applied.interaction.immediate;
+        elements.openButton.textContent = "結果";
       });
       elements.choices.append(button);
     }

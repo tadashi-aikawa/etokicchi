@@ -20,6 +20,12 @@ pnpm dev
 http://127.0.0.1:4173/etokicchi/?time=2026-08-31T06:00:00
 ```
 
+同じ時間帯のシーンと差分を再読み込みごとに一時抽選したい場合は、`debug=random` を加えます。デバッグ中の選択や発見は通常のIndexedDBへ保存されません。
+
+```text
+http://127.0.0.1:4173/etokicchi/?time=2026-08-31T06:00:00&debug=random
+```
+
 ## 検証
 
 ```console

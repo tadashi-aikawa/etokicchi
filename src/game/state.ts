@@ -34,9 +34,19 @@ function cloneState(state: GameState): GameState {
   return structuredClone(state);
 }
 
-function chooseScene(band: TimeBand, localDate: string, history: readonly SceneId[]): SceneDefinition {
+interface ResolveVisitOptions {
+  randomSeed?: string;
+}
+
+function chooseScene(
+  band: TimeBand,
+  localDate: string,
+  history: readonly SceneId[],
+  randomSeed?: string,
+): SceneDefinition {
   const candidates = getScenesForBand(band);
-  let candidate = candidates[indexFromSeed(`${localDate}:${band}:scene`, candidates.length)];
+  const seed = randomSeed ? `${randomSeed}:scene` : `${localDate}:${band}:scene`;
+  let candidate = candidates[indexFromSeed(seed, candidates.length)];
   if (!candidate) throw new Error(`No scenes registered for ${band}`);
 
   const lastTwo = history.slice(-2);
@@ -48,18 +58,19 @@ function chooseScene(band: TimeBand, localDate: string, history: readonly SceneI
   return candidate;
 }
 
-function createAssignment(now: Date, state: GameState): SlotAssignment {
+function createAssignment(now: Date, state: GameState, randomSeed?: string): SlotAssignment {
   const localDate = formatLocalDate(now);
   const band = getTimeBand(now);
   const slotKey = makeSlotKey(localDate, band);
-  const scene = chooseScene(band, localDate, state.histories[band]);
+  const scene = chooseScene(band, localDate, state.histories[band], randomSeed);
+  const variantSeed = randomSeed ?? slotKey;
   return {
     slotKey,
     localDate,
     band,
     sceneId: scene.id,
-    lineIndex: indexFromSeed(`${slotKey}:${scene.id}:line`, scene.lines.length),
-    detailIndex: indexFromSeed(`${slotKey}:${scene.id}:detail`, scene.details.length),
+    lineIndex: indexFromSeed(`${variantSeed}:${scene.id}:line`, scene.lines.length),
+    detailIndex: indexFromSeed(`${variantSeed}:${scene.id}:detail`, scene.details.length),
     createdAt: now.toISOString(),
   };
 }
@@ -82,16 +93,20 @@ function recordNewAssignment(state: GameState, assignment: SlotAssignment): bool
   return true;
 }
 
-export function resolveVisit(now: Date, sourceState: GameState): { state: GameState; visit: VisitView } {
+export function resolveVisit(
+  now: Date,
+  sourceState: GameState,
+  options: ResolveVisitOptions = {},
+): { state: GameState; visit: VisitView } {
   const state = cloneState(sourceState);
   const localDate = formatLocalDate(now);
   const band = getTimeBand(now);
   const slotKey = makeSlotKey(localDate, band);
-  let assignment = state.assignments[slotKey];
+  let assignment = options.randomSeed ? undefined : state.assignments[slotKey];
   let discoveredNow = false;
 
   if (!assignment) {
-    assignment = createAssignment(now, state);
+    assignment = createAssignment(now, state, options.randomSeed);
     discoveredNow = recordNewAssignment(state, assignment);
   }
 
