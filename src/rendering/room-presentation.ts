@@ -64,7 +64,7 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
       sleeperHeight: 42,
       visitor: {
         assetName: "mimizou-pixel.png",
-        height: 31,
+        height: 40,
         x: 49,
         y: 60,
       },

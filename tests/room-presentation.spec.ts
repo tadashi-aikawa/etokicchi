@@ -113,7 +113,7 @@ describe("room presentation", () => {
     expect(getRoomPresentation(visitFor("mimizouVisit"))).toMatchObject({
       visitor: {
         assetName: "mimizou-pixel.png",
-        height: 31,
+        height: 40,
         x: 49,
         y: 60,
       },
