@@ -114,6 +114,11 @@ export function resolveVisit(
   const line = scene.lines[assignment.lineIndex];
   const detail = scene.details[assignment.detailIndex];
   if (line === undefined || detail === undefined) throw new Error(`Invalid variants for ${scene.id}`);
+  const mimizouPresent =
+    scene.id === "watchingStars" &&
+    Boolean(state.discoveries.mimizouVisit) &&
+    // 4択のシーン抽選と同じ法を使うと、FNVハッシュの下位ビットが相関して同時成立しない。
+    indexFromSeed(`${slotKey}:mimizou-companion`, 3) === 0;
 
   return {
     state,
@@ -125,6 +130,7 @@ export function resolveVisit(
       echoes: state.echoes.filter((echo) => echo.targetSlotKey === slotKey),
       interaction: state.interactions[slotKey],
       discoveredNow,
+      mimizouPresent,
     },
   };
 }

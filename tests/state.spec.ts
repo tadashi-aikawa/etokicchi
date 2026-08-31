@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "../src/game/state.ts";
+import { applyInteraction, createInitialState, isGameState, pruneOldSlots, resolveVisit } from "../src/game/state.ts";
 import { addDays, makeSlotKey } from "../src/game/time.ts";
 import type { GameState, SlotAssignment } from "../src/game/types.ts";
 
@@ -62,6 +62,61 @@ describe("visit resolution", () => {
     );
 
     expect(variants.size).toBeGreaterThan(1);
+  });
+
+  it("unlocks a stable low-frequency Mimizou companion after discovering the visit scene", () => {
+    const stargazingResults = Array.from({ length: 90 }, (_, index) => {
+      const now = new Date(2026, 8, index + 1, 1);
+      const state = createInitialState();
+      state.discoveries.mimizouVisit = { firstSeenAt: "2026-08-31T12:00:00.000Z", seenCount: 1 };
+      const first = resolveVisit(now, state);
+      const second = resolveVisit(now, first.state);
+      expect(second.visit.mimizouPresent).toBe(first.visit.mimizouPresent);
+      return first.visit.scene.id === "watchingStars" ? first.visit.mimizouPresent : undefined;
+    });
+    const companionResults = stargazingResults.filter((result): result is boolean => result !== undefined);
+
+    expect(companionResults).toContain(true);
+    expect(companionResults).toContain(false);
+
+    const locked = createInitialState();
+    const lockedVisit = resolveVisit(new Date(2026, 8, 16, 1), locked).visit;
+    expect(lockedVisit.scene.id).toBe("watchingStars");
+    expect(lockedVisit.mimizouPresent).toBe(false);
+  });
+
+  it("unlocks the stargazing companion through the actual visit sequence", () => {
+    const visit = resolveVisit(new Date(2026, 8, 3, 21), createInitialState());
+    expect(visit.visit.scene.id).toBe("mimizouVisit");
+
+    const stargazing = resolveVisit(new Date(2026, 8, 16, 1), visit.state);
+    expect(stargazing.visit.scene.id).toBe("watchingStars");
+    expect(stargazing.visit.mimizouPresent).toBe(true);
+  });
+
+  it("accepts and extends a state saved before the Mimizou scene existed", () => {
+    const legacyState: unknown = {
+      dataVersion: 1,
+      assignments: {},
+      histories: {
+        deepNight: ["watchingStars"],
+        earlyMorning: ["morningTea"],
+        daytime: ["wateringPlants"],
+        evening: ["foldingLaundry"],
+        night: ["readingComics"],
+      },
+      interactions: {},
+      echoes: [],
+      discoveries: {
+        readingComics: { firstSeenAt: "2026-08-30T12:00:00.000Z", seenCount: 2 },
+      },
+    };
+
+    expect(isGameState(legacyState)).toBe(true);
+    if (!isGameState(legacyState)) throw new Error("legacy state was rejected");
+    const resolved = resolveVisit(new Date(2026, 8, 3, 21), legacyState);
+    expect(resolved.state.discoveries.readingComics?.seenCount).toBe(2);
+    expect(resolved.visit.scene.id).toBe("mimizouVisit");
   });
 });
 

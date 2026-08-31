@@ -24,6 +24,7 @@ const COLLECTION_IMAGE_PATHS: Record<SceneId, string> = {
   packingTomorrow: "assets/collection/packing-tomorrow.webp",
   littleNightSnack: "assets/collection/little-night-snack.webp",
   readingComics: "assets/collection/reading-comics.webp",
+  mimizouVisit: "assets/collection/mimizou-visit.webp",
 };
 
 export const SCENE_COUNT = SCENES.length;

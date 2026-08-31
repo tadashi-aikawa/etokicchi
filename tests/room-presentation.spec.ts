@@ -51,6 +51,28 @@ function sleepingWithTatsuoVisit(): VisitView {
   };
 }
 
+function visitFor(sceneId: "watchingStars" | "mimizouVisit", mimizouPresent = false): VisitView {
+  const band = sceneId === "watchingStars" ? "deepNight" : "night";
+  const slotKey = `2026-09-01:${band}`;
+  return {
+    assignment: {
+      slotKey,
+      localDate: "2026-09-01",
+      band,
+      sceneId,
+      lineIndex: 0,
+      detailIndex: 0,
+      createdAt: "2026-08-31T15:20:00.000Z",
+    },
+    scene: getScene(sceneId),
+    line: "テスト用の台詞",
+    detail: "テスト用の詳細",
+    echoes: [],
+    discoveredNow: false,
+    mimizouPresent,
+  };
+}
+
 describe("room presentation", () => {
   it("shows the kicked blanket on the floor before interacting", () => {
     expect(getRoomPresentation(kickedBlanketVisit())).toMatchObject({
@@ -85,5 +107,29 @@ describe("room presentation", () => {
         y: 170,
       },
     });
+  });
+
+  it("configures Mimizou to move from the window during the visit scene", () => {
+    expect(getRoomPresentation(visitFor("mimizouVisit"))).toMatchObject({
+      visitor: {
+        assetName: "mimizou-pixel.png",
+        startX: 49,
+        startY: 60,
+        endX: 78,
+        endY: 126,
+      },
+    });
+  });
+
+  it("shows Mimizou beside Etokichi for the unlocked stargazing variant", () => {
+    expect(getRoomPresentation(visitFor("watchingStars", true))).toMatchObject({
+      companion: {
+        assetName: "mimizou-pixel.png",
+        height: 34,
+        x: 84,
+        y: 128,
+      },
+    });
+    expect(getRoomPresentation(visitFor("watchingStars", false)).companion).toBeUndefined();
   });
 });

@@ -282,6 +282,19 @@ export const SCENES: readonly SceneDefinition[] = [
     characterPose: "busy",
     accent: "#6975a3",
   },
+  {
+    id: "mimizouVisit",
+    band: "night",
+    title: "みみぞうが訪ねてきた",
+    description: "窓を二回つつく音のあと、丸い来客がくるりと部屋へ降りてきた。",
+    lines: [
+      "わあ、みみぞう！ 来てくれたの？ お茶、ちょうど二人分あるよ！",
+      "その着地、かっこよかったよ！ 最後の一回転まで！",
+    ],
+    details: ["窓ガラスを、小さなくちばしで二回つついた", "床に丸い回転の跡がひとつ残っている"],
+    characterPose: "busy",
+    accent: "#b4a56d",
+  },
 ] as const;
 
 const sceneById = new Map<SceneId, SceneDefinition>(SCENES.map((scene) => [scene.id, scene]));

@@ -1,4 +1,14 @@
-import { AnimatedSprite, Application, Assets, Container, Graphics, Rectangle, Sprite, Texture } from "pixi.js";
+import {
+  AnimatedSprite,
+  Application,
+  Assets,
+  Container,
+  Graphics,
+  Rectangle,
+  Sprite,
+  Texture,
+  type Ticker,
+} from "pixi.js";
 import "pixi.js/browser";
 import type { SceneId, TimeBand, VisitView } from "../game/types.ts";
 import { getRoomPresentation } from "./room-presentation.ts";
@@ -118,6 +128,10 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
     { x: 116, y: 186, pauseMs: 700 },
     { x: 87, y: 166, pauseMs: 800 },
   ],
+  mimizouVisit: [
+    { x: 88, y: 160, pauseMs: 1100 },
+    { x: 60, y: 140, pauseMs: 1_000_000_000, action: true },
+  ],
 };
 
 const actionAssetNames: Partial<Record<SceneId, string>> = {
@@ -133,6 +147,7 @@ const actionAssetNames: Partial<Record<SceneId, string>> = {
   packingTomorrow: "etokichi-packing-pixel.webp",
   littleNightSnack: "etokichi-night-snack-pixel.webp",
   readingComics: "etokichi-reading-comics-pixel.webp",
+  mimizouVisit: "etokichi-morning-tea-pixel.webp",
 };
 
 function interactive(graphics: Graphics, label: string, message: string, onObservation: (text: string) => void): void {
@@ -403,6 +418,58 @@ function createCompanion(
   return companion;
 }
 
+function createVisitor(
+  app: Application,
+  texture: Texture,
+  presentation: NonNullable<ReturnType<typeof getRoomPresentation>["visitor"]>,
+  callbacks: RoomCallbacks,
+): Container {
+  texture.source.scaleMode = "nearest";
+  const visitor = new Container();
+  const shadow = new Graphics().ellipse(0, 22, 11, 3).fill({ color: 0x2a160d, alpha: 0 });
+  const sprite = new Sprite(texture);
+  sprite.anchor.set(0.5);
+  sprite.scale.set(presentation.startHeight / texture.height);
+  sprite.tint = 0x8791ad;
+  sprite.roundPixels = true;
+  visitor.addChild(shadow, sprite);
+  visitor.position.set(presentation.startX, presentation.startY);
+  visitor.eventMode = "dynamic";
+  visitor.hitArea = new Rectangle(-28, -28, 56, 56);
+  visitor.cursor = "pointer";
+  visitor.on("pointertap", callbacks.onCharacterTap);
+
+  const peekMs = 900;
+  const landingMs = 1400;
+  let elapsed = 0;
+  const animateVisitor = (ticker: Ticker): void => {
+    elapsed += ticker.deltaMS;
+    if (elapsed < peekMs) {
+      visitor.y = presentation.startY + Math.sin(elapsed / 160) * 0.8;
+      return;
+    }
+
+    sprite.tint = 0xffffff;
+    const progress = Math.min((elapsed - peekMs) / landingMs, 1);
+    const eased = 1 - (1 - progress) ** 3;
+    visitor.x = presentation.startX + (presentation.endX - presentation.startX) * eased;
+    visitor.y =
+      presentation.startY + (presentation.endY - presentation.startY) * eased - Math.sin(progress * Math.PI) * 17;
+    sprite.rotation = progress * Math.PI * 2;
+    const height = presentation.startHeight + (presentation.endHeight - presentation.startHeight) * eased;
+    sprite.scale.set(height / texture.height);
+    shadow.alpha = progress * 0.32;
+    if (progress === 1) app.ticker.remove(animateVisitor);
+  };
+  app.ticker.add(animateVisitor);
+
+  return visitor;
+}
+
+function createWindowForeground(): Graphics {
+  return new Graphics().rect(49, 29, 2, 49).fill(0x4a3028).rect(22, 77, 56, 2).fill(0x65402d);
+}
+
 export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks: RoomCallbacks): Promise<Application> {
   const app = new Application();
   await app.init({
@@ -420,7 +487,8 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
 
   const actionAssetName = actionAssetNames[visit.scene.id];
   const presentation = getRoomPresentation(visit);
-  const [backgroundTexture, characterTexture, actionTexture, companionTexture] = await Promise.all([
+  const guestPresentation = presentation.visitor ?? presentation.companion;
+  const [backgroundTexture, characterTexture, actionTexture, guestTexture] = await Promise.all([
     Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.backgroundAssetName}`),
     Assets.load<Texture>(
       `${import.meta.env.BASE_URL}assets/${
@@ -428,21 +496,28 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
       }`,
     ),
     actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
-    presentation.companion
-      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.companion.assetName}`)
+    guestPresentation
+      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${guestPresentation.assetName}`)
       : undefined,
   ]);
   const room = createRoom(backgroundTexture, visit, callbacks);
   const companion =
-    companionTexture && presentation.companion
-      ? createCompanion(companionTexture, presentation.companion, callbacks)
+    guestTexture && presentation.companion
+      ? createCompanion(guestTexture, presentation.companion, callbacks)
       : undefined;
+  const visitor =
+    guestTexture && presentation.visitor
+      ? createVisitor(app, guestTexture, presentation.visitor, callbacks)
+      : undefined;
+  const windowForeground = visitor ? createWindowForeground() : undefined;
   const character =
     visit.scene.characterPose === "sleep"
       ? createSleeper(app, characterTexture, visit, presentation.sleeperHeight, callbacks)
       : createWalker(app, characterTexture, actionTexture, visit, callbacks);
   app.stage.addChild(room);
   if (companion) app.stage.addChild(companion);
+  if (visitor) app.stage.addChild(visitor);
+  if (windowForeground) app.stage.addChild(windowForeground);
   app.stage.addChild(character);
   host.replaceChildren(app.canvas);
   return app;

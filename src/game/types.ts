@@ -16,7 +16,8 @@ export type SceneId =
   | "foldingLaundry"
   | "packingTomorrow"
   | "littleNightSnack"
-  | "readingComics";
+  | "readingComics"
+  | "mimizouVisit";
 
 export interface ChoiceDefinition {
   id: string;
@@ -85,6 +86,7 @@ export interface VisitView {
   echoes: EchoRecord[];
   interaction?: InteractionRecord;
   discoveredNow: boolean;
+  mimizouPresent?: boolean;
 }
 
 export interface StateRepository {

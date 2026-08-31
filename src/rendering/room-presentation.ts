@@ -10,6 +10,15 @@ export interface RoomPresentation {
     x: number;
     y: number;
   };
+  visitor?: {
+    assetName: string;
+    startHeight: number;
+    endHeight: number;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+  };
 }
 
 export function getRoomPresentation(visit: VisitView): RoomPresentation {
@@ -47,6 +56,37 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         height: 80,
         x: 61,
         y: 170,
+      },
+    };
+  }
+
+  if (visit.scene.id === "mimizouVisit") {
+    return {
+      backgroundAssetName: "room-background-pixel.webp",
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      visitor: {
+        assetName: "mimizou-pixel.png",
+        startHeight: 31,
+        endHeight: 44,
+        startX: 49,
+        startY: 60,
+        endX: 78,
+        endY: 126,
+      },
+    };
+  }
+
+  if (visit.scene.id === "watchingStars" && visit.mimizouPresent) {
+    return {
+      backgroundAssetName: "room-background-pixel.webp",
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      companion: {
+        assetName: "mimizou-pixel.png",
+        height: 34,
+        x: 84,
+        y: 128,
       },
     };
   }
