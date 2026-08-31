@@ -109,14 +109,13 @@ describe("room presentation", () => {
     });
   });
 
-  it("configures Mimizou to move from the window during the visit scene", () => {
+  it("configures Mimizou to peek through the window during the visit scene", () => {
     expect(getRoomPresentation(visitFor("mimizouVisit"))).toMatchObject({
       visitor: {
         assetName: "mimizou-pixel.png",
-        startX: 49,
-        startY: 60,
-        endX: 78,
-        endY: 126,
+        height: 31,
+        x: 49,
+        y: 60,
       },
     });
   });

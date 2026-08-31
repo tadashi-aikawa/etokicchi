@@ -11,6 +11,7 @@ import {
 } from "pixi.js";
 import "pixi.js/browser";
 import type { SceneId, TimeBand, VisitView } from "../game/types.ts";
+import { getMimizouVisitFrame } from "./mimizou-visit.ts";
 import { getRoomPresentation } from "./room-presentation.ts";
 
 const WIDTH = 195;
@@ -128,10 +129,7 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
     { x: 116, y: 186, pauseMs: 700 },
     { x: 87, y: 166, pauseMs: 800 },
   ],
-  mimizouVisit: [
-    { x: 88, y: 160, pauseMs: 1100 },
-    { x: 60, y: 140, pauseMs: 1_000_000_000, action: true },
-  ],
+  mimizouVisit: [{ x: 60, y: 140, pauseMs: 5000, action: true }],
 };
 
 const actionAssetNames: Partial<Record<SceneId, string>> = {
@@ -328,6 +326,21 @@ function createWalker(
 
   showAction(Boolean(route[0]?.action));
 
+  if (visit.scene.id === "mimizouVisit") {
+    const baseY = actor.y;
+    let elapsed = 0;
+    app.ticker.add((ticker) => {
+      elapsed += ticker.deltaMS;
+      const frame = getMimizouVisitFrame(elapsed);
+      showAction(!frame.reacting);
+      actor.y = baseY - frame.reactionHop;
+      if (!frame.reacting) return;
+
+      character.textures = frames.up;
+      character.gotoAndStop(1);
+    });
+  }
+
   app.ticker.add((ticker) => {
     if (route.length < 2) return;
     if (pauseRemaining > 0) {
@@ -426,42 +439,27 @@ function createVisitor(
 ): Container {
   texture.source.scaleMode = "nearest";
   const visitor = new Container();
-  const shadow = new Graphics().ellipse(0, 22, 11, 3).fill({ color: 0x2a160d, alpha: 0 });
   const sprite = new Sprite(texture);
   sprite.anchor.set(0.5);
-  sprite.scale.set(presentation.startHeight / texture.height);
+  sprite.scale.set(presentation.height / texture.height);
   sprite.tint = 0x8791ad;
   sprite.roundPixels = true;
-  visitor.addChild(shadow, sprite);
-  visitor.position.set(presentation.startX, presentation.startY);
-  visitor.eventMode = "dynamic";
+  visitor.addChild(sprite);
+  visitor.position.set(presentation.x, presentation.y + 8);
+  visitor.alpha = 0;
+  visitor.eventMode = "none";
   visitor.hitArea = new Rectangle(-28, -28, 56, 56);
   visitor.cursor = "pointer";
   visitor.on("pointertap", callbacks.onCharacterTap);
 
-  const peekMs = 900;
-  const landingMs = 1400;
   let elapsed = 0;
-  const animateVisitor = (ticker: Ticker): void => {
+  app.ticker.add((ticker: Ticker) => {
     elapsed += ticker.deltaMS;
-    if (elapsed < peekMs) {
-      visitor.y = presentation.startY + Math.sin(elapsed / 160) * 0.8;
-      return;
-    }
-
-    sprite.tint = 0xffffff;
-    const progress = Math.min((elapsed - peekMs) / landingMs, 1);
-    const eased = 1 - (1 - progress) ** 3;
-    visitor.x = presentation.startX + (presentation.endX - presentation.startX) * eased;
-    visitor.y =
-      presentation.startY + (presentation.endY - presentation.startY) * eased - Math.sin(progress * Math.PI) * 17;
-    sprite.rotation = progress * Math.PI * 2;
-    const height = presentation.startHeight + (presentation.endHeight - presentation.startHeight) * eased;
-    sprite.scale.set(height / texture.height);
-    shadow.alpha = progress * 0.32;
-    if (progress === 1) app.ticker.remove(animateVisitor);
-  };
-  app.ticker.add(animateVisitor);
+    const frame = getMimizouVisitFrame(elapsed);
+    visitor.alpha = frame.visitorVisibility;
+    visitor.y = presentation.y + frame.visitorYOffset;
+    visitor.eventMode = frame.visitorInteractive ? "dynamic" : "none";
+  });
 
   return visitor;
 }

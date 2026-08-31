@@ -12,12 +12,9 @@ export interface RoomPresentation {
   };
   visitor?: {
     assetName: string;
-    startHeight: number;
-    endHeight: number;
-    startX: number;
-    startY: number;
-    endX: number;
-    endY: number;
+    height: number;
+    x: number;
+    y: number;
   };
 }
 
@@ -67,12 +64,9 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
       sleeperHeight: 42,
       visitor: {
         assetName: "mimizou-pixel.png",
-        startHeight: 31,
-        endHeight: 44,
-        startX: 49,
-        startY: 60,
-        endX: 78,
-        endY: 126,
+        height: 31,
+        x: 49,
+        y: 60,
       },
     };
   }
