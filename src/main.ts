@@ -64,7 +64,13 @@ function formatFirstSeen(value: string): string {
   }).format(date);
 }
 
-function createCollectionLayer(state: GameState): { layer: HTMLElement; closeButton: HTMLButtonElement } {
+interface CollectionLayer {
+  layer: HTMLElement;
+  closeButton: HTMLButtonElement;
+  closeViewer: (restoreFocus?: boolean) => boolean;
+}
+
+function createCollectionLayer(state: GameState): CollectionLayer {
   const entries = getCollectionEntries(state.discoveries);
   const discoveredCount = countDiscoveries(state.discoveries);
   const layer = document.createElement("section");
@@ -91,6 +97,54 @@ function createCollectionLayer(state: GameState): { layer: HTMLElement; closeBut
 
   const cards = document.createElement("div");
   cards.className = "collection-grid";
+
+  const viewer = document.createElement("div");
+  viewer.className = "collection-viewer";
+  viewer.hidden = true;
+  viewer.setAttribute("role", "dialog");
+  viewer.setAttribute("aria-modal", "true");
+  viewer.setAttribute("aria-labelledby", "collection-viewer-title");
+  const viewerScrim = document.createElement("button");
+  viewerScrim.className = "collection-viewer-scrim";
+  viewerScrim.type = "button";
+  viewerScrim.tabIndex = -1;
+  viewerScrim.setAttribute("aria-label", "画像を閉じる");
+  const viewerPanel = document.createElement("article");
+  viewerPanel.className = "collection-viewer-panel";
+  const viewerImage = document.createElement("img");
+  viewerImage.className = "collection-viewer-image";
+  viewerImage.alt = "";
+  const viewerMeta = document.createElement("div");
+  viewerMeta.className = "collection-viewer-meta";
+  const viewerBand = createParagraph("collection-viewer-band", "");
+  const viewerTitle = document.createElement("h3");
+  viewerTitle.id = "collection-viewer-title";
+  const viewerClose = document.createElement("button");
+  viewerClose.className = "collection-viewer-close";
+  viewerClose.type = "button";
+  viewerClose.textContent = "図鑑へ戻る";
+  viewerMeta.append(viewerBand, viewerTitle, viewerClose);
+  viewerPanel.append(viewerImage, viewerMeta);
+  viewer.append(viewerScrim, viewerPanel);
+
+  let viewerTrigger: HTMLButtonElement | null = null;
+  const closeViewer = (restoreFocus = true): boolean => {
+    if (viewer.hidden) return false;
+    viewer.hidden = true;
+    header.inert = false;
+    cards.inert = false;
+    if (restoreFocus && viewerTrigger) focusWithoutScroll(viewerTrigger);
+    viewerTrigger = null;
+    return true;
+  };
+  viewerScrim.addEventListener("click", () => closeViewer());
+  viewerClose.addEventListener("click", () => closeViewer());
+  viewer.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab") return;
+    event.preventDefault();
+    focusWithoutScroll(viewerClose);
+  });
+
   for (const { scene, discovery, imagePath } of entries) {
     const card = document.createElement("article");
     card.className = `collection-card ${discovery ? "is-discovered" : "is-locked"}`;
@@ -114,14 +168,31 @@ function createCollectionLayer(state: GameState): { layer: HTMLElement; closeBut
         createParagraph("collection-first-seen", `初発見 ${formatFirstSeen(discovery.firstSeenAt)}`),
         createParagraph("collection-seen-count", `${discovery.seenCount}回 出会った`),
       );
+      const openViewer = document.createElement("button");
+      openViewer.className = "collection-card-open";
+      openViewer.type = "button";
+      openViewer.setAttribute("aria-label", `${scene.title}の画像を大きく見る`);
+      openViewer.setAttribute("aria-haspopup", "dialog");
+      openViewer.addEventListener("click", () => {
+        viewerImage.src = illustration.src;
+        viewerImage.alt = scene.title;
+        viewerBand.textContent = `${TIME_BAND_LABELS[scene.band]}の暮らし`;
+        viewerTitle.textContent = scene.title;
+        viewerTrigger = openViewer;
+        header.inert = true;
+        cards.inert = true;
+        viewer.hidden = false;
+        focusWithoutScroll(viewerClose);
+      });
+      card.append(openViewer);
     } else {
       card.append(createParagraph("collection-locked-label", "まだ出会っていない暮らし"));
     }
     cards.append(card);
   }
 
-  layer.append(header, cards);
-  return { layer, closeButton };
+  layer.append(header, cards, viewer);
+  return { layer, closeButton, closeViewer };
 }
 
 function createShell(
@@ -248,6 +319,7 @@ function createShell(
     focusWithoutScroll(collection.closeButton);
   };
   const closeCollection = (): void => {
+    collection.closeViewer(false);
     collection.layer.hidden = true;
     focusWithoutScroll(collectionButton);
   };
@@ -258,6 +330,7 @@ function createShell(
   collection.closeButton.addEventListener("click", closeCollection);
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
+    if (collection.closeViewer()) return;
     if (!collection.layer.hidden) closeCollection();
     else if (!sheetLayer.hidden) closeSheet();
   });
