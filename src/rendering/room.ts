@@ -41,7 +41,7 @@ const timeTints: Record<TimeBand, { color: number; alpha: number }> = {
 
 const routes: Record<SceneId, readonly Waypoint[]> = {
   sleeping: [{ x: 29, y: 124, pauseMs: 5000 }],
-  sleepingWithTatsuo: [{ x: 56, y: 170, pauseMs: 5000 }],
+  sleepingWithTatsuo: [{ x: 28, y: 126, pauseMs: 5000 }],
   kickedBlanket: [{ x: 31, y: 156, pauseMs: 5000 }],
   watchingStars: [
     { x: 54, y: 128, pauseMs: 4800, action: true },
@@ -386,6 +386,23 @@ function createSleeper(
   return sleeper;
 }
 
+function createCompanion(
+  texture: Texture,
+  presentation: NonNullable<ReturnType<typeof getRoomPresentation>["companion"]>,
+  callbacks: RoomCallbacks,
+): Sprite {
+  texture.source.scaleMode = "nearest";
+  const companion = new Sprite(texture);
+  companion.anchor.set(0.5, 1);
+  companion.scale.set(presentation.height / texture.height);
+  companion.roundPixels = true;
+  companion.position.set(presentation.x, presentation.y);
+  companion.eventMode = "dynamic";
+  companion.cursor = "pointer";
+  companion.on("pointertap", callbacks.onCharacterTap);
+  return companion;
+}
+
 export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks: RoomCallbacks): Promise<Application> {
   const app = new Application();
   await app.init({
@@ -403,7 +420,7 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
 
   const actionAssetName = actionAssetNames[visit.scene.id];
   const presentation = getRoomPresentation(visit);
-  const [backgroundTexture, characterTexture, actionTexture] = await Promise.all([
+  const [backgroundTexture, characterTexture, actionTexture, companionTexture] = await Promise.all([
     Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.backgroundAssetName}`),
     Assets.load<Texture>(
       `${import.meta.env.BASE_URL}assets/${
@@ -411,13 +428,22 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
       }`,
     ),
     actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
+    presentation.companion
+      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.companion.assetName}`)
+      : undefined,
   ]);
   const room = createRoom(backgroundTexture, visit, callbacks);
+  const companion =
+    companionTexture && presentation.companion
+      ? createCompanion(companionTexture, presentation.companion, callbacks)
+      : undefined;
   const character =
     visit.scene.characterPose === "sleep"
       ? createSleeper(app, characterTexture, visit, presentation.sleeperHeight, callbacks)
       : createWalker(app, characterTexture, actionTexture, visit, callbacks);
-  app.stage.addChild(room, character);
+  app.stage.addChild(room);
+  if (companion) app.stage.addChild(companion);
+  app.stage.addChild(character);
   host.replaceChildren(app.canvas);
   return app;
 }

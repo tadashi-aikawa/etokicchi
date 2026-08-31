@@ -76,8 +76,14 @@ describe("room presentation", () => {
   it("shows Etokichi and Tatsuo together for their sleeping scene", () => {
     expect(getRoomPresentation(sleepingWithTatsuoVisit())).toEqual({
       backgroundAssetName: "room-background-pixel.webp",
-      sleeperAssetName: "etokichi-sleeping-with-tatsuo-pixel.png",
-      sleeperHeight: 80,
+      sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
+      sleeperHeight: 28,
+      companion: {
+        assetName: "tatsuo-sleeping-pixel.png",
+        height: 80,
+        x: 61,
+        y: 170,
+      },
     });
   });
 });
