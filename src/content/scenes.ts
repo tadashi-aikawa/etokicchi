@@ -12,6 +12,16 @@ export const SCENES: readonly SceneDefinition[] = [
     accent: "#6f76a8",
   },
   {
+    id: "sleepingWithTatsuo",
+    band: "deepNight",
+    title: "タツヲと眠る夜",
+    description: "ベッド脇のタツヲが、エトキチへそっと頭を寄せて眠っている。",
+    lines: ["むにゃ……タツヲ、あったかい……", "すー……すー……いっしょだね……"],
+    details: ["大きな手がベッドの縁にそっと添えられている", "ふたりの寝息がゆっくり重なっている"],
+    characterPose: "sleep",
+    accent: "#706f9e",
+  },
+  {
     id: "kickedBlanket",
     band: "deepNight",
     title: "布団を蹴飛ばしている",

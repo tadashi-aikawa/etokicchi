@@ -31,6 +31,26 @@ function kickedBlanketVisit(choiceId?: string): VisitView {
   };
 }
 
+function sleepingWithTatsuoVisit(): VisitView {
+  const slotKey = "2026-08-31:deepNight";
+  return {
+    assignment: {
+      slotKey,
+      localDate: "2026-08-31",
+      band: "deepNight",
+      sceneId: "sleepingWithTatsuo",
+      lineIndex: 0,
+      detailIndex: 0,
+      createdAt: "2026-08-30T15:20:00.000Z",
+    },
+    scene: getScene("sleepingWithTatsuo"),
+    line: "むにゃ……タツヲ、あったかい……",
+    detail: "大きな手がベッドの縁にそっと添えられている",
+    echoes: [],
+    discoveredNow: false,
+  };
+}
+
 describe("room presentation", () => {
   it("shows the kicked blanket on the floor before interacting", () => {
     expect(getRoomPresentation(kickedBlanketVisit())).toMatchObject({
@@ -50,6 +70,14 @@ describe("room presentation", () => {
     expect(getRoomPresentation(kickedBlanketVisit("warmRoom"))).toMatchObject({
       backgroundAssetName: "room-background-kicked-blanket-pixel.webp",
       sleeperAssetName: "etokichi-sleep-kicked-pixel.png",
+    });
+  });
+
+  it("shows Etokichi and Tatsuo together for their sleeping scene", () => {
+    expect(getRoomPresentation(sleepingWithTatsuoVisit())).toEqual({
+      backgroundAssetName: "room-background-pixel.webp",
+      sleeperAssetName: "etokichi-sleeping-with-tatsuo-pixel.png",
+      sleeperHeight: 80,
     });
   });
 });

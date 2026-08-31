@@ -31,6 +31,14 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     };
   }
 
+  if (visit.scene.id === "sleepingWithTatsuo") {
+    return {
+      backgroundAssetName: "room-background-pixel.webp",
+      sleeperAssetName: "etokichi-sleeping-with-tatsuo-pixel.png",
+      sleeperHeight: 80,
+    };
+  }
+
   return {
     backgroundAssetName: "room-background-pixel.webp",
     sleeperAssetName: "etokichi-sleep-pixel.webp",

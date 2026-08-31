@@ -41,6 +41,7 @@ const timeTints: Record<TimeBand, { color: number; alpha: number }> = {
 
 const routes: Record<SceneId, readonly Waypoint[]> = {
   sleeping: [{ x: 29, y: 124, pauseMs: 5000 }],
+  sleepingWithTatsuo: [{ x: 56, y: 170, pauseMs: 5000 }],
   kickedBlanket: [{ x: 31, y: 156, pauseMs: 5000 }],
   watchingStars: [
     { x: 54, y: 128, pauseMs: 4800, action: true },

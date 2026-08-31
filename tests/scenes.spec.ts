@@ -3,11 +3,12 @@ import { SCENES, getScenesForBand } from "../src/content/scenes.ts";
 import { TIME_BANDS } from "../src/game/time.ts";
 
 describe("scene catalog", () => {
-  it("contains three distinct scenes for every time band", () => {
+  it("contains the expected number of distinct scenes for every time band", () => {
     for (const band of TIME_BANDS) {
       const scenes = getScenesForBand(band);
-      expect(scenes).toHaveLength(3);
-      expect(new Set(scenes.map((scene) => scene.id)).size).toBe(3);
+      const expectedCount = band === "deepNight" ? 4 : 3;
+      expect(scenes).toHaveLength(expectedCount);
+      expect(new Set(scenes.map((scene) => scene.id)).size).toBe(expectedCount);
     }
   });
 

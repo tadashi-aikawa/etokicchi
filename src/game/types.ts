@@ -2,6 +2,7 @@ export type TimeBand = "deepNight" | "earlyMorning" | "daytime" | "evening" | "n
 
 export type SceneId =
   | "sleeping"
+  | "sleepingWithTatsuo"
   | "kickedBlanket"
   | "watchingStars"
   | "tooMuchBreakfast"
