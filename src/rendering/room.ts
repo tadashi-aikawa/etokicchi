@@ -2,6 +2,7 @@ import {
   AnimatedSprite,
   Application,
   Assets,
+  ColorMatrixFilter,
   Container,
   Graphics,
   Rectangle,
@@ -12,7 +13,25 @@ import {
 import "pixi.js/browser";
 import type { SceneId, VisitView } from "../game/types.ts";
 import { getMimizouVisitFrame } from "./mimizou-visit.ts";
-import { getRoomPresentation, getRoomTint } from "./room-presentation.ts";
+import { FURNITURE_DEFINITIONS, type FurnitureLayout, resolveFurnitureSpriteHitArea } from "./room-furniture.ts";
+import {
+  DEFAULT_ROOM_LAYOUT,
+  getDepthZIndex,
+  isMovementSegmentValid,
+  resolveSceneInitialDepthY,
+  resolveSceneRoomLayout,
+  resolveSceneRoute,
+  type ResolvedWaypoint,
+  type RoomLayout,
+  validateRoomLayout,
+} from "./room-layout.ts";
+import {
+  getLightingColorMatrix,
+  getRoomPresentation,
+  resolveGuestDepthY,
+  type LegacyRoomPresentation,
+  type RoomTint,
+} from "./room-presentation.ts";
 
 const WIDTH = 195;
 const HEIGHT = 422;
@@ -22,16 +41,6 @@ const WALKER_FRAME_HEIGHT = 52;
 const ACTION_FRAME_HEIGHT = 60;
 
 type Direction = "down" | "left" | "right" | "up";
-
-interface Waypoint {
-  x: number;
-  y: number;
-  pauseMs: number;
-  action?: boolean;
-  actionFacing?: "left" | "right";
-  actionVariant?: number;
-  actionOffsetY?: number;
-}
 
 interface RoomCallbacks {
   onObservation: (text: string) => void;
@@ -43,105 +52,6 @@ const directionRows: Record<Direction, number> = {
   left: 1,
   right: 2,
   up: 3,
-};
-
-const routes: Record<SceneId, readonly Waypoint[]> = {
-  sleeping: [{ x: 29, y: 124, pauseMs: 5000 }],
-  sleepingWithTatsuo: [{ x: 28, y: 126, pauseMs: 5000 }],
-  kickedBlanket: [{ x: 31, y: 156, pauseMs: 5000 }],
-  watchingStars: [
-    { x: 54, y: 128, pauseMs: 4800, action: true },
-    { x: 83, y: 164, pauseMs: 700 },
-    { x: 68, y: 211, pauseMs: 650 },
-    { x: 103, y: 238, pauseMs: 750 },
-  ],
-  almostAwake: [{ x: 29, y: 124, pauseMs: 5000 }],
-  morningStretch: [
-    { x: 58, y: 137, pauseMs: 4600, action: true },
-    { x: 88, y: 184, pauseMs: 700 },
-    { x: 102, y: 226, pauseMs: 700 },
-  ],
-  planningDay: [
-    { x: 99, y: 292, pauseMs: 5200, action: true },
-    { x: 85, y: 223, pauseMs: 750 },
-    { x: 111, y: 190, pauseMs: 700 },
-  ],
-  tatsuoWakeUp: [{ x: 28, y: 126, pauseMs: 5000 }],
-  mimizouFarewell: [
-    { x: 58, y: 137, pauseMs: 5200, action: true },
-    { x: 88, y: 184, pauseMs: 800 },
-    { x: 107, y: 224, pauseMs: 700 },
-  ],
-  tooMuchBreakfast: [
-    { x: 103, y: 193, pauseMs: 1100 },
-    { x: 132, y: 190, pauseMs: 3000, action: true },
-    { x: 98, y: 225, pauseMs: 1500 },
-  ],
-  overslept: [
-    { x: 96, y: 220, pauseMs: 1800, action: true },
-    { x: 123, y: 151, pauseMs: 650 },
-    { x: 64, y: 193, pauseMs: 500 },
-    { x: 116, y: 244, pauseMs: 550 },
-  ],
-  morningTea: [
-    { x: 68, y: 272, pauseMs: 6800, action: true },
-    { x: 91, y: 220, pauseMs: 650 },
-    { x: 126, y: 202, pauseMs: 900 },
-    { x: 82, y: 252, pauseMs: 650 },
-  ],
-  foundOldToy: [
-    { x: 98, y: 224, pauseMs: 3000, action: true },
-    { x: 93, y: 242, pauseMs: 1300 },
-    { x: 111, y: 194, pauseMs: 1100 },
-  ],
-  windowNap: [{ x: 72, y: 178, pauseMs: 5000 }],
-  wateringPlants: [
-    { x: 155, y: 111, pauseMs: 2700, action: true, actionFacing: "right" },
-    { x: 37, y: 205, pauseMs: 2700, action: true, actionVariant: 1, actionOffsetY: 14 },
-    { x: 143, y: 325, pauseMs: 2700, action: true, actionFacing: "right" },
-    { x: 104, y: 198, pauseMs: 650 },
-  ],
-  muddyReturn: [
-    { x: 138, y: 149, pauseMs: 3000, action: true },
-    { x: 106, y: 205, pauseMs: 1200 },
-    { x: 126, y: 174, pauseMs: 900 },
-  ],
-  simmeringDinner: [
-    { x: 125, y: 211, pauseMs: 900 },
-    { x: 133, y: 202, pauseMs: 3200, action: true },
-    { x: 112, y: 229, pauseMs: 1000 },
-  ],
-  foldingLaundry: [
-    { x: 40, y: 157, pauseMs: 4700, action: true },
-    { x: 65, y: 191, pauseMs: 700 },
-    { x: 93, y: 221, pauseMs: 650 },
-    { x: 70, y: 248, pauseMs: 800 },
-  ],
-  packingTomorrow: [
-    { x: 93, y: 241, pauseMs: 4800, action: true },
-    { x: 118, y: 250, pauseMs: 500 },
-    { x: 130, y: 222, pauseMs: 650 },
-    { x: 116, y: 186, pauseMs: 700 },
-    { x: 83, y: 166, pauseMs: 850 },
-    { x: 66, y: 190, pauseMs: 650 },
-    { x: 87, y: 219, pauseMs: 600 },
-  ],
-  littleNightSnack: [
-    { x: 132, y: 202, pauseMs: 5000, action: true },
-    { x: 126, y: 174, pauseMs: 600 },
-    { x: 105, y: 153, pauseMs: 750 },
-    { x: 70, y: 174, pauseMs: 850 },
-    { x: 91, y: 205, pauseMs: 600 },
-    { x: 117, y: 244, pauseMs: 800 },
-    { x: 137, y: 226, pauseMs: 550 },
-  ],
-  readingComics: [
-    { x: 63, y: 242, pauseMs: 4900, action: true },
-    { x: 92, y: 219, pauseMs: 700 },
-    { x: 116, y: 186, pauseMs: 700 },
-    { x: 87, y: 166, pauseMs: 800 },
-  ],
-  mimizouVisit: [{ x: 60, y: 140, pauseMs: 5000, action: true }],
 };
 
 const actionAssetNames: Partial<Record<SceneId, string>> = {
@@ -184,7 +94,11 @@ function createHotspot(
   return hotspot;
 }
 
-function createRoom(backgroundTexture: Texture, visit: VisitView, callbacks: RoomCallbacks): Container {
+function createLegacyRoom(
+  backgroundTexture: Texture,
+  presentation: LegacyRoomPresentation,
+  callbacks: RoomCallbacks,
+): Container {
   backgroundTexture.source.scaleMode = "nearest";
   const room = new Container();
   const floorExtension = new Graphics().rect(0, BACKGROUND_HEIGHT, WIDTH, HEIGHT - BACKGROUND_HEIGHT).fill(0x6d361d);
@@ -192,8 +106,9 @@ function createRoom(backgroundTexture: Texture, visit: VisitView, callbacks: Roo
   background.width = WIDTH;
   background.height = BACKGROUND_HEIGHT;
 
-  const tint = getRoomTint(visit);
-  const timeOverlay = new Graphics().rect(0, 0, WIDTH, HEIGHT).fill({ color: tint.color, alpha: tint.alpha });
+  const timeOverlay = new Graphics()
+    .rect(0, 0, WIDTH, HEIGHT)
+    .fill({ color: presentation.tint.color, alpha: presentation.tint.alpha });
   const hotspots = [
     createHotspot(19, 25, 63, 58, "窓", "窓の外にも、同じ時間がゆっくり流れている。", callbacks.onObservation),
     createHotspot(
@@ -228,6 +143,76 @@ function createRoom(backgroundTexture: Texture, visit: VisitView, callbacks: Roo
 
   room.addChild(floorExtension, background, timeOverlay, ...hotspots);
   return room;
+}
+
+function applyLighting(displayObject: Container | Graphics | Sprite, tint: RoomTint): void {
+  if (tint.alpha === 0) return;
+  const filter = new ColorMatrixFilter();
+  filter.matrix = getLightingColorMatrix(tint);
+  displayObject.filters = [filter];
+}
+
+function createLayeredBackground(baseTexture: Texture, tint: RoomTint): Container {
+  baseTexture.source.scaleMode = "nearest";
+  const background = new Container();
+  background.label = "timeNeutralBase";
+  const floorExtension = new Graphics().rect(0, BACKGROUND_HEIGHT, WIDTH, HEIGHT - BACKGROUND_HEIGHT).fill(0x6d361d);
+  const base = new Sprite(baseTexture);
+  base.width = WIDTH;
+  base.height = BACKGROUND_HEIGHT;
+  background.addChild(floorExtension, base);
+  applyLighting(background, tint);
+  return background;
+}
+
+function createWindowLayer(windowTexture: Texture, tint: RoomTint, callbacks: RoomCallbacks): Container {
+  windowTexture.source.scaleMode = "nearest";
+  const windowLayer = new Container();
+  windowLayer.label = "timeWindow";
+  const window = new Sprite(windowTexture);
+  window.width = WIDTH;
+  window.height = BACKGROUND_HEIGHT;
+  applyLighting(window, tint);
+  const windowMask = new Graphics().rect(22, 25, 56, 54).fill(0xffffff);
+  window.mask = windowMask;
+  window.eventMode = "static";
+  window.cursor = "pointer";
+  window.label = "窓";
+  const scaleX = windowTexture.width / WIDTH;
+  const scaleY = windowTexture.height / BACKGROUND_HEIGHT;
+  window.hitArea = new Rectangle(22 * scaleX, 25 * scaleY, 56 * scaleX, 54 * scaleY);
+  window.on("pointertap", () => callbacks.onObservation("窓の外にも、同じ時間がゆっくり流れている。"));
+  windowLayer.addChild(window, windowMask);
+  return windowLayer;
+}
+
+function createFurnitureSprites(
+  textures: ReadonlyMap<string, Texture>,
+  furniture: FurnitureLayout,
+  tint: RoomTint,
+  callbacks: RoomCallbacks,
+): readonly Sprite[] {
+  return FURNITURE_DEFINITIONS.map((definition, tieBreak) => {
+    const texture = textures.get(definition.id);
+    if (!texture) throw new Error(`${definition.id}の家具素材がありません`);
+    texture.source.scaleMode = "nearest";
+    const placed = furniture[definition.id];
+    const sprite = new Sprite(texture);
+    const scale = definition.displayHeight / texture.height;
+    sprite.anchor.set(0.5, 1);
+    sprite.scale.set(scale);
+    sprite.position.set(placed.anchor.x, placed.anchor.y);
+    sprite.roundPixels = true;
+    applyLighting(sprite, tint);
+    sprite.zIndex = getDepthZIndex(placed.footY, tieBreak);
+    sprite.label = definition.displayName;
+    sprite.eventMode = "static";
+    sprite.cursor = "pointer";
+    const hitArea = resolveFurnitureSpriteHitArea(definition, texture.height);
+    sprite.hitArea = new Rectangle(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
+    sprite.on("pointertap", () => callbacks.onObservation(definition.observation));
+    return sprite;
+  });
 }
 
 function createGridFrames(
@@ -277,9 +262,10 @@ function createWalker(
   sheet: Texture,
   actionSheet: Texture | undefined,
   visit: VisitView,
+  route: readonly ResolvedWaypoint[],
+  furniture: FurnitureLayout,
   callbacks: RoomCallbacks,
 ): Container {
-  const route = routes[visit.scene.id];
   const frames = createDirectionFrames(sheet);
   const character = new AnimatedSprite(frames.down);
   const baseFrame = frames.down.at(0);
@@ -323,6 +309,7 @@ function createWalker(
   actor.addChild(shadow, character);
   if (action) actor.addChild(action);
   actor.position.set(route[0]?.x ?? 98, route[0]?.y ?? 220);
+  actor.zIndex = getDepthZIndex(actor.y, 50);
   actor.eventMode = "dynamic";
   actor.hitArea = new Rectangle(-30, -64, 60, 66);
   actor.cursor = "pointer";
@@ -358,6 +345,7 @@ function createWalker(
       const frame = getMimizouVisitFrame(elapsed);
       showAction(!frame.reacting);
       actor.y = baseY - frame.reactionHop;
+      actor.zIndex = getDepthZIndex(actor.y, 50);
       if (!frame.reacting) return;
 
       character.textures = frames.up;
@@ -384,7 +372,9 @@ function createWalker(
     const step = WALK_SPEED * (ticker.deltaMS / 1000);
 
     if (distance <= step) {
+      if (!isMovementSegmentValid({ x: actor.x, y: actor.y }, target, furniture)) return;
       actor.position.set(target.x, target.y);
+      actor.zIndex = getDepthZIndex(actor.y, 50);
       pauseRemaining = target.pauseMs;
       targetIndex = (targetIndex + 1) % route.length;
       character.stop();
@@ -400,8 +390,13 @@ function createWalker(
       character.textures = frames[direction];
     }
     if (!character.playing) character.play();
-    actor.x += (dx / distance) * step;
-    actor.y += (dy / distance) * step;
+    const next = {
+      x: actor.x + (dx / distance) * step,
+      y: actor.y + (dy / distance) * step,
+    };
+    if (!isMovementSegmentValid({ x: actor.x, y: actor.y }, next, furniture)) return;
+    actor.position.set(next.x, next.y);
+    actor.zIndex = getDepthZIndex(actor.y, 50);
   });
 
   return actor;
@@ -410,17 +405,18 @@ function createWalker(
 function createSleeper(
   app: Application,
   texture: Texture,
-  visit: VisitView,
+  position: ResolvedWaypoint,
+  depthY: number,
   height: number,
   callbacks: RoomCallbacks,
 ): Sprite {
   texture.source.scaleMode = "nearest";
   const sleeper = new Sprite(texture);
-  const position = routes[visit.scene.id][0] ?? { x: 30, y: 154 };
   sleeper.anchor.set(0.5, 1);
   sleeper.scale.set(height / texture.height);
   sleeper.roundPixels = true;
   sleeper.position.set(position.x, position.y);
+  sleeper.zIndex = getDepthZIndex(depthY, 50);
   sleeper.eventMode = "dynamic";
   sleeper.cursor = "pointer";
   sleeper.on("pointertap", callbacks.onCharacterTap);
@@ -434,28 +430,31 @@ function createSleeper(
     sleeper.scale.x = baseScaleX * (1 + breath * 0.018);
     sleeper.scale.y = baseScaleY * (1 + breath * 0.045);
     sleeper.y = position.y + breath * 0.8;
+    sleeper.zIndex = getDepthZIndex(depthY, 50);
   });
   return sleeper;
 }
 
 function createSleeperBase(
   texture: Texture,
-  visit: VisitView,
+  position: ResolvedWaypoint,
+  depthY: number,
   presentation: NonNullable<ReturnType<typeof getRoomPresentation>["sleeperBase"]>,
 ): Sprite {
   texture.source.scaleMode = "nearest";
   const base = new Sprite(texture);
-  const position = routes[visit.scene.id][0] ?? { x: 30, y: 154 };
   base.anchor.set(0.5, 1);
   base.scale.set(presentation.height / texture.height);
   base.roundPixels = true;
   base.position.set(position.x, position.y);
+  base.zIndex = getDepthZIndex(depthY, 40);
   return base;
 }
 
 function createCompanion(
   texture: Texture,
   presentation: NonNullable<ReturnType<typeof getRoomPresentation>["companion"]>,
+  sceneDepthY: number,
   callbacks: RoomCallbacks,
 ): Sprite {
   texture.source.scaleMode = "nearest";
@@ -464,6 +463,7 @@ function createCompanion(
   companion.scale.set(presentation.height / texture.height);
   companion.roundPixels = true;
   companion.position.set(presentation.x, presentation.y);
+  companion.zIndex = getDepthZIndex(resolveGuestDepthY(presentation, sceneDepthY), 45);
   companion.eventMode = "dynamic";
   companion.cursor = "pointer";
   companion.on("pointertap", callbacks.onCharacterTap);
@@ -507,7 +507,16 @@ function createWindowForeground(): Graphics {
   return new Graphics().rect(49, 29, 2, 49).fill(0x4a3028).rect(22, 77, 56, 2).fill(0x65402d);
 }
 
-export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks: RoomCallbacks): Promise<Application> {
+export async function renderRoom(
+  host: HTMLElement,
+  visit: VisitView,
+  callbacks: RoomCallbacks,
+  layout: RoomLayout = DEFAULT_ROOM_LAYOUT,
+): Promise<Application> {
+  const layoutErrors = validateRoomLayout(layout);
+  if (layoutErrors.length > 0) {
+    throw new Error(`不正な家具配置は描画できません: ${layoutErrors.map(({ message }) => message).join("、")}`);
+  }
   const app = new Application();
   await app.init({
     width: WIDTH,
@@ -524,9 +533,13 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
 
   const actionAssetName = actionAssetNames[visit.scene.id];
   const presentation = getRoomPresentation(visit);
+  // legacy背景にはベッドや布団が焼き込まれているため、模様替え後も旧座標を使う。
+  const sceneLayout = resolveSceneRoomLayout(visit.scene.id, layout);
+  const route = resolveSceneRoute(visit.scene.id, sceneLayout.furniture);
+  const initialPosition = route[0] ?? { x: 30, y: 154, pauseMs: 5000 };
+  const initialDepthY = resolveSceneInitialDepthY(visit.scene.id, sceneLayout.furniture);
   const guestPresentation = presentation.visitor ?? presentation.companion;
-  const [backgroundTexture, characterTexture, actionTexture, guestTexture, sleeperBaseTexture] = await Promise.all([
-    Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.backgroundAssetName}`),
+  const [characterTexture, actionTexture, guestTexture, sleeperBaseTexture] = await Promise.all([
     Assets.load<Texture>(
       `${import.meta.env.BASE_URL}assets/${
         visit.scene.characterPose === "sleep" ? presentation.sleeperAssetName : "etokichi-walk-pixel-v2.webp"
@@ -540,10 +553,9 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
       ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.sleeperBase.assetName}`)
       : undefined,
   ]);
-  const room = createRoom(backgroundTexture, visit, callbacks);
   const companion =
     guestTexture && presentation.companion
-      ? createCompanion(guestTexture, presentation.companion, callbacks)
+      ? createCompanion(guestTexture, presentation.companion, initialDepthY, callbacks)
       : undefined;
   const visitor =
     guestTexture && presentation.visitor
@@ -552,18 +564,51 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
   const windowForeground = visitor ? createWindowForeground() : undefined;
   const sleeperBase =
     sleeperBaseTexture && presentation.sleeperBase
-      ? createSleeperBase(sleeperBaseTexture, visit, presentation.sleeperBase)
+      ? createSleeperBase(sleeperBaseTexture, initialPosition, initialDepthY, presentation.sleeperBase)
       : undefined;
   const character =
     visit.scene.characterPose === "sleep"
-      ? createSleeper(app, characterTexture, visit, presentation.sleeperHeight, callbacks)
-      : createWalker(app, characterTexture, actionTexture, visit, callbacks);
-  app.stage.addChild(room);
-  if (companion) app.stage.addChild(companion);
-  if (visitor) app.stage.addChild(visitor);
-  if (windowForeground) app.stage.addChild(windowForeground);
-  if (sleeperBase) app.stage.addChild(sleeperBase);
-  app.stage.addChild(character);
+      ? createSleeper(app, characterTexture, initialPosition, initialDepthY, presentation.sleeperHeight, callbacks)
+      : createWalker(app, characterTexture, actionTexture, visit, route, sceneLayout.furniture, callbacks);
+
+  if (presentation.kind === "legacy") {
+    const backgroundTexture = await Assets.load<Texture>(
+      `${import.meta.env.BASE_URL}assets/${presentation.backgroundAssetName}`,
+    );
+    const room = createLegacyRoom(backgroundTexture, presentation, callbacks);
+    app.stage.addChild(room);
+    if (companion) app.stage.addChild(companion);
+    if (visitor) app.stage.addChild(visitor);
+    if (windowForeground) app.stage.addChild(windowForeground);
+    if (sleeperBase) app.stage.addChild(sleeperBase);
+    app.stage.addChild(character);
+  } else {
+    const [baseTexture, windowTexture, ...furnitureTextures] = await Promise.all([
+      Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.baseAssetName}`),
+      Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.windowAssetName}`),
+      ...FURNITURE_DEFINITIONS.map(({ assetName }) =>
+        Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${assetName}`),
+      ),
+    ]);
+    const textureByFurnitureId = new Map(
+      FURNITURE_DEFINITIONS.map(({ id }, index) => [id, furnitureTextures[index] as Texture]),
+    );
+    const base = createLayeredBackground(baseTexture, presentation.tint);
+    const windowLayer = createWindowLayer(windowTexture, presentation.tint, callbacks);
+    const depthContainer = new Container();
+    depthContainer.label = "floorDepth";
+    depthContainer.sortableChildren = true;
+    depthContainer.addChild(
+      ...createFurnitureSprites(textureByFurnitureId, layout.furniture, presentation.tint, callbacks),
+    );
+    if (sleeperBase) depthContainer.addChild(sleeperBase);
+    if (companion) depthContainer.addChild(companion);
+    depthContainer.addChild(character);
+
+    app.stage.addChild(base, windowLayer);
+    if (visitor) app.stage.addChild(visitor);
+    app.stage.addChild(depthContainer, createWindowForeground());
+  }
   host.replaceChildren(app.canvas);
   return app;
 }

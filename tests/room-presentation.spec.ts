@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { getScene } from "../src/content/scenes.ts";
+import { getScene, SCENES } from "../src/content/scenes.ts";
 import type { SceneId, TimeBand, VisitView } from "../src/game/types.ts";
-import { getRoomPresentation, getRoomTint } from "../src/rendering/room-presentation.ts";
+import {
+  getLightingColorMatrix,
+  getRoomPresentation,
+  getRoomTint,
+  resolveGuestDepthY,
+} from "../src/rendering/room-presentation.ts";
+import { getDepthZIndex } from "../src/rendering/room-layout.ts";
 
 function kickedBlanketVisit(choiceId?: string): VisitView {
   const slotKey = "2026-08-31:deepNight";
@@ -88,8 +94,11 @@ function visitFor(sceneId: SceneId, mimizouPresent = false): VisitView {
 describe("room presentation", () => {
   it("shows the kicked blanket on the floor before interacting", () => {
     expect(getRoomPresentation(kickedBlanketVisit())).toMatchObject({
+      kind: "legacy",
       backgroundAssetName: "room-background-kicked-blanket-pixel.webp",
       sleeperAssetName: "etokichi-sleep-kicked-pixel.png",
+      tintPlacement: "beforeCharacters",
+      characterOrder: "companionVisitorForegroundBaseCharacter",
     });
   });
 
@@ -107,15 +116,18 @@ describe("room presentation", () => {
     });
   });
 
-  it("keeps the stronger deep-night tint for both kicked-blanket backgrounds", () => {
+  it("keeps the legacy tint for both kicked-blanket backgrounds and darkens the neutral layered base", () => {
     expect(getRoomTint(kickedBlanketVisit())).toEqual({ color: 0x101a3b, alpha: 0.56 });
     expect(getRoomTint(kickedBlanketVisit("cover"))).toEqual({ color: 0x101a3b, alpha: 0.56 });
-    expect(getRoomTint(visitFor("sleeping"))).toEqual({ color: 0x101a3b, alpha: 0.15 });
+    expect(getRoomTint(visitFor("sleeping"))).toEqual({ color: 0x101a3b, alpha: 0.65 });
   });
 
   it("shows Etokichi and Tatsuo together for their sleeping scene", () => {
     expect(getRoomPresentation(sleepingWithTatsuoVisit())).toEqual({
-      backgroundAssetName: "room-background-deep-night-pixel.webp",
+      kind: "layered",
+      baseAssetName: "room-base-daytime-pixel.webp",
+      windowAssetName: "room-background-deep-night-pixel.webp",
+      tint: { color: 0x101a3b, alpha: 0.65 },
       sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
       sleeperHeight: 28,
       companion: {
@@ -123,6 +135,7 @@ describe("room presentation", () => {
         height: 80,
         x: 61,
         y: 170,
+        depth: "scene",
       },
     });
   });
@@ -152,13 +165,36 @@ describe("room presentation", () => {
         height: 80,
         x: 76,
         y: 170,
+        depth: "scene",
       },
     });
   });
 
+  it("keeps a scene-bound companion behind the base character at the same furniture depth", () => {
+    const presentation = getRoomPresentation(sleepingWithTatsuoVisit());
+    expect(presentation.companion).toBeDefined();
+    if (!presentation.companion) throw new Error("sleeping Tatsuo is missing");
+    const companionDepthY = resolveGuestDepthY(presentation.companion, 165);
+    expect(getDepthZIndex(companionDepthY, 45)).toBeLessThan(getDepthZIndex(165, 50));
+  });
+
+  it("expresses lighting as source-over color blending instead of multiplicative tint", () => {
+    const matrix = getLightingColorMatrix({ color: 0x1d2a50, alpha: 0.52 });
+    expect(matrix).toHaveLength(20);
+    expect(matrix[0]).toBeCloseTo(0.48);
+    expect(matrix[4]).toBeCloseTo((0x1d / 255) * 0.52);
+    expect(matrix[6]).toBeCloseTo(0.48);
+    expect(matrix[9]).toBeCloseTo((0x2a / 255) * 0.52);
+    expect(matrix[12]).toBeCloseTo(0.48);
+    expect(matrix[14]).toBeCloseTo((0x50 / 255) * 0.52);
+    expect(matrix.slice(15)).toEqual([0, 0, 0, 1, 0]);
+  });
+
   it("shows Etokichi sprawled on a cushion during the window nap", () => {
     expect(getRoomPresentation(visitFor("windowNap"))).toMatchObject({
-      backgroundAssetName: "room-background-daytime-pixel.webp",
+      kind: "layered",
+      baseAssetName: "room-base-daytime-pixel.webp",
+      windowAssetName: "room-background-daytime-pixel.webp",
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
       sleeperHeight: 64,
       sleeperBase: {
@@ -186,8 +222,12 @@ describe("room presentation", () => {
     ["muddyReturn", "room-background-evening-pixel.webp"],
     ["packingTomorrow", "room-background-night-pixel.webp"],
     ["sleeping", "room-background-deep-night-pixel.webp"],
-  ] as const)("uses the time-specific background for %s", (sceneId, expectedAssetName) => {
-    expect(getRoomPresentation(visitFor(sceneId)).backgroundAssetName).toBe(expectedAssetName);
+  ] as const)("uses the time-specific window for %s", (sceneId, expectedAssetName) => {
+    const presentation = getRoomPresentation(visitFor(sceneId));
+    expect(presentation.kind).toBe("layered");
+    if (presentation.kind !== "layered") throw new Error(`${sceneId} unexpectedly uses legacy rendering`);
+    expect(presentation.windowAssetName).toBe(expectedAssetName);
+    expect(presentation.baseAssetName).toBe("room-base-daytime-pixel.webp");
   });
 
   it("shows Mimizou beside Etokichi for the unlocked stargazing variant", () => {
@@ -200,5 +240,26 @@ describe("room presentation", () => {
       },
     });
     expect(getRoomPresentation(visitFor("watchingStars", false)).companion).toBeUndefined();
+  });
+
+  it("uses layered rendering for every scene except kickedBlanket", () => {
+    for (const scene of SCENES) {
+      const visit = visitFor(scene.id);
+      visit.assignment.band = scene.band;
+      expect(getRoomPresentation(visit).kind, scene.id).toBe(scene.id === "kickedBlanket" ? "legacy" : "layered");
+    }
+  });
+
+  it.each([
+    ["almostAwake", { color: 0xffc578, alpha: 0.12 }],
+    ["tooMuchBreakfast", { color: 0xffdc9c, alpha: 0.05 }],
+    ["foundOldToy", { color: 0xfff1c6, alpha: 0 }],
+    ["muddyReturn", { color: 0xc75b45, alpha: 0.18 }],
+    ["packingTomorrow", { color: 0x1d2a50, alpha: 0.52 }],
+    ["sleeping", { color: 0x101a3b, alpha: 0.65 }],
+  ] as const)("selects the time tint for %s", (sceneId, tint) => {
+    const presentation = getRoomPresentation(visitFor(sceneId));
+    expect(presentation.kind).toBe("layered");
+    expect(presentation.tint).toEqual(tint);
   });
 });
