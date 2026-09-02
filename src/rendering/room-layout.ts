@@ -10,6 +10,13 @@ import {
   resolveFurnitureActionPoint,
   resolveFurnitureLayout,
 } from "./room-furniture.ts";
+import {
+  DEFAULT_FIXTURE_LAYOUT,
+  FIXTURE_DEFINITIONS,
+  type FixtureId,
+  type FixtureLayout,
+  resolveFixtureActionPoint,
+} from "./room-fixtures.ts";
 
 export const ROOM_BOUNDS: Aabb = { x: 0, y: 80, width: 195, height: 267 };
 export const CHARACTER_FOOT_RADIUS = 5;
@@ -28,7 +35,13 @@ export interface FurnitureDestination {
   actionPointId: string;
 }
 
-export type RouteDestination = PointDestination | FurnitureDestination;
+export interface FixtureDestination {
+  type: "fixtureAction";
+  fixtureId: FixtureId;
+  actionPointId: string;
+}
+
+export type RouteDestination = PointDestination | FurnitureDestination | FixtureDestination;
 
 export interface RouteWaypoint {
   destination: RouteDestination;
@@ -37,6 +50,8 @@ export interface RouteWaypoint {
   actionFacing?: "left" | "right";
   actionVariant?: number;
   actionOffsetY?: number;
+  actionScale?: number;
+  depthOffset?: number;
 }
 
 export interface SceneRoute {
@@ -50,12 +65,19 @@ export interface ResolvedWaypoint extends Point {
   actionFacing?: "left" | "right";
   actionVariant?: number;
   actionOffsetY?: number;
+  actionScale?: number;
+  depthOffset?: number;
 }
 
 const point = (x: number, y: number): PointDestination => ({ type: "point", x, y });
 const furnitureAction = (furnitureId: FurnitureId, actionPointId: string): FurnitureDestination => ({
   type: "furnitureAction",
   furnitureId,
+  actionPointId,
+});
+const fixtureAction = (fixtureId: FixtureId, actionPointId: string): FixtureDestination => ({
+  type: "fixtureAction",
+  fixtureId,
   actionPointId,
 });
 
@@ -75,10 +97,14 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
   watchingStars: {
     movement: "walking",
     waypoints: [
-      { destination: point(54, 128), pauseMs: 4800, action: true },
-      { destination: point(83, 164), pauseMs: 700 },
+      { destination: point(42, 128), pauseMs: 4800, action: true, depthOffset: 40 },
+      { destination: point(44, 145), pauseMs: 0, depthOffset: 40 },
+      { destination: point(44, 174), pauseMs: 0, depthOffset: 40 },
+      { destination: point(83, 184), pauseMs: 700 },
       { destination: point(68, 211), pauseMs: 650 },
       { destination: point(103, 238), pauseMs: 750 },
+      { destination: point(44, 174), pauseMs: 0, depthOffset: 40 },
+      { destination: point(44, 145), pauseMs: 0, depthOffset: 40 },
     ],
   },
   almostAwake: {
@@ -88,16 +114,20 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
   morningStretch: {
     movement: "walking",
     waypoints: [
-      { destination: point(58, 137), pauseMs: 4600, action: true },
+      { destination: point(42, 128), pauseMs: 4600, action: true, depthOffset: 40 },
+      { destination: point(44, 145), pauseMs: 0, depthOffset: 40 },
+      { destination: point(44, 174), pauseMs: 0, depthOffset: 40 },
       { destination: point(88, 184), pauseMs: 700 },
       { destination: point(102, 226), pauseMs: 700 },
+      { destination: point(44, 174), pauseMs: 0, depthOffset: 40 },
+      { destination: point(44, 145), pauseMs: 0, depthOffset: 40 },
     ],
   },
   planningDay: {
     movement: "walking",
     waypoints: [
       { destination: point(99, 292), pauseMs: 5200, action: true },
-      { destination: point(85, 223), pauseMs: 750 },
+      { destination: point(112, 223), pauseMs: 750 },
       { destination: point(111, 190), pauseMs: 700 },
     ],
   },
@@ -108,16 +138,20 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
   mimizouFarewell: {
     movement: "walking",
     waypoints: [
-      { destination: point(58, 137), pauseMs: 5200, action: true },
+      { destination: point(42, 128), pauseMs: 5200, action: true, depthOffset: 40 },
+      { destination: point(44, 145), pauseMs: 0, depthOffset: 40 },
+      { destination: point(44, 174), pauseMs: 0, depthOffset: 40 },
       { destination: point(88, 184), pauseMs: 800 },
       { destination: point(107, 224), pauseMs: 700 },
+      { destination: point(44, 174), pauseMs: 0, depthOffset: 40 },
+      { destination: point(44, 145), pauseMs: 0, depthOffset: 40 },
     ],
   },
   tooMuchBreakfast: {
     movement: "walking",
     waypoints: [
       { destination: point(103, 193), pauseMs: 1100 },
-      { destination: furnitureAction("fridge", "breakfast"), pauseMs: 3000, action: true },
+      { destination: fixtureAction("kitchenUnit", "fridgeFront"), pauseMs: 3000, action: true },
       { destination: point(98, 225), pauseMs: 1500 },
     ],
   },
@@ -134,16 +168,17 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     movement: "walking",
     waypoints: [
       { destination: furnitureAction("diningSet", "morningTea"), pauseMs: 6800, action: true },
-      { destination: point(91, 220), pauseMs: 650 },
-      { destination: point(126, 202), pauseMs: 900 },
-      { destination: point(82, 252), pauseMs: 650 },
+      { destination: point(105, 273), pauseMs: 0 },
+      { destination: point(105, 220), pauseMs: 650 },
+      { destination: point(105, 215), pauseMs: 900 },
+      { destination: point(105, 252), pauseMs: 650 },
     ],
   },
   foundOldToy: {
     movement: "walking",
     waypoints: [
-      { destination: point(98, 224), pauseMs: 3000, action: true },
-      { destination: point(93, 242), pauseMs: 1300 },
+      { destination: point(110, 224), pauseMs: 3000, action: true },
+      { destination: point(110, 260), pauseMs: 1300 },
       { destination: point(111, 194), pauseMs: 1100 },
     ],
   },
@@ -155,18 +190,15 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     movement: "walking",
     waypoints: [
       {
-        destination: furnitureAction("sideShelf", "watering"),
-        pauseMs: 2700,
-        action: true,
-        actionFacing: "right",
-      },
-      {
         destination: furnitureAction("diningSet", "watering"),
         pauseMs: 2700,
         action: true,
         actionVariant: 1,
         actionOffsetY: 14,
+        actionScale: 1.18,
       },
+      { destination: point(105, 235), pauseMs: 0, depthOffset: 40 },
+      { destination: point(105, 279), pauseMs: 0, depthOffset: 40 },
       {
         destination: furnitureAction("floorPlant", "watering"),
         pauseMs: 2700,
@@ -185,38 +217,29 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     ],
   },
   simmeringDinner: {
-    movement: "walking",
+    movement: "nonWalking",
     waypoints: [
-      { destination: point(125, 211), pauseMs: 900 },
-      { destination: furnitureAction("fridge", "simmering"), pauseMs: 3200, action: true },
-      { destination: point(112, 229), pauseMs: 1000 },
+      {
+        destination: fixtureAction("kitchenUnit", "stoveStool"),
+        pauseMs: 5000,
+        action: true,
+        depthOffset: 33,
+      },
     ],
   },
   foldingLaundry: {
-    movement: "walking",
-    waypoints: [
-      { destination: point(40, 157), pauseMs: 4700, action: true },
-      { destination: point(65, 191), pauseMs: 700 },
-      { destination: point(93, 221), pauseMs: 650 },
-      { destination: point(70, 248), pauseMs: 800 },
-    ],
+    movement: "nonWalking",
+    waypoints: [{ destination: point(98, 176), pauseMs: 5000, action: true }],
   },
   packingTomorrow: {
-    movement: "walking",
-    waypoints: [
-      { destination: point(93, 241), pauseMs: 4800, action: true },
-      { destination: point(118, 250), pauseMs: 500 },
-      { destination: point(130, 222), pauseMs: 650 },
-      { destination: point(116, 186), pauseMs: 700 },
-      { destination: point(83, 166), pauseMs: 850 },
-      { destination: point(66, 190), pauseMs: 650 },
-      { destination: point(87, 219), pauseMs: 600 },
-    ],
+    movement: "nonWalking",
+    waypoints: [{ destination: furnitureAction("bookshelf", "packing"), pauseMs: 5000, action: true }],
   },
   littleNightSnack: {
     movement: "walking",
     waypoints: [
-      { destination: furnitureAction("fridge", "nightSnack"), pauseMs: 5000, action: true },
+      { destination: fixtureAction("kitchenUnit", "fridgeFront"), pauseMs: 5000, action: true },
+      { destination: point(105, 183), pauseMs: 0 },
       { destination: point(126, 174), pauseMs: 600 },
       { destination: point(105, 153), pauseMs: 750 },
       { destination: point(70, 174), pauseMs: 850 },
@@ -226,13 +249,8 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     ],
   },
   readingComics: {
-    movement: "walking",
-    waypoints: [
-      { destination: furnitureAction("diningSet", "reading"), pauseMs: 4900, action: true },
-      { destination: point(92, 219), pauseMs: 700 },
-      { destination: point(116, 186), pauseMs: 700 },
-      { destination: point(87, 166), pauseMs: 800 },
-    ],
+    movement: "nonWalking",
+    waypoints: [{ destination: furnitureAction("sofa", "sit"), pauseMs: 5000, action: true, depthOffset: 30 }],
   },
   mimizouVisit: {
     movement: "nonWalking",
@@ -245,12 +263,14 @@ export const WALKABLE_BOUNDS = insetAabb(ROOM_BOUNDS, CHARACTER_FOOT_RADIUS);
 export interface RoomLayout {
   anchors: FurnitureAnchors;
   furniture: FurnitureLayout;
+  fixtures: FixtureLayout;
 }
 
 export interface LayoutValidationError {
-  code: "invalidDefinition" | "outsideRoom" | "furnitureOverlap" | "invalidRoute";
+  code: "invalidDefinition" | "outsideRoom" | "furnitureOverlap" | "fixtureOverlap" | "invalidRoute";
   message: string;
   furnitureId?: FurnitureId;
+  fixtureId?: FixtureId;
   sceneId?: SceneId;
 }
 
@@ -323,42 +343,53 @@ export function segmentIntersectsAabb(from: Point, to: Point, aabb: Aabb): boole
   return clip(from.x, dx, aabb.x, aabb.x + aabb.width) && clip(from.y, dy, aabb.y, aabb.y + aabb.height);
 }
 
-export function resolveSceneRoute(sceneId: SceneId, layout: FurnitureLayout): readonly ResolvedWaypoint[] {
+export function resolveSceneRoute(sceneId: SceneId, layout: RoomLayout): readonly ResolvedWaypoint[] {
   return SCENE_ROUTES[sceneId].waypoints.map(({ destination, ...waypoint }) => {
     const resolved =
       destination.type === "point"
         ? destination
-        : resolveFurnitureActionPoint(layout, destination.furnitureId, destination.actionPointId);
+        : destination.type === "furnitureAction"
+          ? resolveFurnitureActionPoint(layout.furniture, destination.furnitureId, destination.actionPointId)
+          : resolveFixtureActionPoint(layout.fixtures, destination.fixtureId, destination.actionPointId);
     return { ...waypoint, x: resolved.x, y: resolved.y };
   });
 }
 
-export function resolveSceneInitialDepthY(sceneId: SceneId, layout: FurnitureLayout): number {
+export function resolveSceneInitialDepthY(sceneId: SceneId, layout: RoomLayout): number {
   const firstDestination = SCENE_ROUTES[sceneId].waypoints[0]?.destination;
   if (!firstDestination) return 154;
   // 家具上で静止するキャラクターは、行動地点ではなく家具の足元を基準に重ねる。
   // これによりベッドなどのSprite内で、キャラクターが家具の背面へ隠れない。
-  if (firstDestination.type === "furnitureAction") return layout[firstDestination.furnitureId].footY;
+  if (firstDestination.type === "furnitureAction") return layout.furniture[firstDestination.furnitureId].footY;
+  if (firstDestination.type === "fixtureAction") {
+    return resolveFixtureActionPoint(layout.fixtures, firstDestination.fixtureId, firstDestination.actionPointId).y;
+  }
   return firstDestination.y;
 }
 
-export function isMovementSegmentValid(from: Point, to: Point, furniture: FurnitureLayout): boolean {
+export function isMovementSegmentValid(from: Point, to: Point, layout: RoomLayout): boolean {
   if (!containsPoint(WALKABLE_BOUNDS, from) || !containsPoint(WALKABLE_BOUNDS, to)) return false;
-  return FURNITURE_DEFINITIONS.every(
-    ({ id }) => !segmentIntersectsAabb(from, to, expandAabb(furniture[id].occupancy, CHARACTER_FOOT_RADIUS)),
+  const avoidsFurniture = FURNITURE_DEFINITIONS.every(
+    ({ id }) => !segmentIntersectsAabb(from, to, expandAabb(layout.furniture[id].occupancy, CHARACTER_FOOT_RADIUS)),
+  );
+  return (
+    avoidsFurniture &&
+    FIXTURE_DEFINITIONS.every(
+      ({ id }) => !segmentIntersectsAabb(from, to, expandAabb(layout.fixtures[id].occupancy, CHARACTER_FOOT_RADIUS)),
+    )
   );
 }
 
-export function validateSceneRoute(sceneId: SceneId, furniture: FurnitureLayout): readonly LayoutValidationError[] {
+export function validateSceneRoute(sceneId: SceneId, layout: RoomLayout): readonly LayoutValidationError[] {
   const routeDefinition = SCENE_ROUTES[sceneId];
   if (routeDefinition.movement === "nonWalking") return [];
-  const route = resolveSceneRoute(sceneId, furniture);
+  const route = resolveSceneRoute(sceneId, layout);
   const errors: LayoutValidationError[] = [];
 
   for (let index = 0; index < route.length; index += 1) {
     const from = route[index];
     const to = route[(index + 1) % route.length];
-    if (!from || !to || isMovementSegmentValid(from, to, furniture)) continue;
+    if (!from || !to || isMovementSegmentValid(from, to, layout)) continue;
     errors.push({
       code: "invalidRoute",
       sceneId,
@@ -416,14 +447,39 @@ export function validateRoomLayout(layout: RoomLayout): readonly LayoutValidatio
     }
   }
 
+  for (const definition of FIXTURE_DEFINITIONS) {
+    const occupancy = layout.fixtures[definition.id].occupancy;
+    if (
+      occupancy.x < ROOM_BOUNDS.x ||
+      occupancy.y < ROOM_BOUNDS.y ||
+      occupancy.x + occupancy.width > ROOM_BOUNDS.x + ROOM_BOUNDS.width ||
+      occupancy.y + occupancy.height > ROOM_BOUNDS.y + ROOM_BOUNDS.height
+    ) {
+      errors.push({
+        code: "outsideRoom",
+        fixtureId: definition.id,
+        message: `${definition.id}の占有領域が部屋の外へ出ています`,
+      });
+    }
+    for (const furniture of FURNITURE_DEFINITIONS) {
+      if (!aabbsCollide(occupancy, layout.furniture[furniture.id].occupancy)) continue;
+      errors.push({
+        code: "fixtureOverlap",
+        furnitureId: furniture.id,
+        fixtureId: definition.id,
+        message: `${definition.id}と${furniture.id}の占有領域が重なっています`,
+      });
+    }
+  }
+
   for (const sceneId of Object.keys(SCENE_ROUTES) as SceneId[]) {
-    errors.push(...validateSceneRoute(sceneId, layout.furniture));
+    errors.push(...validateSceneRoute(sceneId, layout));
   }
   return errors;
 }
 
 export function tryCreateRoomLayout(anchors: FurnitureAnchors): RoomLayoutAdoption {
-  const layout = { anchors, furniture: resolveFurnitureLayout(anchors) };
+  const layout = { anchors, furniture: resolveFurnitureLayout(anchors), fixtures: DEFAULT_FIXTURE_LAYOUT };
   const errors = validateRoomLayout(layout);
   return errors.length === 0 ? { accepted: true, layout } : { accepted: false, errors };
 }
@@ -442,7 +498,3 @@ if (!defaultLayoutResult.accepted) {
 }
 
 export const DEFAULT_ROOM_LAYOUT = defaultLayoutResult.layout;
-
-export function resolveSceneRoomLayout(sceneId: SceneId, requestedLayout: RoomLayout): RoomLayout {
-  return sceneId === "kickedBlanket" ? DEFAULT_ROOM_LAYOUT : requestedLayout;
-}

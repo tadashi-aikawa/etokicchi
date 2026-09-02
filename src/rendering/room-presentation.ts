@@ -1,5 +1,8 @@
 import type { ColorMatrix } from "pixi.js";
-import type { TimeBand, VisitView } from "../game/types.ts";
+import type { SceneId, TimeBand, VisitView } from "../game/types.ts";
+import type { FurnitureId, Point } from "./room-furniture.ts";
+import type { FixtureId } from "./room-fixtures.ts";
+import type { RoomDepthDecorationId, RoomDepthDecorationOverride } from "./room-decor.ts";
 
 const TIME_WINDOW_ASSET_NAMES: Record<TimeBand, string> = {
   earlyMorning: "room-background-early-morning-pixel.webp",
@@ -23,6 +26,33 @@ export interface GuestPresentation {
   depth?: "scene" | "position";
 }
 
+interface AttachedScenePropCommon {
+  assetName: string;
+  height: number;
+  offset: Point;
+  depthOffset?: number;
+}
+
+export interface FurnitureAttachedSceneProp extends AttachedScenePropCommon {
+  type: "furniture";
+  furnitureId: FurnitureId;
+}
+
+export interface FixtureAttachedSceneProp extends AttachedScenePropCommon {
+  type: "fixture";
+  fixtureId: FixtureId;
+}
+
+export type AttachedSceneProp = FurnitureAttachedSceneProp | FixtureAttachedSceneProp;
+
+export interface CharacterBubblePresentation {
+  kind: "speech" | "thought";
+  text: string;
+  offset: Point;
+  width: number;
+  height: number;
+}
+
 interface RoomPresentationCommon {
   sleeperAssetName: string;
   sleeperHeight: number;
@@ -32,24 +62,22 @@ interface RoomPresentationCommon {
   };
   companion?: GuestPresentation;
   visitor?: GuestPresentation;
+  furnitureAssetNames?: Partial<Record<FurnitureId, string>>;
+  hiddenFurnitureIds?: readonly FurnitureId[];
+  depthDecorationOverrides?: Partial<Record<RoomDepthDecorationId, RoomDepthDecorationOverride>>;
+  sceneProps?: readonly AttachedSceneProp[];
+  hideCharacterShadow?: boolean;
+  characterBubble?: CharacterBubblePresentation;
 }
 
 export interface LayeredRoomPresentation extends RoomPresentationCommon {
   kind: "layered";
-  baseAssetName: "room-base-daytime-pixel.webp";
+  baseAssetName: "room-base-empty-daytime-pixel.webp";
   windowAssetName: string;
   tint: RoomTint;
 }
 
-export interface LegacyRoomPresentation extends RoomPresentationCommon {
-  kind: "legacy";
-  backgroundAssetName: string;
-  tint: RoomTint;
-  tintPlacement: "beforeCharacters";
-  characterOrder: "companionVisitorForegroundBaseCharacter";
-}
-
-export type RoomPresentation = LayeredRoomPresentation | LegacyRoomPresentation;
+export type RoomPresentation = LayeredRoomPresentation;
 
 export function resolveGuestDepthY(guest: GuestPresentation, sceneDepthY: number): number {
   return guest.depth === "scene" ? sceneDepthY : guest.y;
@@ -92,33 +120,57 @@ const TIME_TINTS: Record<TimeBand, RoomTint> = {
   deepNight: { color: 0x101a3b, alpha: 0.65 },
 };
 
+const AWAKE_NIGHT_TINTS: Partial<Record<TimeBand, RoomTint>> = {
+  night: { color: 0x1d2a50, alpha: 0.42 },
+  deepNight: { color: 0x101a3b, alpha: 0.52 },
+};
+
+const BED_SIDE_ACTION_SCENES = new Set<SceneId>(["watchingStars", "morningStretch", "mimizouFarewell"]);
+
 export function getRoomTint(visit: VisitView): RoomTint {
-  if (visit.scene.id === "kickedBlanket") return { color: 0x101a3b, alpha: 0.56 };
+  if (visit.scene.characterPose !== "sleep") {
+    const awakeTint = AWAKE_NIGHT_TINTS[visit.assignment.band];
+    if (awakeTint) return awakeTint;
+  }
   return TIME_TINTS[visit.assignment.band];
 }
 
 function layeredPresentation(visit: VisitView, character: RoomPresentationCommon): LayeredRoomPresentation {
+  const furnitureAssetNames = BED_SIDE_ACTION_SCENES.has(visit.scene.id)
+    ? { bed: "furniture-bed-bare-pixel.webp", ...character.furnitureAssetNames }
+    : character.furnitureAssetNames;
   return {
     kind: "layered",
-    baseAssetName: "room-base-daytime-pixel.webp",
+    baseAssetName: "room-base-empty-daytime-pixel.webp",
     windowAssetName: TIME_WINDOW_ASSET_NAMES[visit.assignment.band],
     tint: getRoomTint(visit),
     ...character,
+    furnitureAssetNames,
   };
 }
 
 export function getRoomPresentation(visit: VisitView): RoomPresentation {
   if (visit.scene.id === "kickedBlanket") {
     const covered = visit.interaction?.choiceId === "cover";
-    return {
-      kind: "legacy",
-      backgroundAssetName: covered ? "room-background-covered-pixel.webp" : "room-background-kicked-blanket-pixel.webp",
-      tint: getRoomTint(visit),
-      tintPlacement: "beforeCharacters",
-      characterOrder: "companionVisitorForegroundBaseCharacter",
+    return layeredPresentation(visit, {
       sleeperAssetName: covered ? "etokichi-sleep-covered-pixel.png" : "etokichi-sleep-kicked-pixel.png",
       sleeperHeight: 39,
-    };
+      furnitureAssetNames: {
+        bed: "furniture-bed-bare-pixel.webp",
+      },
+      sceneProps: covered
+        ? undefined
+        : [
+            {
+              type: "furniture",
+              assetName: "scene-blanket-floor-pixel.webp",
+              height: 30,
+              furnitureId: "bed",
+              offset: { x: 10, y: 27 },
+              depthOffset: 20,
+            },
+          ],
+    });
   }
 
   if (visit.scene.id === "sleeping" || visit.scene.id === "almostAwake") {
@@ -190,6 +242,58 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         x: 84,
         y: 128,
       },
+    });
+  }
+
+  if (visit.scene.id === "readingComics") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "furniture",
+          furnitureId: "bed",
+          offset: { x: -3, y: -18 },
+          width: 54,
+          height: 43,
+          depthOffset: 1,
+          observation: "ふさふさのメインクーンが、ベッドの上で満足そうに丸くなっている。",
+        },
+      },
+    });
+  }
+
+  if (visit.scene.id === "simmeringDinner") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      hideCharacterShadow: true,
+      hiddenFurnitureIds: ["roundStool"],
+      characterBubble: {
+        kind: "thought",
+        text: "♪",
+        offset: { x: -19, y: -69 },
+        width: 28,
+        height: 22,
+      },
+      sceneProps: [
+        {
+          type: "fixture",
+          assetName: "scene-simmering-pot-pixel.webp",
+          height: 24,
+          fixtureId: "kitchenUnit",
+          offset: { x: -18, y: -54 },
+          depthOffset: -10,
+        },
+        {
+          type: "fixture",
+          assetName: "furniture-round-stool-pixel.webp",
+          height: 34,
+          fixtureId: "kitchenUnit",
+          offset: { x: -44, y: 1 },
+          depthOffset: 0,
+        },
+      ],
     });
   }
 

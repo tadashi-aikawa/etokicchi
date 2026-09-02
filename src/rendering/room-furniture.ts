@@ -10,7 +10,7 @@ export interface Aabb {
   height: number;
 }
 
-export type FurnitureId = "bed" | "bookshelf" | "diningSet" | "floorPlant" | "fridge" | "lowCabinet" | "sideShelf";
+export type FurnitureId = "bed" | "bookshelf" | "diningSet" | "roundStool" | "floorPlant" | "sofa" | "bedsideTable";
 
 export interface FurnitureDefinition {
   id: FurnitureId;
@@ -19,6 +19,7 @@ export interface FurnitureDefinition {
   observation: string;
   anchor: Point;
   displayHeight: number;
+  displayWidth?: number;
   footY: number;
   occupancy: Aabb;
   clickArea: Aabb;
@@ -44,6 +45,7 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     observation: "枕は少しへこんでいて、毎晩ここで眠っていることが分かる。",
     anchor: { x: 28, y: 165 },
     displayHeight: 80,
+    displayWidth: 54,
     footY: 0,
     occupancy: { x: -25, y: -21, width: 31, height: 21 },
     clickArea: { x: -27, y: -80, width: 54, height: 80 },
@@ -63,22 +65,37 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     footY: 0,
     occupancy: { x: -16, y: -7, width: 32, height: 7 },
     clickArea: { x: -24, y: -67, width: 48, height: 67 },
-    actionPoints: {},
+    actionPoints: {
+      packing: { x: 10, y: 34 },
+    },
   },
   {
     id: "diningSet",
-    assetName: "furniture-dining-set-pixel.webp",
+    assetName: "furniture-dining-table-chair-pixel.webp",
     displayName: "食卓",
     observation: "食卓には、今日使ったものがそのまま残っている。",
-    anchor: { x: 46, y: 264 },
-    displayHeight: 65,
+    anchor: { x: 52, y: 264 },
+    displayHeight: 74,
     footY: 0,
-    occupancy: { x: -29, y: -15, width: 45, height: 15 },
-    clickArea: { x: -34, y: -65, width: 68, height: 65 },
+    occupancy: { x: -32, y: -17, width: 50, height: 17 },
+    clickArea: { x: -39, y: -74, width: 78, height: 74 },
     actionPoints: {
-      morningTea: { x: 22, y: 8 },
-      reading: { x: 17, y: -22 },
-      watering: { x: -9, y: -59 },
+      morningTea: { x: 26, y: 9 },
+      watering: { x: -12, y: -66 },
+    },
+  },
+  {
+    id: "roundStool",
+    assetName: "furniture-round-stool-pixel.webp",
+    displayName: "丸椅子",
+    observation: "軽い丸椅子は、必要な場所へすぐ運べるようにしてある。",
+    anchor: { x: 85, y: 249 },
+    displayHeight: 22,
+    footY: -10,
+    occupancy: { x: -9, y: -5, width: 18, height: 5 },
+    clickArea: { x: -10, y: -22, width: 20, height: 22 },
+    actionPoints: {
+      sit: { x: 0, y: -9 },
     },
   },
   {
@@ -86,56 +103,41 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     assetName: "furniture-floor-plant-pixel.webp",
     displayName: "床の鉢植え",
     observation: "大きな葉が、窓から入る光のほうへゆっくり伸びている。",
-    anchor: { x: 163, y: 320 },
-    displayHeight: 50,
+    anchor: { x: 160, y: 342 },
+    displayHeight: 66,
     footY: 0,
-    occupancy: { x: -10, y: -8, width: 20, height: 8 },
-    clickArea: { x: -24, y: -50, width: 48, height: 50 },
+    occupancy: { x: -13, y: -10, width: 26, height: 10 },
+    clickArea: { x: -31, y: -66, width: 62, height: 66 },
     actionPoints: {
-      watering: { x: -20, y: 5 },
+      watering: { x: -24, y: -4 },
     },
   },
   {
-    id: "fridge",
-    assetName: "furniture-fridge-pixel.webp",
-    displayName: "冷蔵庫",
-    observation: "冷蔵庫には、エトキチが選んだ小さな食材がきれいに並んでいる。",
-    anchor: { x: 159, y: 188 },
-    displayHeight: 61,
+    id: "sofa",
+    assetName: "furniture-sofa-right-pixel.webp",
+    displayName: "右向きのソファー",
+    observation: "ソファーの座面には、メインクーンが丸くなっていた跡が残っている。",
+    anchor: { x: 24, y: 329 },
+    displayHeight: 62,
+    displayWidth: 40,
     footY: 0,
-    occupancy: { x: -12, y: -7, width: 24, height: 7 },
-    clickArea: { x: -19, y: -61, width: 38, height: 61 },
+    occupancy: { x: -12, y: -8, width: 24, height: 8 },
+    clickArea: { x: -20, y: -62, width: 40, height: 62 },
     actionPoints: {
-      breakfast: { x: -27, y: 2 },
-      simmering: { x: -26, y: 14 },
-      nightSnack: { x: -27, y: 14 },
+      sit: { x: 7, y: -22 },
     },
   },
   {
-    id: "lowCabinet",
-    assetName: "furniture-low-cabinet-pixel.webp",
-    displayName: "低い棚",
-    observation: "低い棚の上には、小さな鉢と読みかけの本が置かれている。",
-    anchor: { x: 14, y: 329 },
-    displayHeight: 55,
+    id: "bedsideTable",
+    assetName: "furniture-bedside-table-pixel.webp",
+    displayName: "ベッド脇の照明台",
+    observation: "照明台の柔らかな明かりが、眠る前の部屋を落ち着かせてくれる。",
+    anchor: { x: 61, y: 125 },
+    displayHeight: 42,
     footY: 0,
-    occupancy: { x: -11, y: -7, width: 22, height: 7 },
-    clickArea: { x: -16, y: -55, width: 32, height: 55 },
+    occupancy: { x: -8, y: -5, width: 16, height: 5 },
+    clickArea: { x: -13, y: -42, width: 26, height: 42 },
     actionPoints: {},
-  },
-  {
-    id: "sideShelf",
-    assetName: "furniture-side-shelf-pixel.webp",
-    displayName: "台所の棚",
-    observation: "台所の棚には、エトキチが選んだ小さな食器が並んでいる。",
-    anchor: { x: 176, y: 134 },
-    displayHeight: 67,
-    footY: 0,
-    occupancy: { x: -9, y: -6, width: 18, height: 6 },
-    clickArea: { x: -18, y: -67, width: 36, height: 67 },
-    actionPoints: {
-      watering: { x: -21, y: -23 },
-    },
   },
 ] as const;
 

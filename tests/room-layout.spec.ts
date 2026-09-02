@@ -15,7 +15,6 @@ import {
   getDepthZIndex,
   isMovementSegmentValid,
   resolveSceneInitialDepthY,
-  resolveSceneRoomLayout,
   resolveSceneRoute,
   SCENE_ROUTES,
   segmentIntersectsAabb,
@@ -27,13 +26,22 @@ import {
 } from "../src/rendering/room-layout.ts";
 
 describe("furniture definitions", () => {
-  it("centralizes seven stable, valid furniture definitions", () => {
+  it("centralizes seven stable, valid movable furniture definitions", () => {
     expect(FURNITURE_DEFINITIONS).toHaveLength(7);
-    expect(new Set(FURNITURE_DEFINITIONS.map(({ id }) => id)).size).toBe(7);
+    expect(FURNITURE_DEFINITIONS.map(({ id }) => id)).toEqual([
+      "bed",
+      "bookshelf",
+      "diningSet",
+      "roundStool",
+      "floorPlant",
+      "sofa",
+      "bedsideTable",
+    ]);
     expect(new Set(FURNITURE_DEFINITIONS.map(({ assetName }) => assetName)).size).toBe(7);
     for (const definition of FURNITURE_DEFINITIONS) {
       expect(definition.assetName).toMatch(/^furniture-.+-pixel\.webp$/);
       expect(definition.displayHeight).toBeGreaterThan(0);
+      if (definition.displayWidth) expect(definition.displayWidth).toBeGreaterThan(0);
       expect(definition.occupancy.width).toBeGreaterThan(0);
       expect(definition.occupancy.height).toBeGreaterThan(0);
       expect(definition.clickArea.width).toBeGreaterThan(0);
@@ -70,7 +78,35 @@ describe("furniture definitions", () => {
 
   it("converts click regions to the Sprite local coordinates around its bottom-center anchor", () => {
     const bed = getFurnitureDefinition("bed");
+    expect(bed).toMatchObject({ displayWidth: 54, displayHeight: 80 });
     expect(resolveFurnitureSpriteHitArea(bed, 160)).toEqual({ x: -54, y: -160, width: 108, height: 160 });
+  });
+
+  it("uses the hotel-style bedside table", () => {
+    expect(getFurnitureDefinition("bedsideTable")).toMatchObject({
+      assetName: "furniture-bedside-table-pixel.webp",
+      displayName: "ベッド脇の照明台",
+    });
+  });
+
+  it("uses a right-facing sofa along the left wall", () => {
+    expect(getFurnitureDefinition("sofa")).toMatchObject({
+      assetName: "furniture-sofa-right-pixel.webp",
+      displayName: "右向きのソファー",
+      displayWidth: 40,
+      displayHeight: 62,
+      actionPoints: { sit: { x: 7, y: -22 } },
+    });
+  });
+
+  it("separates the backless stool from the dining table and front chair", () => {
+    expect(getFurnitureDefinition("diningSet").assetName).toBe("furniture-dining-table-chair-pixel.webp");
+    expect(getFurnitureDefinition("roundStool")).toMatchObject({
+      assetName: "furniture-round-stool-pixel.webp",
+      anchor: { x: 85, y: 249 },
+      displayHeight: 22,
+      footY: -10,
+    });
   });
 });
 
@@ -103,14 +139,14 @@ describe("room collision geometry", () => {
       isMovementSegmentValid(
         { x: bed.x + bed.width + 6, y: bed.y },
         { x: bed.x + bed.width + 6, y: bed.y + bed.height },
-        DEFAULT_ROOM_LAYOUT.furniture,
+        DEFAULT_ROOM_LAYOUT,
       ),
     ).toBe(true);
     expect(
       isMovementSegmentValid(
         { x: bed.x + bed.width + 5, y: bed.y },
         { x: bed.x + bed.width + 5, y: bed.y + bed.height },
-        DEFAULT_ROOM_LAYOUT.furniture,
+        DEFAULT_ROOM_LAYOUT,
       ),
     ).toBe(false);
   });
@@ -120,7 +156,7 @@ describe("room layout adoption and scene routes", () => {
   it("accepts the default layout and every walking scene route", () => {
     expect(validateRoomLayout(DEFAULT_ROOM_LAYOUT)).toEqual([]);
     for (const sceneId of Object.keys(SCENE_ROUTES) as SceneId[]) {
-      expect(validateSceneRoute(sceneId, DEFAULT_ROOM_LAYOUT.furniture), sceneId).toEqual([]);
+      expect(validateSceneRoute(sceneId, DEFAULT_ROOM_LAYOUT), sceneId).toEqual([]);
     }
   });
 
@@ -145,22 +181,24 @@ describe("room layout adoption and scene routes", () => {
   });
 
   it("resolves table, watering, and bed destinations through furniture action IDs", () => {
+    const wateringRoute = resolveSceneRoute("wateringPlants", DEFAULT_ROOM_LAYOUT);
     const routes = {
-      morningTea: resolveSceneRoute("morningTea", DEFAULT_ROOM_LAYOUT.furniture)[0],
-      watering: resolveSceneRoute("wateringPlants", DEFAULT_ROOM_LAYOUT.furniture).slice(0, 3),
-      sleeping: resolveSceneRoute("sleeping", DEFAULT_ROOM_LAYOUT.furniture)[0],
+      morningTea: resolveSceneRoute("morningTea", DEFAULT_ROOM_LAYOUT)[0],
+      watering: [wateringRoute[0], wateringRoute[3]],
+      sleeping: resolveSceneRoute("sleeping", DEFAULT_ROOM_LAYOUT)[0],
     };
-    expect(routes.morningTea).toMatchObject({ x: 68, y: 272 });
+    expect(routes.morningTea).toMatchObject({ x: 78, y: 273 });
     expect(routes.watering).toMatchObject([
-      { x: 155, y: 111 },
-      { x: 37, y: 205 },
-      { x: 143, y: 325 },
+      { x: 40, y: 198, actionScale: 1.18 },
+      { x: 136, y: 338 },
+    ]);
+    expect(wateringRoute.slice(1, 3)).toMatchObject([
+      { x: 105, y: 235, depthOffset: 40 },
+      { x: 105, y: 279, depthOffset: 40 },
     ]);
     expect(routes.sleeping).toMatchObject({ x: 29, y: 124 });
-    expect(resolveSceneInitialDepthY("sleeping", DEFAULT_ROOM_LAYOUT.furniture)).toBe(
-      DEFAULT_ROOM_LAYOUT.furniture.bed.footY,
-    );
-    expect(resolveSceneInitialDepthY("windowNap", DEFAULT_ROOM_LAYOUT.furniture)).toBe(178);
+    expect(resolveSceneInitialDepthY("sleeping", DEFAULT_ROOM_LAYOUT)).toBe(DEFAULT_ROOM_LAYOUT.furniture.bed.footY);
+    expect(resolveSceneInitialDepthY("windowNap", DEFAULT_ROOM_LAYOUT)).toBe(178);
   });
 
   it("moves furniture-dependent destinations with an adopted layout", () => {
@@ -170,19 +208,10 @@ describe("room layout adoption and scene routes", () => {
     if (!candidate.accepted) throw new Error(candidate.errors.map(({ message }) => message).join(", "));
 
     expect(resolveFurnitureActionPoint(candidate.layout.furniture, "diningSet", "morningTea")).toEqual({
-      x: 69,
-      y: 272,
+      x: 73,
+      y: 273,
     });
-    expect(resolveSceneRoute("morningTea", candidate.layout.furniture)[0]).toMatchObject({ x: 69, y: 272 });
-  });
-
-  it("keeps the baked legacy bedroom fixed when a valid furniture layout is requested", () => {
-    const candidate = tryCreateRoomLayout(createFurnitureAnchors({ diningSet: { x: 47, y: 264 } }));
-    expect(candidate.accepted).toBe(true);
-    if (!candidate.accepted) throw new Error(candidate.errors.map(({ message }) => message).join(", "));
-
-    expect(resolveSceneRoomLayout("kickedBlanket", candidate.layout)).toBe(DEFAULT_ROOM_LAYOUT);
-    expect(resolveSceneRoomLayout("morningTea", candidate.layout)).toBe(candidate.layout);
+    expect(resolveSceneRoute("morningTea", candidate.layout)[0]).toMatchObject({ x: 73, y: 273 });
   });
 
   it("marks every scene without walking segments explicitly as nonWalking", () => {
@@ -193,6 +222,10 @@ describe("room layout adoption and scene routes", () => {
       "almostAwake",
       "tatsuoWakeUp",
       "windowNap",
+      "simmeringDinner",
+      "foldingLaundry",
+      "packingTomorrow",
+      "readingComics",
       "mimizouVisit",
     ];
     expect(
@@ -205,5 +238,41 @@ describe("room layout adoption and scene routes", () => {
   it("uses footY first and a stable tie-break second for depth", () => {
     expect(getDepthZIndex(200, 3)).toBeLessThan(getDepthZIndex(201, 0));
     expect(getDepthZIndex(200, 3)).toBeLessThan(getDepthZIndex(200, 4));
+  });
+
+  it.each(["watchingStars", "morningStretch", "mimizouFarewell"] as const)(
+    "places the %s action pose in front of the bed and window",
+    (sceneId) => {
+      expect(resolveSceneRoute(sceneId, DEFAULT_ROOM_LAYOUT)[0]).toMatchObject({ depthOffset: 40 });
+    },
+  );
+
+  it("folds laundry without walking in the open space near the bed", () => {
+    expect(resolveSceneRoute("foldingLaundry", DEFAULT_ROOM_LAYOUT)).toEqual([
+      expect.objectContaining({ x: 98, y: 176, action: true }),
+    ]);
+  });
+
+  it("simmers dinner from the moved dining stool without walking", () => {
+    expect(resolveSceneRoute("simmeringDinner", DEFAULT_ROOM_LAYOUT)).toEqual([
+      expect.objectContaining({ x: 158, y: 266, action: true, depthOffset: 33 }),
+    ]);
+  });
+
+  it("keeps the seated comic-reading pose in front of the sofa", () => {
+    expect(resolveSceneRoute("readingComics", DEFAULT_ROOM_LAYOUT)[0]).toMatchObject({
+      x: 31,
+      y: 307,
+      action: true,
+      depthOffset: 30,
+    });
+  });
+
+  it("prepares tomorrow's luggage in front of the bookshelf beside the entrance", () => {
+    expect(resolveSceneRoute("packingTomorrow", DEFAULT_ROOM_LAYOUT)[0]).toMatchObject({
+      x: 113,
+      y: 145,
+      action: true,
+    });
   });
 });

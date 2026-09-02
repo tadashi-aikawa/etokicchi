@@ -379,7 +379,7 @@ async function bootstrap(): Promise<void> {
     onObservation: showObservation,
     onCharacterTap: elements.openSheet,
   };
-  let roomApp = await renderRoom(elements.roomHost, resolved.visit, roomCallbacks);
+  let roomApp = await renderRoom(elements.roomHost, resolved.visit, roomCallbacks, options.now);
 
   if (!loaded.persistent) {
     const warning = createParagraph(
@@ -437,6 +437,7 @@ async function bootstrap(): Promise<void> {
           elements.roomHost,
           { ...resolved.visit, interaction: applied.interaction },
           roomCallbacks,
+          options.now,
         );
         previousRoomApp.destroy({ removeView: true }, { children: true });
       });

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { getScene, SCENES } from "../src/content/scenes.ts";
 import type { SceneId, TimeBand, VisitView } from "../src/game/types.ts";
+import { getDepthZIndex } from "../src/rendering/room-layout.ts";
 import {
   getLightingColorMatrix,
   getRoomPresentation,
   getRoomTint,
   resolveGuestDepthY,
 } from "../src/rendering/room-presentation.ts";
-import { getDepthZIndex } from "../src/rendering/room-layout.ts";
 
 function kickedBlanketVisit(choiceId?: string): VisitView {
   const slotKey = "2026-08-31:deepNight";
@@ -94,38 +94,49 @@ function visitFor(sceneId: SceneId, mimizouPresent = false): VisitView {
 describe("room presentation", () => {
   it("shows the kicked blanket on the floor before interacting", () => {
     expect(getRoomPresentation(kickedBlanketVisit())).toMatchObject({
-      kind: "legacy",
-      backgroundAssetName: "room-background-kicked-blanket-pixel.webp",
+      kind: "layered",
       sleeperAssetName: "etokichi-sleep-kicked-pixel.png",
-      tintPlacement: "beforeCharacters",
-      characterOrder: "companionVisitorForegroundBaseCharacter",
+      furnitureAssetNames: {
+        bed: "furniture-bed-bare-pixel.webp",
+      },
+      sceneProps: [
+        {
+          assetName: "scene-blanket-floor-pixel.webp",
+          furnitureId: "bed",
+          offset: { x: 10, y: 27 },
+        },
+      ],
     });
   });
 
   it("moves the blanket onto Etokichi after choosing cover", () => {
     expect(getRoomPresentation(kickedBlanketVisit("cover"))).toMatchObject({
-      backgroundAssetName: "room-background-covered-pixel.webp",
+      kind: "layered",
       sleeperAssetName: "etokichi-sleep-covered-pixel.png",
+      furnitureAssetNames: {
+        bed: "furniture-bed-bare-pixel.webp",
+      },
+      sceneProps: undefined,
     });
   });
 
   it("does not change the room for other choices", () => {
     expect(getRoomPresentation(kickedBlanketVisit("warmRoom"))).toMatchObject({
-      backgroundAssetName: "room-background-kicked-blanket-pixel.webp",
       sleeperAssetName: "etokichi-sleep-kicked-pixel.png",
+      sceneProps: [{ assetName: "scene-blanket-floor-pixel.webp" }],
     });
   });
 
-  it("keeps the legacy tint for both kicked-blanket backgrounds and darkens the neutral layered base", () => {
-    expect(getRoomTint(kickedBlanketVisit())).toEqual({ color: 0x101a3b, alpha: 0.56 });
-    expect(getRoomTint(kickedBlanketVisit("cover"))).toEqual({ color: 0x101a3b, alpha: 0.56 });
+  it("uses the same deep-night lighting for the kicked-blanket scene and the other layered scenes", () => {
+    expect(getRoomTint(kickedBlanketVisit())).toEqual({ color: 0x101a3b, alpha: 0.65 });
+    expect(getRoomTint(kickedBlanketVisit("cover"))).toEqual({ color: 0x101a3b, alpha: 0.65 });
     expect(getRoomTint(visitFor("sleeping"))).toEqual({ color: 0x101a3b, alpha: 0.65 });
   });
 
   it("shows Etokichi and Tatsuo together for their sleeping scene", () => {
     expect(getRoomPresentation(sleepingWithTatsuoVisit())).toEqual({
       kind: "layered",
-      baseAssetName: "room-base-daytime-pixel.webp",
+      baseAssetName: "room-base-empty-daytime-pixel.webp",
       windowAssetName: "room-background-deep-night-pixel.webp",
       tint: { color: 0x101a3b, alpha: 0.65 },
       sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
@@ -155,6 +166,38 @@ describe("room presentation", () => {
     expect(getRoomPresentation(visitFor("almostAwake"))).toMatchObject({
       sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
       sleeperHeight: 30,
+    });
+  });
+
+  it("moves the dining stool beside the fixed kitchen for simmering", () => {
+    expect(getRoomPresentation(visitFor("simmeringDinner"))).toMatchObject({
+      hideCharacterShadow: true,
+      hiddenFurnitureIds: ["roundStool"],
+      characterBubble: {
+        kind: "thought",
+        text: "♪",
+        offset: { x: -19, y: -69 },
+        width: 28,
+        height: 22,
+      },
+      sceneProps: [
+        {
+          type: "fixture",
+          assetName: "scene-simmering-pot-pixel.webp",
+          height: 24,
+          fixtureId: "kitchenUnit",
+          offset: { x: -18, y: -54 },
+          depthOffset: -10,
+        },
+        {
+          type: "fixture",
+          assetName: "furniture-round-stool-pixel.webp",
+          height: 34,
+          fixtureId: "kitchenUnit",
+          offset: { x: -44, y: 1 },
+          depthOffset: 0,
+        },
+      ],
     });
   });
 
@@ -193,7 +236,7 @@ describe("room presentation", () => {
   it("shows Etokichi sprawled on a cushion during the window nap", () => {
     expect(getRoomPresentation(visitFor("windowNap"))).toMatchObject({
       kind: "layered",
-      baseAssetName: "room-base-daytime-pixel.webp",
+      baseAssetName: "room-base-empty-daytime-pixel.webp",
       windowAssetName: "room-background-daytime-pixel.webp",
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
       sleeperHeight: 64,
@@ -227,7 +270,7 @@ describe("room presentation", () => {
     expect(presentation.kind).toBe("layered");
     if (presentation.kind !== "layered") throw new Error(`${sceneId} unexpectedly uses legacy rendering`);
     expect(presentation.windowAssetName).toBe(expectedAssetName);
-    expect(presentation.baseAssetName).toBe("room-base-daytime-pixel.webp");
+    expect(presentation.baseAssetName).toBe("room-base-empty-daytime-pixel.webp");
   });
 
   it("shows Mimizou beside Etokichi for the unlocked stargazing variant", () => {
@@ -242,20 +285,46 @@ describe("room presentation", () => {
     expect(getRoomPresentation(visitFor("watchingStars", false)).companion).toBeUndefined();
   });
 
-  it("uses layered rendering for every scene except kickedBlanket", () => {
+  it("moves the Maine Coon onto the bed while Etokichi reads on the sofa", () => {
+    expect(getRoomPresentation(visitFor("readingComics"))).toMatchObject({
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "furniture",
+          furnitureId: "bed",
+          offset: { x: -3, y: -18 },
+          width: 54,
+          height: 43,
+          depthOffset: 1,
+          observation: "ふさふさのメインクーンが、ベッドの上で満足そうに丸くなっている。",
+        },
+      },
+    });
+  });
+
+  it("uses layered rendering for every scene", () => {
     for (const scene of SCENES) {
       const visit = visitFor(scene.id);
       visit.assignment.band = scene.band;
-      expect(getRoomPresentation(visit).kind, scene.id).toBe(scene.id === "kickedBlanket" ? "legacy" : "layered");
+      expect(getRoomPresentation(visit).kind, scene.id).toBe("layered");
     }
   });
+
+  it.each(["watchingStars", "morningStretch", "mimizouFarewell"] as const)(
+    "removes the front duvet while %s is active beside the bed",
+    (sceneId) => {
+      expect(getRoomPresentation(visitFor(sceneId)).furnitureAssetNames).toMatchObject({
+        bed: "furniture-bed-bare-pixel.webp",
+      });
+    },
+  );
 
   it.each([
     ["almostAwake", { color: 0xffc578, alpha: 0.12 }],
     ["tooMuchBreakfast", { color: 0xffdc9c, alpha: 0.05 }],
     ["foundOldToy", { color: 0xfff1c6, alpha: 0 }],
     ["muddyReturn", { color: 0xc75b45, alpha: 0.18 }],
-    ["packingTomorrow", { color: 0x1d2a50, alpha: 0.52 }],
+    ["packingTomorrow", { color: 0x1d2a50, alpha: 0.42 }],
+    ["watchingStars", { color: 0x101a3b, alpha: 0.52 }],
     ["sleeping", { color: 0x101a3b, alpha: 0.65 }],
   ] as const)("selects the time tint for %s", (sceneId, tint) => {
     const presentation = getRoomPresentation(visitFor(sceneId));
