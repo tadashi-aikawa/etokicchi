@@ -91,11 +91,11 @@ describe("furniture definitions", () => {
 
   it("uses a right-facing sofa along the left wall", () => {
     expect(getFurnitureDefinition("sofa")).toMatchObject({
-      assetName: "furniture-sofa-right-pixel.webp",
-      displayName: "右向きのソファー",
+      assetName: "furniture-sofa-right-two-seat-pixel.webp",
+      displayName: "右向きの二人掛けソファー",
       displayWidth: 40,
-      displayHeight: 62,
-      actionPoints: { sit: { x: 7, y: -22 } },
+      displayHeight: 80,
+      actionPoints: { sit: { x: 7, y: -22 }, sitRear: { x: 7, y: -52 } },
     });
   });
 
@@ -262,7 +262,7 @@ describe("room layout adoption and scene routes", () => {
   it("keeps the seated comic-reading pose in front of the sofa", () => {
     expect(resolveSceneRoute("readingComics", DEFAULT_ROOM_LAYOUT)[0]).toMatchObject({
       x: 31,
-      y: 307,
+      y: 318,
       action: true,
       depthOffset: 30,
     });

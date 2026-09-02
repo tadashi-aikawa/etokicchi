@@ -280,12 +280,12 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         maineCoon: {
           type: "furniture",
           furnitureId: "sofa",
-          assetName: "decor-cat-sofa-side-pixel.webp",
-          offset: { x: 13, y: -15 },
-          width: 72,
-          height: 90,
+          assetName: "decor-cat-sofa-curled-compact-pixel.webp",
+          offset: { x: 8, y: -14 },
+          width: 60,
+          height: 75,
           depthOffset: 1,
-          observation: "クーンちゃんが、ソファーから少しはみ出しながら長々と寝そべっている。",
+          observation: "クーンちゃんが、長いソファーの座面でゆったり丸くなっている。",
         },
       },
     });
