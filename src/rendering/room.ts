@@ -10,9 +10,9 @@ import {
   type Ticker,
 } from "pixi.js";
 import "pixi.js/browser";
-import type { SceneId, TimeBand, VisitView } from "../game/types.ts";
+import type { SceneId, VisitView } from "../game/types.ts";
 import { getMimizouVisitFrame } from "./mimizou-visit.ts";
-import { getRoomPresentation } from "./room-presentation.ts";
+import { getRoomPresentation, getRoomTint } from "./room-presentation.ts";
 
 const WIDTH = 195;
 const HEIGHT = 422;
@@ -42,15 +42,6 @@ const directionRows: Record<Direction, number> = {
   up: 3,
 };
 
-const timeTints: Record<TimeBand, { color: number; alpha: number }> = {
-  deepNight: { color: 0x101a3b, alpha: 0.56 },
-  earlyMorning: { color: 0xffc578, alpha: 0.08 },
-  morning: { color: 0xffdc9c, alpha: 0.04 },
-  daytime: { color: 0xfff1c6, alpha: 0.02 },
-  evening: { color: 0xc75b45, alpha: 0.08 },
-  night: { color: 0x1d2a50, alpha: 0.36 },
-};
-
 const routes: Record<SceneId, readonly Waypoint[]> = {
   sleeping: [{ x: 29, y: 124, pauseMs: 5000 }],
   sleepingWithTatsuo: [{ x: 28, y: 126, pauseMs: 5000 }],
@@ -68,7 +59,7 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
     { x: 102, y: 226, pauseMs: 700 },
   ],
   planningDay: [
-    { x: 52, y: 245, pauseMs: 5200, action: true },
+    { x: 99, y: 292, pauseMs: 5200, action: true },
     { x: 85, y: 223, pauseMs: 750 },
     { x: 111, y: 190, pauseMs: 700 },
   ],
@@ -153,7 +144,7 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
 const actionAssetNames: Partial<Record<SceneId, string>> = {
   watchingStars: "etokichi-watching-stars-pixel.webp",
   morningStretch: "etokichi-morning-stretch-pixel.webp",
-  planningDay: "etokichi-planning-day-pixel.webp",
+  planningDay: "etokichi-planning-day-floor-pixel.webp",
   mimizouFarewell: "etokichi-mimizou-farewell-pixel.webp",
   tooMuchBreakfast: "etokichi-breakfast-pixel.webp",
   overslept: "etokichi-overslept-pixel.webp",
@@ -198,7 +189,7 @@ function createRoom(backgroundTexture: Texture, visit: VisitView, callbacks: Roo
   background.width = WIDTH;
   background.height = BACKGROUND_HEIGHT;
 
-  const tint = timeTints[visit.assignment.band];
+  const tint = getRoomTint(visit);
   const timeOverlay = new Graphics().rect(0, 0, WIDTH, HEIGHT).fill({ color: tint.color, alpha: tint.alpha });
   const hotspots = [
     createHotspot(19, 25, 63, 58, "窓", "窓の外にも、同じ時間がゆっくり流れている。", callbacks.onObservation),

@@ -15,7 +15,7 @@ const COLLECTION_IMAGE_PATHS: Record<SceneId, string> = {
   almostAwake: "assets/collection/almost-awake.webp",
   morningStretch: "assets/collection/morning-stretch.webp",
   planningDay: "assets/collection/planning-day.webp",
-  tatsuoWakeUp: "assets/collection/tatsuo-wake-up.webp",
+  tatsuoWakeUp: "assets/collection/tatsuo-wake-up-v2.webp",
   mimizouFarewell: "assets/collection/mimizou-farewell.webp",
   tooMuchBreakfast: "assets/collection/too-much-breakfast.webp",
   overslept: "assets/collection/overslept.webp",
