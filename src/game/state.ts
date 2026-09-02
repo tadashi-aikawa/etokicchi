@@ -1,6 +1,6 @@
 import { getScene, getScenesForBand } from "../content/scenes.ts";
 import { indexFromSeed } from "./random.ts";
-import { addDays, formatLocalDate, getTimeBand, makeSlotKey, nextChronologicalSlot, TIME_BANDS } from "./time.ts";
+import { addDays, formatSlotDate, getTimeBand, makeSlotKey, nextChronologicalSlot, TIME_BANDS } from "./time.ts";
 import type {
   ChoiceDefinition,
   EchoRecord,
@@ -15,14 +15,15 @@ import type {
 
 export function createInitialState(): GameState {
   return {
-    dataVersion: 1,
+    dataVersion: 2,
     assignments: {},
     histories: {
-      deepNight: [],
       earlyMorning: [],
+      morning: [],
       daytime: [],
       evening: [],
       night: [],
+      deepNight: [],
     },
     interactions: {},
     echoes: [],
@@ -42,9 +43,12 @@ function chooseScene(
   band: TimeBand,
   localDate: string,
   history: readonly SceneId[],
+  discoveries: GameState["discoveries"],
   randomSeed?: string,
 ): SceneDefinition {
-  const candidates = getScenesForBand(band);
+  const candidates = getScenesForBand(band).filter(
+    (scene) => scene.id !== "mimizouFarewell" || Boolean(discoveries.mimizouVisit),
+  );
   const seed = randomSeed ? `${randomSeed}:scene` : `${localDate}:${band}:scene`;
   let candidate = candidates[indexFromSeed(seed, candidates.length)];
   if (!candidate) throw new Error(`No scenes registered for ${band}`);
@@ -59,10 +63,10 @@ function chooseScene(
 }
 
 function createAssignment(now: Date, state: GameState, randomSeed?: string): SlotAssignment {
-  const localDate = formatLocalDate(now);
+  const localDate = formatSlotDate(now);
   const band = getTimeBand(now);
   const slotKey = makeSlotKey(localDate, band);
-  const scene = chooseScene(band, localDate, state.histories[band], randomSeed);
+  const scene = chooseScene(band, localDate, state.histories[band], state.discoveries, randomSeed);
   const variantSeed = randomSeed ?? slotKey;
   return {
     slotKey,
@@ -99,7 +103,7 @@ export function resolveVisit(
   options: ResolveVisitOptions = {},
 ): { state: GameState; visit: VisitView } {
   const state = cloneState(sourceState);
-  const localDate = formatLocalDate(now);
+  const localDate = formatSlotDate(now);
   const band = getTimeBand(now);
   const slotKey = makeSlotKey(localDate, band);
   let assignment = options.randomSeed ? undefined : state.assignments[slotKey];
@@ -203,7 +207,7 @@ export function isGameState(value: unknown): value is GameState {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<GameState>;
   return (
-    candidate.dataVersion === 1 &&
+    candidate.dataVersion === 2 &&
     typeof candidate.assignments === "object" &&
     typeof candidate.histories === "object" &&
     typeof candidate.interactions === "object" &&
@@ -211,4 +215,109 @@ export function isGameState(value: unknown): value is GameState {
     typeof candidate.discoveries === "object" &&
     TIME_BANDS.every((band) => Array.isArray(candidate.histories?.[band]))
   );
+}
+
+type LegacyTimeBand = Exclude<TimeBand, "morning">;
+
+interface LegacyGameState {
+  dataVersion: 1;
+  assignments: Record<string, SlotAssignment>;
+  histories: Record<LegacyTimeBand, SceneId[]>;
+  interactions: Record<string, InteractionRecord>;
+  echoes: EchoRecord[];
+  discoveries: Partial<Record<SceneId, { firstSeenAt: string; seenCount: number }>>;
+}
+
+function isLegacyGameState(value: unknown): value is LegacyGameState {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<LegacyGameState>;
+  const legacyBands: readonly LegacyTimeBand[] = ["deepNight", "earlyMorning", "daytime", "evening", "night"];
+  return (
+    candidate.dataVersion === 1 &&
+    typeof candidate.assignments === "object" &&
+    typeof candidate.histories === "object" &&
+    typeof candidate.interactions === "object" &&
+    Array.isArray(candidate.echoes) &&
+    typeof candidate.discoveries === "object" &&
+    legacyBands.every((band) => Array.isArray(candidate.histories?.[band]))
+  );
+}
+
+function parseLegacySlotKey(slotKey: string): { localDate: string; band: LegacyTimeBand } | undefined {
+  const match = /^(\d{4}-\d{2}-\d{2}):(deepNight|earlyMorning|daytime|evening|night)$/.exec(slotKey);
+  if (!match) return undefined;
+  const localDate = match[1];
+  const band = match[2] as LegacyTimeBand | undefined;
+  return localDate && band ? { localDate, band } : undefined;
+}
+
+function migrateLegacySlotKey(slotKey: string): string {
+  const parsed = parseLegacySlotKey(slotKey);
+  if (!parsed) return slotKey;
+  if (parsed.band === "earlyMorning") return makeSlotKey(parsed.localDate, "morning");
+  if (parsed.band === "deepNight") return makeSlotKey(addDays(parsed.localDate, -1), "deepNight");
+  return slotKey;
+}
+
+function migrateLegacyEcho(echo: EchoRecord): EchoRecord {
+  const source = parseLegacySlotKey(echo.sourceSlotKey);
+  const sourceSlotKey = migrateLegacySlotKey(echo.sourceSlotKey);
+  let targetSlotKey = echo.targetSlotKey;
+
+  if (source && echo.kind === "later" && source.band === "night") {
+    const target = parseLegacySlotKey(echo.targetSlotKey);
+    if (target?.band === "deepNight") {
+      targetSlotKey = makeSlotKey(addDays(target.localDate, -1), "deepNight");
+    }
+  } else if (source && echo.kind === "nextDay") {
+    targetSlotKey = migrateLegacySlotKey(echo.targetSlotKey);
+  }
+
+  return {
+    ...echo,
+    id: echo.id.startsWith(`${echo.sourceSlotKey}:`)
+      ? `${sourceSlotKey}${echo.id.slice(echo.sourceSlotKey.length)}`
+      : echo.id,
+    sourceSlotKey,
+    targetSlotKey,
+  };
+}
+
+function migrateLegacyState(state: LegacyGameState): GameState {
+  const assignments: Record<string, SlotAssignment> = {};
+  for (const assignment of Object.values(state.assignments)) {
+    const slotKey = migrateLegacySlotKey(assignment.slotKey);
+    const parsed = slotKey.split(":");
+    const localDate = parsed[0] ?? assignment.localDate;
+    const band = (parsed[1] ?? assignment.band) as TimeBand;
+    assignments[slotKey] = { ...assignment, slotKey, localDate, band };
+  }
+
+  const interactions: Record<string, InteractionRecord> = {};
+  for (const interaction of Object.values(state.interactions)) {
+    const slotKey = migrateLegacySlotKey(interaction.slotKey);
+    interactions[slotKey] = { ...interaction, slotKey };
+  }
+
+  return {
+    dataVersion: 2,
+    assignments,
+    histories: {
+      earlyMorning: [],
+      morning: [...state.histories.earlyMorning],
+      daytime: [...state.histories.daytime],
+      evening: [...state.histories.evening],
+      night: [...state.histories.night],
+      deepNight: [...state.histories.deepNight],
+    },
+    interactions,
+    echoes: state.echoes.map(migrateLegacyEcho),
+    discoveries: structuredClone(state.discoveries),
+  };
+}
+
+export function migrateGameState(value: unknown): GameState {
+  if (isGameState(value)) return structuredClone(value);
+  if (isLegacyGameState(value)) return migrateLegacyState(value);
+  return createInitialState();
 }

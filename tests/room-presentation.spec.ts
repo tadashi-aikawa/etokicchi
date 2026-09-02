@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getScene } from "../src/content/scenes.ts";
-import type { VisitView } from "../src/game/types.ts";
+import type { SceneId, TimeBand, VisitView } from "../src/game/types.ts";
 import { getRoomPresentation } from "../src/rendering/room-presentation.ts";
 
 function kickedBlanketVisit(choiceId?: string): VisitView {
@@ -51,8 +51,15 @@ function sleepingWithTatsuoVisit(): VisitView {
   };
 }
 
-function visitFor(sceneId: "watchingStars" | "mimizouVisit", mimizouPresent = false): VisitView {
-  const band = sceneId === "watchingStars" ? "deepNight" : "night";
+function visitFor(sceneId: SceneId, mimizouPresent = false): VisitView {
+  const bandByScene: Partial<Record<SceneId, TimeBand>> = {
+    watchingStars: "deepNight",
+    mimizouVisit: "night",
+    almostAwake: "earlyMorning",
+    tatsuoWakeUp: "earlyMorning",
+    mimizouFarewell: "earlyMorning",
+  };
+  const band = bandByScene[sceneId] ?? "daytime";
   const slotKey = `2026-09-01:${band}`;
   return {
     assignment: {
@@ -111,6 +118,35 @@ describe("room presentation", () => {
 
   it("configures Mimizou to peek through the window during the visit scene", () => {
     expect(getRoomPresentation(visitFor("mimizouVisit"))).toMatchObject({
+      visitor: {
+        assetName: "mimizou-pixel.png",
+        height: 40,
+        x: 49,
+        y: 60,
+      },
+    });
+  });
+
+  it("keeps Etokichi tucked in while almost awake", () => {
+    expect(getRoomPresentation(visitFor("almostAwake"))).toMatchObject({
+      sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
+      sleeperHeight: 30,
+    });
+  });
+
+  it("shows awake Tatsuo beside Etokichi in the wake-up scene", () => {
+    expect(getRoomPresentation(visitFor("tatsuoWakeUp"))).toMatchObject({
+      companion: {
+        assetName: "tatsuo-awake-pixel.png",
+        height: 80,
+        x: 61,
+        y: 170,
+      },
+    });
+  });
+
+  it("shows Mimizou at the window in the farewell scene", () => {
+    expect(getRoomPresentation(visitFor("mimizouFarewell"))).toMatchObject({
       visitor: {
         assetName: "mimizou-pixel.png",
         height: 40,

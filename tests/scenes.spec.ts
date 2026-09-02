@@ -6,7 +6,7 @@ describe("scene catalog", () => {
   it("contains the expected number of distinct scenes for every time band", () => {
     for (const band of TIME_BANDS) {
       const scenes = getScenesForBand(band);
-      const expectedCount = band === "deepNight" || band === "night" ? 4 : 3;
+      const expectedCount = band === "earlyMorning" ? 5 : band === "deepNight" || band === "night" ? 4 : 3;
       expect(scenes).toHaveLength(expectedCount);
       expect(new Set(scenes.map((scene) => scene.id)).size).toBe(expectedCount);
     }

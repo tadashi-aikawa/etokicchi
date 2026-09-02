@@ -35,7 +35,7 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     };
   }
 
-  if (visit.scene.id === "sleeping") {
+  if (visit.scene.id === "sleeping" || visit.scene.id === "almostAwake") {
     return {
       backgroundAssetName: "room-background-pixel.webp",
       sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
@@ -57,7 +57,21 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     };
   }
 
-  if (visit.scene.id === "mimizouVisit") {
+  if (visit.scene.id === "tatsuoWakeUp") {
+    return {
+      backgroundAssetName: "room-background-pixel.webp",
+      sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
+      sleeperHeight: 28,
+      companion: {
+        assetName: "tatsuo-awake-pixel.png",
+        height: 80,
+        x: 61,
+        y: 170,
+      },
+    };
+  }
+
+  if (visit.scene.id === "mimizouVisit" || visit.scene.id === "mimizouFarewell") {
     return {
       backgroundAssetName: "room-background-pixel.webp",
       sleeperAssetName: "etokichi-sleep-pixel.webp",

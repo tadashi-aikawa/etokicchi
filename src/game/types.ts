@@ -1,10 +1,15 @@
-export type TimeBand = "deepNight" | "earlyMorning" | "daytime" | "evening" | "night";
+export type TimeBand = "earlyMorning" | "morning" | "daytime" | "evening" | "night" | "deepNight";
 
 export type SceneId =
   | "sleeping"
   | "sleepingWithTatsuo"
   | "kickedBlanket"
   | "watchingStars"
+  | "almostAwake"
+  | "morningStretch"
+  | "planningDay"
+  | "tatsuoWakeUp"
+  | "mimizouFarewell"
   | "tooMuchBreakfast"
   | "overslept"
   | "morningTea"
@@ -70,7 +75,7 @@ export interface DiscoveryRecord {
 }
 
 export interface GameState {
-  dataVersion: 1;
+  dataVersion: 2;
   assignments: Record<string, SlotAssignment>;
   histories: Record<TimeBand, SceneId[]>;
   interactions: Record<string, InteractionRecord>;

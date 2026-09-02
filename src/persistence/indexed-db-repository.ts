@@ -1,4 +1,4 @@
-import { createInitialState, isGameState } from "../game/state.ts";
+import { createInitialState, migrateGameState } from "../game/state.ts";
 import type { GameState, StateRepository } from "../game/types.ts";
 
 const DATABASE_NAME = "etokicchi";
@@ -63,7 +63,7 @@ export class IndexedDbStateRepository implements StateRepository {
         transaction.objectStore(STORE_NAME).get(STATE_KEY) as IDBRequest<StoredState | undefined>,
       );
       await completed;
-      return isGameState(record?.value) ? record.value : createInitialState();
+      return migrateGameState(record?.value);
     } finally {
       database.close();
     }

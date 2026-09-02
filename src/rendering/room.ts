@@ -45,6 +45,7 @@ const directionRows: Record<Direction, number> = {
 const timeTints: Record<TimeBand, { color: number; alpha: number }> = {
   deepNight: { color: 0x101a3b, alpha: 0.56 },
   earlyMorning: { color: 0xffc578, alpha: 0.08 },
+  morning: { color: 0xffdc9c, alpha: 0.04 },
   daytime: { color: 0xfff1c6, alpha: 0.02 },
   evening: { color: 0xc75b45, alpha: 0.08 },
   night: { color: 0x1d2a50, alpha: 0.36 },
@@ -59,6 +60,23 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
     { x: 83, y: 164, pauseMs: 700 },
     { x: 68, y: 211, pauseMs: 650 },
     { x: 103, y: 238, pauseMs: 750 },
+  ],
+  almostAwake: [{ x: 29, y: 124, pauseMs: 5000 }],
+  morningStretch: [
+    { x: 58, y: 137, pauseMs: 4600, action: true },
+    { x: 88, y: 184, pauseMs: 700 },
+    { x: 102, y: 226, pauseMs: 700 },
+  ],
+  planningDay: [
+    { x: 52, y: 245, pauseMs: 5200, action: true },
+    { x: 85, y: 223, pauseMs: 750 },
+    { x: 111, y: 190, pauseMs: 700 },
+  ],
+  tatsuoWakeUp: [{ x: 28, y: 126, pauseMs: 5000 }],
+  mimizouFarewell: [
+    { x: 58, y: 137, pauseMs: 5200, action: true },
+    { x: 88, y: 184, pauseMs: 800 },
+    { x: 107, y: 224, pauseMs: 700 },
   ],
   tooMuchBreakfast: [
     { x: 103, y: 193, pauseMs: 1100 },
@@ -134,6 +152,9 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
 
 const actionAssetNames: Partial<Record<SceneId, string>> = {
   watchingStars: "etokichi-watching-stars-pixel.webp",
+  morningStretch: "etokichi-morning-stretch-pixel.webp",
+  planningDay: "etokichi-planning-day-pixel.webp",
+  mimizouFarewell: "etokichi-mimizou-farewell-pixel.webp",
   tooMuchBreakfast: "etokichi-breakfast-pixel.webp",
   overslept: "etokichi-overslept-pixel.webp",
   morningTea: "etokichi-morning-tea-pixel.webp",
