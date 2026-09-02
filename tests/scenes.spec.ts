@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SCENES, getScenesForBand } from "../src/content/scenes.ts";
+import { isSceneUnlocked } from "../src/game/scene-unlock.ts";
 import { TIME_BANDS } from "../src/game/time.ts";
 
 describe("scene catalog", () => {
@@ -24,6 +25,31 @@ describe("scene catalog", () => {
       if (scene.unlockRequirement?.kind === "sceneDiscovery") {
         expect(sceneIds.has(scene.unlockRequirement.sceneId), scene.id).toBe(true);
       }
+    }
+  });
+
+  it("has no cycles in discovery unlock requirements", () => {
+    const sceneById = new Map(SCENES.map((scene) => [scene.id, scene]));
+
+    for (const scene of SCENES) {
+      const visited = new Set();
+      let current = scene;
+      while (current.unlockRequirement?.kind === "sceneDiscovery") {
+        expect(visited.has(current.id), scene.id).toBe(false);
+        visited.add(current.id);
+        const next = sceneById.get(current.unlockRequirement.sceneId);
+        if (!next) break;
+        current = next;
+      }
+    }
+  });
+
+  it("keeps at least one initially available scene in every time band", () => {
+    for (const band of TIME_BANDS) {
+      expect(
+        getScenesForBand(band).some((scene) => isSceneUnlocked(scene, {})),
+        band,
+      ).toBe(true);
     }
   });
 });

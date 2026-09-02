@@ -72,7 +72,9 @@ describe("visit resolution", () => {
 
   it("keeps the same deep-night slot and interaction after midnight", () => {
     const beforeMidnight = new Date(2026, 8, 2, 23, 30);
-    const first = resolveVisit(beforeMidnight, createInitialState());
+    const state = createInitialState();
+    state.discoveries.tatsuoWakeUp = { firstSeenAt: "2026-09-01T21:00:00.000Z", seenCount: 1 };
+    const first = resolveVisit(beforeMidnight, state);
     expect(first.visit.scene.id).toBe("kickedBlanket");
     const interacted = applyInteraction(first.state, first.visit.assignment.slotKey, "cover", beforeMidnight);
 
@@ -110,8 +112,10 @@ describe("visit resolution", () => {
     expect(lockedVisit.mimizouPresent).toBe(false);
   });
 
-  it("unlocks the stargazing companion through the actual visit sequence", () => {
-    const visit = resolveVisit(new Date(2026, 8, 3, 21), createInitialState());
+  it("unlocks the Mimizou visit after stargazing and then unlocks the companion", () => {
+    const state = createInitialState();
+    state.discoveries.watchingStars = { firstSeenAt: "2026-09-02T16:00:00.000Z", seenCount: 1 };
+    const visit = resolveVisit(new Date(2026, 8, 3, 21), state);
     expect(visit.visit.scene.id).toBe("mimizouVisit");
 
     const stargazing = Array.from({ length: 90 }, (_, index) =>
@@ -159,6 +163,7 @@ describe("visit resolution", () => {
       echoes: [],
       discoveries: {
         readingComics: { firstSeenAt: "2026-08-30T12:00:00.000Z", seenCount: 2 },
+        watchingStars: { firstSeenAt: "2026-08-31T16:00:00.000Z", seenCount: 1 },
       },
     };
 

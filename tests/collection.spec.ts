@@ -16,9 +16,13 @@ describe("scene collection", () => {
     expect(entries).toHaveLength(23);
     expect(SCENE_COUNT).toBe(23);
     expect(entries.every((entry) => entry.discovery === undefined)).toBe(true);
-    expect(entries.filter((entry) => entry.status === "available")).toHaveLength(22);
+    expect(entries.filter((entry) => entry.status === "available")).toHaveLength(18);
     expect(entries.filter((entry) => entry.status === "locked").map((entry) => entry.scene.id)).toEqual([
+      "sleepingWithTatsuo",
+      "morningStretch",
       "mimizouFarewell",
+      "tatsuoTooComfortable",
+      "mimizouVisit",
     ]);
     expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(23);
     expect(entries.every((entry) => entry.imagePath.endsWith(".webp"))).toBe(true);
@@ -31,13 +35,27 @@ describe("scene collection", () => {
 
   it("distinguishes an available unseen scene from a condition-locked scene", () => {
     const lockedEntries = getCollectionEntries({});
-    expect(lockedEntries.find((entry) => entry.scene.id === "morningStretch")?.status).toBe("available");
+    expect(lockedEntries.find((entry) => entry.scene.id === "planningDay")?.status).toBe("available");
+    expect(lockedEntries.find((entry) => entry.scene.id === "morningStretch")?.status).toBe("locked");
     expect(lockedEntries.find((entry) => entry.scene.id === "mimizouFarewell")?.status).toBe("locked");
 
     const unlockedEntries = getCollectionEntries({
       mimizouVisit: { firstSeenAt: "2026-09-02T12:00:00.000Z", seenCount: 1 },
     });
     expect(unlockedEntries.find((entry) => entry.scene.id === "mimizouFarewell")?.status).toBe("available");
+  });
+
+  it("unlocks the added scenes after discovering their prerequisites", () => {
+    const entries = getCollectionEntries({
+      almostAwake: { firstSeenAt: "2026-09-01T21:00:00.000Z", seenCount: 1 },
+      tatsuoWakeUp: { firstSeenAt: "2026-09-02T21:00:00.000Z", seenCount: 1 },
+      watchingStars: { firstSeenAt: "2026-09-02T16:00:00.000Z", seenCount: 1 },
+    });
+
+    expect(entries.find((entry) => entry.scene.id === "morningStretch")?.status).toBe("available");
+    expect(entries.find((entry) => entry.scene.id === "sleepingWithTatsuo")?.status).toBe("available");
+    expect(entries.find((entry) => entry.scene.id === "tatsuoTooComfortable")?.status).toBe("available");
+    expect(entries.find((entry) => entry.scene.id === "mimizouVisit")?.status).toBe("available");
   });
 
   it("advances achievement levels at the configured encounter milestones", () => {
