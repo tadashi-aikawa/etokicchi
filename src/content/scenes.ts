@@ -280,6 +280,19 @@ export const SCENES: readonly SceneDefinition[] = [
     accent: "#c77c68",
   },
   {
+    id: "tatsuoTooComfortable",
+    band: "evening",
+    title: "タツヲ、くつろぎすぎ",
+    description: "タツヲが二人掛けソファーをひとり占めし、片手で頭を支えたまま眠っている。",
+    lines: ["タツヲ、そこ二人掛けなんだけどな……。", "気持ちよさそう。起こすのも悪い気がするキチ……。"],
+    details: [
+      "タツヲの長い手足が、二つの座面をすっかり覆っている",
+      "クーンちゃんが絨毯の上から、困り顔のエトキチを静かに見守っている",
+    ],
+    characterPose: "busy",
+    accent: "#c97861",
+  },
+  {
     id: "packingTomorrow",
     band: "night",
     title: "明日の持ち物を準備",

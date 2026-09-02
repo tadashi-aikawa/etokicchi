@@ -231,6 +231,10 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     movement: "nonWalking",
     waypoints: [{ destination: point(98, 176), pauseMs: 5000, action: true }],
   },
+  tatsuoTooComfortable: {
+    movement: "nonWalking",
+    waypoints: [{ destination: point(76, 271), pauseMs: 5000, action: true }],
+  },
   packingTomorrow: {
     movement: "nonWalking",
     waypoints: [{ destination: furnitureAction("bookshelf", "packing"), pauseMs: 5000, action: true }],

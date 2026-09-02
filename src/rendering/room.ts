@@ -44,6 +44,7 @@ import {
   getLightingColorMatrix,
   getRoomPresentation,
   resolveGuestDepthY,
+  resolveGuestPosition,
   type AttachedSceneProp,
   type CharacterBubblePresentation,
   type RoomTint,
@@ -83,6 +84,7 @@ const actionAssetNames: Partial<Record<SceneId, string>> = {
   muddyReturn: "etokichi-muddy-return-pixel.webp",
   simmeringDinner: "etokichi-watching-pot-up-right-pixel.webp",
   foldingLaundry: "etokichi-folding-laundry-pixel.webp",
+  tatsuoTooComfortable: "etokichi-troubled-pixel.webp",
   packingTomorrow: "etokichi-packing-pixel.webp",
   littleNightSnack: "etokichi-night-snack-pixel.webp",
   readingComics: "etokichi-reading-comics-sofa-right-pixel.webp",
@@ -654,6 +656,7 @@ function createCompanion(
   texture: Texture,
   presentation: NonNullable<ReturnType<typeof getRoomPresentation>["companion"]>,
   sceneDepthY: number,
+  furniture: FurnitureLayout,
   callbacks: RoomCallbacks,
 ): Sprite {
   texture.source.scaleMode = "nearest";
@@ -661,8 +664,9 @@ function createCompanion(
   companion.anchor.set(0.5, 1);
   companion.scale.set(presentation.height / texture.height);
   companion.roundPixels = true;
-  companion.position.set(presentation.x, presentation.y);
-  companion.zIndex = getDepthZIndex(resolveGuestDepthY(presentation, sceneDepthY), 45);
+  const position = resolveGuestPosition(presentation, furniture);
+  companion.position.set(position.x, position.y);
+  companion.zIndex = getDepthZIndex(resolveGuestDepthY(presentation, sceneDepthY, furniture), 45);
   companion.eventMode = "dynamic";
   companion.cursor = "pointer";
   companion.on("pointertap", callbacks.onCharacterTap);
@@ -759,7 +763,7 @@ export async function renderRoom(
   ]);
   const companion =
     guestTexture && presentation.companion
-      ? createCompanion(guestTexture, presentation.companion, initialDepthY, callbacks)
+      ? createCompanion(guestTexture, presentation.companion, initialDepthY, sceneLayout.furniture, callbacks)
       : undefined;
   const visitor =
     guestTexture && presentation.visitor

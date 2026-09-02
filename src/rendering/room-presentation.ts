@@ -1,6 +1,6 @@
 import type { ColorMatrix } from "pixi.js";
 import type { SceneId, TimeBand, VisitView } from "../game/types.ts";
-import type { FurnitureId, Point } from "./room-furniture.ts";
+import { type FurnitureId, type FurnitureLayout, type Point, resolveFurnitureActionPoint } from "./room-furniture.ts";
 import type { FixtureId } from "./room-fixtures.ts";
 import type { RoomDepthDecorationId, RoomDepthDecorationOverride } from "./room-decor.ts";
 
@@ -18,13 +18,27 @@ export interface RoomTint {
   alpha: number;
 }
 
-export interface GuestPresentation {
+interface GuestPresentationCommon {
   assetName: string;
   height: number;
+}
+
+export interface PositionedGuestPresentation extends GuestPresentationCommon {
   x: number;
   y: number;
   depth?: "scene" | "position";
 }
+
+export interface FurnitureAttachedGuestPresentation extends GuestPresentationCommon {
+  furnitureId: FurnitureId;
+  actionPointId: string;
+  offset?: Point;
+  // 横たわる同席者は複数の座席へまたがるため、位置と前後関係を別の行動地点から解決できるようにする。
+  depthActionPointId?: string;
+  depthOffset?: number;
+}
+
+export type GuestPresentation = PositionedGuestPresentation | FurnitureAttachedGuestPresentation;
 
 interface AttachedScenePropCommon {
   assetName: string;
@@ -61,7 +75,7 @@ interface RoomPresentationCommon {
     height: number;
   };
   companion?: GuestPresentation;
-  visitor?: GuestPresentation;
+  visitor?: PositionedGuestPresentation;
   furnitureAssetNames?: Partial<Record<FurnitureId, string>>;
   hiddenFurnitureIds?: readonly FurnitureId[];
   depthDecorationOverrides?: Partial<Record<RoomDepthDecorationId, RoomDepthDecorationOverride>>;
@@ -79,7 +93,23 @@ export interface LayeredRoomPresentation extends RoomPresentationCommon {
 
 export type RoomPresentation = LayeredRoomPresentation;
 
-export function resolveGuestDepthY(guest: GuestPresentation, sceneDepthY: number): number {
+export function resolveGuestPosition(guest: GuestPresentation, furniture: FurnitureLayout): Point {
+  if ("furnitureId" in guest) {
+    const anchor = resolveFurnitureActionPoint(furniture, guest.furnitureId, guest.actionPointId);
+    return {
+      x: anchor.x + (guest.offset?.x ?? 0),
+      y: anchor.y + (guest.offset?.y ?? 0),
+    };
+  }
+  return { x: guest.x, y: guest.y };
+}
+
+export function resolveGuestDepthY(guest: GuestPresentation, sceneDepthY: number, furniture?: FurnitureLayout): number {
+  if ("furnitureId" in guest) {
+    if (!furniture) throw new Error("家具へ追随する同席者の描画深度には家具配置が必要です");
+    const actionPointId = guest.depthActionPointId ?? guest.actionPointId;
+    return resolveFurnitureActionPoint(furniture, guest.furnitureId, actionPointId).y + (guest.depthOffset ?? 0);
+  }
   return guest.depth === "scene" ? sceneDepthY : guest.y;
 }
 
@@ -287,6 +317,22 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
           depthOffset: 1,
           observation: "クーンちゃんが、長いソファーの座面でゆったり丸くなっている。",
         },
+      },
+    });
+  }
+
+  if (visit.scene.id === "tatsuoTooComfortable") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      companion: {
+        assetName: "tatsuo-too-comfortable-pixel.png",
+        height: 88,
+        furnitureId: "sofa",
+        actionPointId: "sitRear",
+        offset: { x: 0, y: 30 },
+        depthActionPointId: "sit",
+        depthOffset: 30,
       },
     });
   }

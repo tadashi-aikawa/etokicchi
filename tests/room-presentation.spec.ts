@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { getScene, SCENES } from "../src/content/scenes.ts";
 import type { SceneId, TimeBand, VisitView } from "../src/game/types.ts";
-import { getDepthZIndex } from "../src/rendering/room-layout.ts";
+import { createFurnitureAnchors, resolveFurnitureLayout } from "../src/rendering/room-furniture.ts";
+import { DEFAULT_ROOM_LAYOUT, getDepthZIndex } from "../src/rendering/room-layout.ts";
 import {
   getLightingColorMatrix,
   getRoomPresentation,
   getRoomTint,
   resolveGuestDepthY,
+  resolveGuestPosition,
 } from "../src/rendering/room-presentation.ts";
 
 function kickedBlanketVisit(choiceId?: string): VisitView {
@@ -67,6 +69,7 @@ function visitFor(sceneId: SceneId, mimizouPresent = false): VisitView {
     tooMuchBreakfast: "morning",
     foundOldToy: "daytime",
     muddyReturn: "evening",
+    tatsuoTooComfortable: "evening",
     packingTomorrow: "night",
     sleeping: "deepNight",
   };
@@ -323,6 +326,26 @@ describe("room presentation", () => {
         },
       },
     });
+  });
+
+  it("anchors reclining Tatsuo across both sofa seats and draws him in front", () => {
+    const presentation = getRoomPresentation(visitFor("tatsuoTooComfortable"));
+    expect(presentation.companion).toMatchObject({
+      assetName: "tatsuo-too-comfortable-pixel.png",
+      height: 88,
+      furnitureId: "sofa",
+      actionPointId: "sitRear",
+      offset: { x: 0, y: 30 },
+      depthActionPointId: "sit",
+      depthOffset: 30,
+    });
+    if (!presentation.companion) throw new Error("reclining Tatsuo is missing");
+    expect(resolveGuestPosition(presentation.companion, DEFAULT_ROOM_LAYOUT.furniture)).toEqual({ x: 31, y: 318 });
+    expect(resolveGuestDepthY(presentation.companion, 271, DEFAULT_ROOM_LAYOUT.furniture)).toBe(348);
+
+    const movedFurniture = resolveFurnitureLayout(createFurnitureAnchors({ sofa: { x: 29, y: 330 } }));
+    expect(resolveGuestPosition(presentation.companion, movedFurniture)).toEqual({ x: 36, y: 308 });
+    expect(resolveGuestDepthY(presentation.companion, 271, movedFurniture)).toBe(338);
   });
 
   it("lets Koon blink at Etokichi during the secret night snack", () => {
