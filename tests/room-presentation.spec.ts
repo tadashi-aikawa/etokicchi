@@ -335,16 +335,16 @@ describe("room presentation", () => {
       height: 88,
       furnitureId: "sofa",
       actionPointId: "sitRear",
-      offset: { x: 0, y: 30 },
+      offset: { x: -2, y: 34 },
       depthActionPointId: "sit",
       depthOffset: 30,
     });
     if (!presentation.companion) throw new Error("reclining Tatsuo is missing");
-    expect(resolveGuestPosition(presentation.companion, DEFAULT_ROOM_LAYOUT.furniture)).toEqual({ x: 31, y: 318 });
+    expect(resolveGuestPosition(presentation.companion, DEFAULT_ROOM_LAYOUT.furniture)).toEqual({ x: 29, y: 322 });
     expect(resolveGuestDepthY(presentation.companion, 271, DEFAULT_ROOM_LAYOUT.furniture)).toBe(348);
 
     const movedFurniture = resolveFurnitureLayout(createFurnitureAnchors({ sofa: { x: 29, y: 330 } }));
-    expect(resolveGuestPosition(presentation.companion, movedFurniture)).toEqual({ x: 36, y: 308 });
+    expect(resolveGuestPosition(presentation.companion, movedFurniture)).toEqual({ x: 34, y: 312 });
     expect(resolveGuestDepthY(presentation.companion, 271, movedFurniture)).toBe(338);
   });
 

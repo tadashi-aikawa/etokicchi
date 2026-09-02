@@ -330,7 +330,7 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         height: 88,
         furnitureId: "sofa",
         actionPointId: "sitRear",
-        offset: { x: 0, y: 30 },
+        offset: { x: -2, y: 34 },
         depthActionPointId: "sit",
         depthOffset: 30,
       },
