@@ -33,6 +33,12 @@ export interface ChoiceDefinition {
   nextDay: string;
 }
 
+export interface SceneUnlockRequirement {
+  kind: "sceneDiscovery";
+  sceneId: SceneId;
+  hint: string;
+}
+
 export interface SceneDefinition {
   id: SceneId;
   band: TimeBand;
@@ -41,6 +47,7 @@ export interface SceneDefinition {
   lines: readonly string[];
   details: readonly string[];
   choices?: readonly ChoiceDefinition[];
+  unlockRequirement?: SceneUnlockRequirement;
   characterPose: "stand" | "sleep" | "busy";
   accent: string;
 }

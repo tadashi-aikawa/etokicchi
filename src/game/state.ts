@@ -1,5 +1,6 @@
 import { getScene, getScenesForBand } from "../content/scenes.ts";
 import { indexFromSeed } from "./random.ts";
+import { isSceneUnlocked } from "./scene-unlock.ts";
 import { addDays, formatSlotDate, getTimeBand, makeSlotKey, nextChronologicalSlot, TIME_BANDS } from "./time.ts";
 import type {
   ChoiceDefinition,
@@ -46,9 +47,8 @@ function chooseScene(
   discoveries: GameState["discoveries"],
   randomSeed?: string,
 ): SceneDefinition {
-  const candidates = getScenesForBand(band).filter(
-    (scene) => scene.id !== "mimizouFarewell" || Boolean(discoveries.mimizouVisit),
-  );
+  // 抽選と図鑑で同じ解放判定を使い、表示上の「出会える」と実際の候補を食い違わせない。
+  const candidates = getScenesForBand(band).filter((scene) => isSceneUnlocked(scene, discoveries));
   const seed = randomSeed ? `${randomSeed}:scene` : `${localDate}:${band}:scene`;
   let candidate = candidates[indexFromSeed(seed, candidates.length)];
   if (!candidate) throw new Error(`No scenes registered for ${band}`);

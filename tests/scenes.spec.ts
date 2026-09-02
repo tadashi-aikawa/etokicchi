@@ -17,4 +17,13 @@ describe("scene catalog", () => {
     expect(new Set(SCENES.map((scene) => scene.id)).size).toBe(SCENES.length);
     expect(new Set(SCENES.map((scene) => scene.title)).size).toBe(SCENES.length);
   });
+
+  it("references an existing scene from every discovery unlock requirement", () => {
+    const sceneIds = new Set(SCENES.map((scene) => scene.id));
+    for (const scene of SCENES) {
+      if (scene.unlockRequirement?.kind === "sceneDiscovery") {
+        expect(sceneIds.has(scene.unlockRequirement.sceneId), scene.id).toBe(true);
+      }
+    }
+  });
 });

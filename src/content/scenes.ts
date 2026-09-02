@@ -114,6 +114,11 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "白み始めた窓辺で、夜の帰り道へ飛び立つみみぞうに手を振っている。",
     lines: ["みみぞう、また夜にね！", "ぼくが起きる時間は、みみぞうのおやすみの時間なんだね。"],
     details: ["窓の向こうでみみぞうが大きく一度羽ばたいた", "窓台に灰色の小さな羽が一枚残っている"],
+    unlockRequirement: {
+      kind: "sceneDiscovery",
+      sceneId: "mimizouVisit",
+      hint: "みみぞうと出会うと解放",
+    },
     characterPose: "busy",
     accent: "#c7a575",
   },

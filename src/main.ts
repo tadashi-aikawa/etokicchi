@@ -1,11 +1,12 @@
 import "./styles.css";
-import { countDiscoveries, getCollectionEntries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
+import { countDiscoveries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
 import { isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
 import { formatLocalDate, TIME_BAND_LABELS } from "./game/time.ts";
 import type { GameState, StateRepository, VisitView } from "./game/types.ts";
 import { IndexedDbStateRepository, MemoryStateRepository } from "./persistence/indexed-db-repository.ts";
 import { renderRoom } from "./rendering/room.ts";
+import { createCollectionLayer } from "./ui/collection.ts";
 
 interface LaunchOptions {
   now: Date;
@@ -50,149 +51,6 @@ function createParagraph(className: string, text: string): HTMLParagraphElement 
 
 function focusWithoutScroll(element: HTMLElement): void {
   element.focus({ preventScroll: true });
-}
-
-function formatFirstSeen(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "発見日時を記録済み";
-  return new Intl.DateTimeFormat("ja-JP", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-interface CollectionLayer {
-  layer: HTMLElement;
-  closeButton: HTMLButtonElement;
-  closeViewer: (restoreFocus?: boolean) => boolean;
-}
-
-function createCollectionLayer(state: GameState): CollectionLayer {
-  const entries = getCollectionEntries(state.discoveries);
-  const discoveredCount = countDiscoveries(state.discoveries);
-  const layer = document.createElement("section");
-  layer.className = "collection-layer";
-  layer.hidden = true;
-  layer.setAttribute("role", "dialog");
-  layer.setAttribute("aria-modal", "true");
-  layer.setAttribute("aria-labelledby", "collection-title");
-
-  const header = document.createElement("header");
-  header.className = "collection-header";
-  const heading = document.createElement("div");
-  const kicker = createParagraph("collection-kicker", "ETO LIFE ARCHIVE");
-  const title = document.createElement("h2");
-  title.id = "collection-title";
-  title.textContent = "暮らし図鑑";
-  const progress = createParagraph("collection-progress", `${discoveredCount} / ${entries.length} 発見`);
-  heading.append(kicker, title, progress);
-  const closeButton = document.createElement("button");
-  closeButton.className = "collection-close";
-  closeButton.type = "button";
-  closeButton.textContent = "部屋へ戻る";
-  header.append(heading, closeButton);
-
-  const cards = document.createElement("div");
-  cards.className = "collection-grid";
-
-  const viewer = document.createElement("div");
-  viewer.className = "collection-viewer";
-  viewer.hidden = true;
-  viewer.setAttribute("role", "dialog");
-  viewer.setAttribute("aria-modal", "true");
-  viewer.setAttribute("aria-labelledby", "collection-viewer-title");
-  const viewerScrim = document.createElement("button");
-  viewerScrim.className = "collection-viewer-scrim";
-  viewerScrim.type = "button";
-  viewerScrim.tabIndex = -1;
-  viewerScrim.setAttribute("aria-label", "画像を閉じる");
-  const viewerPanel = document.createElement("article");
-  viewerPanel.className = "collection-viewer-panel";
-  const viewerImage = document.createElement("img");
-  viewerImage.className = "collection-viewer-image";
-  viewerImage.alt = "";
-  const viewerMeta = document.createElement("div");
-  viewerMeta.className = "collection-viewer-meta";
-  const viewerBand = createParagraph("collection-viewer-band", "");
-  const viewerTitle = document.createElement("h3");
-  viewerTitle.id = "collection-viewer-title";
-  const viewerClose = document.createElement("button");
-  viewerClose.className = "collection-viewer-close";
-  viewerClose.type = "button";
-  viewerClose.textContent = "図鑑へ戻る";
-  viewerMeta.append(viewerBand, viewerTitle, viewerClose);
-  viewerPanel.append(viewerImage, viewerMeta);
-  viewer.append(viewerScrim, viewerPanel);
-
-  let viewerTrigger: HTMLButtonElement | null = null;
-  const closeViewer = (restoreFocus = true): boolean => {
-    if (viewer.hidden) return false;
-    viewer.hidden = true;
-    header.inert = false;
-    cards.inert = false;
-    if (restoreFocus && viewerTrigger) focusWithoutScroll(viewerTrigger);
-    viewerTrigger = null;
-    return true;
-  };
-  viewerScrim.addEventListener("click", () => closeViewer());
-  viewerClose.addEventListener("click", () => closeViewer());
-  viewer.addEventListener("keydown", (event) => {
-    if (event.key !== "Tab") return;
-    event.preventDefault();
-    focusWithoutScroll(viewerClose);
-  });
-
-  for (const { scene, discovery, imagePath } of entries) {
-    const card = document.createElement("article");
-    card.className = `collection-card ${discovery ? "is-discovered" : "is-locked"}`;
-    card.style.setProperty("--card-accent", scene.accent);
-    const illustration = document.createElement("img");
-    illustration.className = "collection-illustration";
-    illustration.src = `${import.meta.env.BASE_URL}${imagePath}`;
-    illustration.alt = "";
-    illustration.loading = "lazy";
-    illustration.decoding = "async";
-    const band = createParagraph("collection-band", TIME_BAND_LABELS[scene.band]);
-    const emblem = document.createElement("div");
-    emblem.className = "collection-emblem";
-    emblem.setAttribute("aria-hidden", "true");
-    emblem.textContent = discovery ? "★" : "？";
-    const cardTitle = document.createElement("h3");
-    cardTitle.textContent = discovery ? scene.title : "？？？";
-    card.append(illustration, band, emblem, cardTitle);
-    if (discovery) {
-      card.append(
-        createParagraph("collection-first-seen", `初発見 ${formatFirstSeen(discovery.firstSeenAt)}`),
-        createParagraph("collection-seen-count", `${discovery.seenCount}回 出会った`),
-      );
-      const openViewer = document.createElement("button");
-      openViewer.className = "collection-card-open";
-      openViewer.type = "button";
-      openViewer.setAttribute("aria-label", `${scene.title}の画像を大きく見る`);
-      openViewer.setAttribute("aria-haspopup", "dialog");
-      openViewer.addEventListener("click", () => {
-        viewerImage.src = illustration.src;
-        viewerImage.alt = scene.title;
-        viewerBand.textContent = `${TIME_BAND_LABELS[scene.band]}の暮らし`;
-        viewerTitle.textContent = scene.title;
-        viewerTrigger = openViewer;
-        header.inert = true;
-        cards.inert = true;
-        viewer.hidden = false;
-        focusWithoutScroll(viewerClose);
-      });
-      card.append(openViewer);
-    } else {
-      card.append(createParagraph("collection-locked-label", "まだ出会っていない暮らし"));
-    }
-    cards.append(card);
-  }
-
-  layer.append(header, cards, viewer);
-  return { layer, closeButton, closeViewer };
 }
 
 function createShell(

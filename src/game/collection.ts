@@ -1,10 +1,23 @@
 import { SCENES } from "../content/scenes.ts";
+import { isSceneUnlocked } from "./scene-unlock.ts";
 import type { DiscoveryRecord, SceneDefinition, SceneId } from "./types.ts";
+
+export const ACHIEVEMENT_THRESHOLDS = [1, 2, 3, 5, 10, 25, 50, 100] as const;
+
+export type CollectionEntryStatus = "discovered" | "available" | "locked";
+
+export interface SceneAchievement {
+  level: number;
+  totalLevels: number;
+  nextThreshold?: number;
+}
 
 export interface CollectionEntry {
   scene: SceneDefinition;
   discovery?: DiscoveryRecord;
   imagePath: string;
+  status: CollectionEntryStatus;
+  achievement: SceneAchievement;
 }
 
 const COLLECTION_IMAGE_PATHS: Record<SceneId, string> = {
@@ -39,12 +52,26 @@ export function getCollectionImagePath(sceneId: SceneId): string {
   return COLLECTION_IMAGE_PATHS[sceneId];
 }
 
+export function getSceneAchievement(seenCount: number): SceneAchievement {
+  const level = ACHIEVEMENT_THRESHOLDS.filter((threshold) => seenCount >= threshold).length;
+  return {
+    level,
+    totalLevels: ACHIEVEMENT_THRESHOLDS.length,
+    nextThreshold: ACHIEVEMENT_THRESHOLDS[level],
+  };
+}
+
 export function getCollectionEntries(discoveries: Partial<Record<SceneId, DiscoveryRecord>>): CollectionEntry[] {
-  return SCENES.map((scene) => ({
-    scene,
-    discovery: discoveries[scene.id],
-    imagePath: getCollectionImagePath(scene.id),
-  }));
+  return SCENES.map((scene) => {
+    const discovery = discoveries[scene.id];
+    return {
+      scene,
+      discovery,
+      imagePath: getCollectionImagePath(scene.id),
+      status: discovery ? "discovered" : isSceneUnlocked(scene, discoveries) ? "available" : "locked",
+      achievement: getSceneAchievement(discovery?.seenCount ?? 0),
+    };
+  });
 }
 
 export function countDiscoveries(discoveries: Partial<Record<SceneId, DiscoveryRecord>>): number {
