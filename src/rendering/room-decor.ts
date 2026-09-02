@@ -21,9 +21,14 @@ export interface RoomDepthDecoration {
 export type RoomDepthDecorationId = "maineCoon";
 
 interface RoomDepthDecorationOverrideCommon {
+  assetName?: string;
   width?: number;
   height?: number;
   observation?: string;
+  animation?: {
+    columns: number;
+    frameDurationsMs: readonly number[];
+  };
 }
 
 export interface AbsoluteRoomDepthDecorationOverride extends RoomDepthDecorationOverrideCommon {
@@ -72,8 +77,8 @@ export const DEPTH_DECORATIONS: readonly RoomDepthDecoration[] = [
   {
     id: "maineCoon",
     assetName: "decor-cat-loaf-pixel.webp",
-    displayName: "メインクーン",
-    observation: "ふさふさのメインクーンが、ソファー前の絨毯で満足そうに丸くなっている。",
+    displayName: "クーン",
+    observation: "クーンちゃんが、ソファー前の絨毯で満足そうに丸くなっている。",
     x: 82,
     y: 322,
     width: 60,

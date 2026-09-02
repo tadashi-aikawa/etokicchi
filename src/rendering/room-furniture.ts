@@ -116,7 +116,7 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     id: "sofa",
     assetName: "furniture-sofa-right-pixel.webp",
     displayName: "右向きのソファー",
-    observation: "ソファーの座面には、メインクーンが丸くなっていた跡が残っている。",
+    observation: "ソファーの座面には、クーンちゃんが丸くなっていた跡が残っている。",
     anchor: { x: 24, y: 329 },
     displayHeight: 62,
     displayWidth: 40,

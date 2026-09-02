@@ -140,10 +140,11 @@ function createDepthDecorationSprites(
   furniture: FurnitureLayout,
 ): readonly Sprite[] {
   return definitions.map((definition, tieBreak) => {
-    const texture = textures.get(definition.assetName);
-    if (!texture) throw new Error(`${definition.assetName}の床上装飾素材がありません`);
-    texture.source.scaleMode = "nearest";
     const override = overrides?.[definition.id];
+    const assetName = override?.assetName ?? definition.assetName;
+    const texture = textures.get(assetName);
+    if (!texture) throw new Error(`${assetName}の床上装飾素材がありません`);
+    texture.source.scaleMode = "nearest";
     let x = definition.x;
     let y = definition.y;
     let depthY = y;
@@ -157,7 +158,21 @@ function createDepthDecorationSprites(
       y = override.y;
       depthY = override.depthY ?? y;
     }
-    const sprite = new Sprite(texture);
+    let sprite: Sprite;
+    if (override?.animation) {
+      const frames = createGridFrames(texture, override.animation.columns, 1)[0] ?? [];
+      if (frames.length !== override.animation.frameDurationsMs.length) {
+        throw new Error(`${assetName}のコマ数と再生時間の数が一致しません`);
+      }
+      const animated = new AnimatedSprite(
+        frames.map((frame, index) => ({ texture: frame, time: override.animation?.frameDurationsMs[index] ?? 100 })),
+      );
+      animated.loop = true;
+      animated.play();
+      sprite = animated;
+    } else {
+      sprite = new Sprite(texture);
+    }
     sprite.anchor.set(0.5, 1);
     sprite.width = override?.width ?? definition.width;
     sprite.height = override?.height ?? definition.height;
@@ -777,6 +792,9 @@ export async function renderRoom(
       ...FLOOR_DECORATIONS.map(({ assetName }) => assetName),
       ...DEPTH_DECORATIONS.map(({ assetName }) => assetName),
       ...WALL_DECORATIONS.map(({ assetName }) => assetName),
+      ...Object.values(presentation.depthDecorationOverrides ?? {})
+        .map((override) => override?.assetName)
+        .filter((assetName): assetName is string => Boolean(assetName)),
     ]),
   ];
   const sceneProps = presentation.sceneProps ?? [];

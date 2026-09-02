@@ -216,6 +216,15 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         assetName: "etokichi-window-nap-cushion-base-pixel.png",
         height: 64,
       },
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "absolute",
+          x: 66,
+          y: 300,
+          depthY: 300,
+          observation: "クーンちゃんも、窓から差す日なたを選んで気持ちよさそうに眠っている。",
+        },
+      },
     });
   }
 
@@ -257,7 +266,49 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
           width: 54,
           height: 43,
           depthOffset: 1,
-          observation: "ふさふさのメインクーンが、ベッドの上で満足そうに丸くなっている。",
+          observation: "クーンちゃんが、ベッドの上で満足そうに丸くなっている。",
+        },
+      },
+    });
+  }
+
+  if (visit.scene.id === "foldingLaundry") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "furniture",
+          furnitureId: "sofa",
+          assetName: "decor-cat-sofa-side-pixel.webp",
+          offset: { x: 1, y: -15 },
+          width: 48,
+          height: 60,
+          depthOffset: 1,
+          observation: "クーンちゃんが、ソファーから少しはみ出しながら長々と寝そべっている。",
+        },
+      },
+    });
+  }
+
+  if (visit.scene.id === "littleNightSnack") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "absolute",
+          assetName: "decor-cat-loaf-blink-pixel.webp",
+          x: 83,
+          y: 286,
+          depthY: 286,
+          width: 60,
+          height: 48,
+          animation: {
+            columns: 4,
+            frameDurationsMs: [2600, 80, 110, 80],
+          },
+          observation: "クーンちゃんが目をぱちぱちさせながら、エトキチの秘密の夜食を見つめている。",
         },
       },
     });

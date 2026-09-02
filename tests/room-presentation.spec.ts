@@ -244,6 +244,14 @@ describe("room presentation", () => {
         assetName: "etokichi-window-nap-cushion-base-pixel.png",
         height: 64,
       },
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "absolute",
+          x: 66,
+          y: 300,
+          depthY: 300,
+        },
+      },
     });
   });
 
@@ -295,7 +303,43 @@ describe("room presentation", () => {
           width: 54,
           height: 43,
           depthOffset: 1,
-          observation: "ふさふさのメインクーンが、ベッドの上で満足そうに丸くなっている。",
+          observation: "クーンちゃんが、ベッドの上で満足そうに丸くなっている。",
+        },
+      },
+    });
+  });
+
+  it("lets Koon stretch along the sofa while Etokichi folds laundry", () => {
+    expect(getRoomPresentation(visitFor("foldingLaundry"))).toMatchObject({
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "furniture",
+          furnitureId: "sofa",
+          assetName: "decor-cat-sofa-side-pixel.webp",
+          offset: { x: 1, y: -15 },
+          width: 48,
+          height: 60,
+          depthOffset: 1,
+        },
+      },
+    });
+  });
+
+  it("lets Koon blink at Etokichi during the secret night snack", () => {
+    expect(getRoomPresentation(visitFor("littleNightSnack"))).toMatchObject({
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "absolute",
+          assetName: "decor-cat-loaf-blink-pixel.webp",
+          x: 83,
+          y: 286,
+          depthY: 286,
+          width: 60,
+          height: 48,
+          animation: {
+            columns: 4,
+            frameDurationsMs: [2600, 80, 110, 80],
+          },
         },
       },
     });

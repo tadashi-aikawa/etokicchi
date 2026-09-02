@@ -24,7 +24,8 @@ describe("room decorations", () => {
     expect(DEPTH_DECORATIONS).toEqual([
       expect.objectContaining({
         assetName: "decor-cat-loaf-pixel.webp",
-        displayName: "メインクーン",
+        displayName: "クーン",
+        observation: "クーンちゃんが、ソファー前の絨毯で満足そうに丸くなっている。",
         x: 82,
         y: 322,
         width: 60,
