@@ -28,6 +28,9 @@ interface Waypoint {
   y: number;
   pauseMs: number;
   action?: boolean;
+  actionFacing?: "left" | "right";
+  actionVariant?: number;
+  actionOffsetY?: number;
 }
 
 interface RoomCallbacks {
@@ -91,11 +94,11 @@ const routes: Record<SceneId, readonly Waypoint[]> = {
     { x: 93, y: 242, pauseMs: 1300 },
     { x: 111, y: 194, pauseMs: 1100 },
   ],
-  windowNap: [{ x: 54, y: 128, pauseMs: 5000 }],
+  windowNap: [{ x: 72, y: 178, pauseMs: 5000 }],
   wateringPlants: [
-    { x: 70, y: 112, pauseMs: 2700, action: true },
-    { x: 161, y: 287, pauseMs: 2700, action: true },
-    { x: 136, y: 230, pauseMs: 2200, action: true },
+    { x: 155, y: 111, pauseMs: 2700, action: true, actionFacing: "right" },
+    { x: 37, y: 205, pauseMs: 2700, action: true, actionVariant: 1, actionOffsetY: 14 },
+    { x: 143, y: 325, pauseMs: 2700, action: true, actionFacing: "right" },
     { x: 104, y: 198, pauseMs: 650 },
   ],
   muddyReturn: [
@@ -150,7 +153,7 @@ const actionAssetNames: Partial<Record<SceneId, string>> = {
   overslept: "etokichi-overslept-pixel.webp",
   morningTea: "etokichi-morning-tea-pixel.webp",
   foundOldToy: "etokichi-old-toy-pixel.webp",
-  wateringPlants: "etokichi-watering-plants-pixel.webp",
+  wateringPlants: "etokichi-watering-directions-pixel.webp",
   muddyReturn: "etokichi-muddy-return-pixel.webp",
   simmeringDinner: "etokichi-simmering-dinner-pixel.webp",
   foldingLaundry: "etokichi-folding-laundry-pixel.webp",
@@ -287,24 +290,29 @@ function createWalker(
   character.animationSpeed = 0.13;
   character.loop = true;
 
-  const actionFrames = actionSheet ? createGridFrames(actionSheet, 3, 1)[0] : undefined;
-  const actionLoop = actionFrames
-    ? [
-        actionFrames[0],
-        actionFrames[0],
-        actionFrames[1],
-        actionFrames[1],
-        actionFrames[2],
-        actionFrames[2],
-        actionFrames[2],
-      ].filter((frame): frame is Texture => Boolean(frame))
+  const actionFrameRows = actionSheet
+    ? createGridFrames(actionSheet, 3, visit.scene.id === "wateringPlants" ? 2 : 1)
     : [];
-  const action = actionLoop.length > 0 ? new AnimatedSprite(actionLoop) : undefined;
+  const actionLoops = actionFrameRows.map((actionFrames) =>
+    [
+      actionFrames[0],
+      actionFrames[0],
+      actionFrames[1],
+      actionFrames[1],
+      actionFrames[2],
+      actionFrames[2],
+      actionFrames[2],
+    ].filter((frame): frame is Texture => Boolean(frame)),
+  );
+  const initialActionLoop = actionLoops[0] ?? [];
+  const action = initialActionLoop.length > 0 ? new AnimatedSprite(initialActionLoop) : undefined;
+  let baseActionScaleX = 1;
   if (action) {
-    const baseActionFrame = actionLoop[0];
+    const baseActionFrame = initialActionLoop[0];
     if (!baseActionFrame) throw new Error("行動アニメーションのフレームがありません");
     action.anchor.set(0.5, 1);
     action.scale.set(ACTION_FRAME_HEIGHT / baseActionFrame.height);
+    baseActionScaleX = action.scale.x;
     action.roundPixels = true;
     action.animationSpeed = 0.08;
     action.loop = true;
@@ -324,10 +332,14 @@ function createWalker(
   let pauseRemaining = route[0]?.pauseMs ?? 800;
   let direction: Direction = "down";
 
-  const showAction = (enabled: boolean): void => {
+  const showAction = (enabled: boolean, facing?: "left" | "right", variant = 0, offsetY = 0): void => {
     const active = enabled && Boolean(action);
     character.visible = !active;
     if (!action) return;
+    const nextActionLoop = actionLoops[variant] ?? initialActionLoop;
+    if (action.textures !== nextActionLoop) action.textures = nextActionLoop;
+    action.scale.x = Math.abs(baseActionScaleX) * (facing === "right" ? -1 : 1);
+    action.y = offsetY;
     action.visible = active;
     if (active) {
       if (!action.playing) action.gotoAndPlay(0);
@@ -336,7 +348,7 @@ function createWalker(
     }
   };
 
-  showAction(Boolean(route[0]?.action));
+  showAction(Boolean(route[0]?.action), route[0]?.actionFacing, route[0]?.actionVariant, route[0]?.actionOffsetY);
 
   if (visit.scene.id === "mimizouVisit") {
     const baseY = actor.y;
@@ -377,7 +389,7 @@ function createWalker(
       targetIndex = (targetIndex + 1) % route.length;
       character.stop();
       character.gotoAndStop(1);
-      showAction(Boolean(target.action));
+      showAction(Boolean(target.action), target.actionFacing, target.actionVariant, target.actionOffsetY);
       return;
     }
 
@@ -424,6 +436,21 @@ function createSleeper(
     sleeper.y = position.y + breath * 0.8;
   });
   return sleeper;
+}
+
+function createSleeperBase(
+  texture: Texture,
+  visit: VisitView,
+  presentation: NonNullable<ReturnType<typeof getRoomPresentation>["sleeperBase"]>,
+): Sprite {
+  texture.source.scaleMode = "nearest";
+  const base = new Sprite(texture);
+  const position = routes[visit.scene.id][0] ?? { x: 30, y: 154 };
+  base.anchor.set(0.5, 1);
+  base.scale.set(presentation.height / texture.height);
+  base.roundPixels = true;
+  base.position.set(position.x, position.y);
+  return base;
 }
 
 function createCompanion(
@@ -498,7 +525,7 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
   const actionAssetName = actionAssetNames[visit.scene.id];
   const presentation = getRoomPresentation(visit);
   const guestPresentation = presentation.visitor ?? presentation.companion;
-  const [backgroundTexture, characterTexture, actionTexture, guestTexture] = await Promise.all([
+  const [backgroundTexture, characterTexture, actionTexture, guestTexture, sleeperBaseTexture] = await Promise.all([
     Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.backgroundAssetName}`),
     Assets.load<Texture>(
       `${import.meta.env.BASE_URL}assets/${
@@ -508,6 +535,9 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
     actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
     guestPresentation
       ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${guestPresentation.assetName}`)
+      : undefined,
+    presentation.sleeperBase
+      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.sleeperBase.assetName}`)
       : undefined,
   ]);
   const room = createRoom(backgroundTexture, visit, callbacks);
@@ -520,6 +550,10 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
       ? createVisitor(app, guestTexture, presentation.visitor, callbacks)
       : undefined;
   const windowForeground = visitor ? createWindowForeground() : undefined;
+  const sleeperBase =
+    sleeperBaseTexture && presentation.sleeperBase
+      ? createSleeperBase(sleeperBaseTexture, visit, presentation.sleeperBase)
+      : undefined;
   const character =
     visit.scene.characterPose === "sleep"
       ? createSleeper(app, characterTexture, visit, presentation.sleeperHeight, callbacks)
@@ -528,6 +562,7 @@ export async function renderRoom(host: HTMLElement, visit: VisitView, callbacks:
   if (companion) app.stage.addChild(companion);
   if (visitor) app.stage.addChild(visitor);
   if (windowForeground) app.stage.addChild(windowForeground);
+  if (sleeperBase) app.stage.addChild(sleeperBase);
   app.stage.addChild(character);
   host.replaceChildren(app.canvas);
   return app;

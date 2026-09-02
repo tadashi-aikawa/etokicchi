@@ -207,7 +207,7 @@ export const SCENES: readonly SceneDefinition[] = [
     id: "windowNap",
     band: "daytime",
     title: "窓辺でお昼寝",
-    description: "日の当たる床へクッションを運び、丸くなって眠っている。",
+    description: "日の当たる窓辺へ座布団を運び、大の字になって眠っている。",
     lines: ["あと五分だけ……おひさまが、ふかふか……", "むにゃ……雲に乗ったら、どこまで行けるかな……"],
     details: ["読みかけの本が胸の上で開いている", "カーテンの影がゆっくり動いている"],
     characterPose: "sleep",

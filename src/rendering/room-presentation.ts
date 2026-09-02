@@ -13,6 +13,10 @@ export interface RoomPresentation {
   backgroundAssetName: string;
   sleeperAssetName: string;
   sleeperHeight: number;
+  sleeperBase?: {
+    assetName: string;
+    height: number;
+  };
   companion?: {
     assetName: string;
     height: number;
@@ -97,8 +101,20 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
       companion: {
         assetName: "tatsuo-awake-pixel-v2.png",
         height: 80,
-        x: 61,
+        x: 76,
         y: 170,
+      },
+    };
+  }
+
+  if (visit.scene.id === "windowNap") {
+    return {
+      backgroundAssetName: timeBackgroundAssetName,
+      sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
+      sleeperHeight: 64,
+      sleeperBase: {
+        assetName: "etokichi-window-nap-cushion-base-pixel.png",
+        height: 64,
       },
     };
   }

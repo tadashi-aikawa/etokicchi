@@ -150,8 +150,20 @@ describe("room presentation", () => {
       companion: {
         assetName: "tatsuo-awake-pixel-v2.png",
         height: 80,
-        x: 61,
+        x: 76,
         y: 170,
+      },
+    });
+  });
+
+  it("shows Etokichi sprawled on a cushion during the window nap", () => {
+    expect(getRoomPresentation(visitFor("windowNap"))).toMatchObject({
+      backgroundAssetName: "room-background-daytime-pixel.webp",
+      sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
+      sleeperHeight: 64,
+      sleeperBase: {
+        assetName: "etokichi-window-nap-cushion-base-pixel.png",
+        height: 64,
       },
     });
   });
