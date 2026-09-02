@@ -283,7 +283,7 @@ export const SCENES: readonly SceneDefinition[] = [
     id: "tatsuoTooComfortable",
     band: "evening",
     title: "タツヲ、くつろぎすぎ",
-    description: "タツヲが二人掛けソファーをひとり占めし、片手で頭を支えたまま眠っている。",
+    description: "タツヲが二人掛けソファーをひとり占めし、両手を頭上で組んだまま眠っている。",
     lines: ["タツヲ、そこ二人掛けなんだけどな……。", "気持ちよさそう。起こすのも悪い気がするキチ……。"],
     details: [
       "タツヲの長い手足が、二つの座面をすっかり覆っている",
