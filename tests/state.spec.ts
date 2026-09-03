@@ -70,6 +70,25 @@ describe("visit resolution", () => {
     expect(variants.size).toBeGreaterThan(1);
   });
 
+  it("forces a locked scene for visual debugging without a discovery", () => {
+    const result = resolveVisit(new Date(2026, 8, 3, 12, 20), createInitialState(), {
+      randomSeed: "forced-scene",
+      sceneId: "nappingOnMaineCoon",
+    });
+
+    expect(result.visit.scene.id).toBe("nappingOnMaineCoon");
+    expect(result.visit.assignment.band).toBe("daytime");
+  });
+
+  it("rejects a forced scene outside its time band", () => {
+    expect(() =>
+      resolveVisit(new Date(2026, 8, 3, 8), createInitialState(), {
+        randomSeed: "wrong-band",
+        sceneId: "nappingOnMaineCoon",
+      }),
+    ).toThrow("nappingOnMaineCoon is registered for daytime, not morning");
+  });
+
   it("keeps the same deep-night slot and interaction after midnight", () => {
     const beforeMidnight = new Date(2026, 8, 2, 23, 30);
     const state = createInitialState();

@@ -38,6 +38,7 @@ function cloneState(state: GameState): GameState {
 
 interface ResolveVisitOptions {
   randomSeed?: string;
+  sceneId?: SceneId;
 }
 
 function chooseScene(
@@ -46,7 +47,15 @@ function chooseScene(
   history: readonly SceneId[],
   discoveries: GameState["discoveries"],
   randomSeed?: string,
+  forcedSceneId?: SceneId,
 ): SceneDefinition {
+  if (forcedSceneId) {
+    const forcedScene = getScene(forcedSceneId);
+    if (forcedScene.band !== band) {
+      throw new Error(`${forcedSceneId} is registered for ${forcedScene.band}, not ${band}`);
+    }
+    return forcedScene;
+  }
   // 抽選と図鑑で同じ解放判定を使い、表示上の「出会える」と実際の候補を食い違わせない。
   const candidates = getScenesForBand(band).filter((scene) => isSceneUnlocked(scene, discoveries));
   const seed = randomSeed ? `${randomSeed}:scene` : `${localDate}:${band}:scene`;
@@ -62,11 +71,11 @@ function chooseScene(
   return candidate;
 }
 
-function createAssignment(now: Date, state: GameState, randomSeed?: string): SlotAssignment {
+function createAssignment(now: Date, state: GameState, randomSeed?: string, forcedSceneId?: SceneId): SlotAssignment {
   const localDate = formatSlotDate(now);
   const band = getTimeBand(now);
   const slotKey = makeSlotKey(localDate, band);
-  const scene = chooseScene(band, localDate, state.histories[band], state.discoveries, randomSeed);
+  const scene = chooseScene(band, localDate, state.histories[band], state.discoveries, randomSeed, forcedSceneId);
   const variantSeed = randomSeed ?? slotKey;
   return {
     slotKey,
@@ -106,11 +115,11 @@ export function resolveVisit(
   const localDate = formatSlotDate(now);
   const band = getTimeBand(now);
   const slotKey = makeSlotKey(localDate, band);
-  let assignment = options.randomSeed ? undefined : state.assignments[slotKey];
+  let assignment = options.randomSeed || options.sceneId ? undefined : state.assignments[slotKey];
   let discoveredNow = false;
 
   if (!assignment) {
-    assignment = createAssignment(now, state, options.randomSeed);
+    assignment = createAssignment(now, state, options.randomSeed, options.sceneId);
     discoveredNow = recordNewAssignment(state, assignment);
   }
 

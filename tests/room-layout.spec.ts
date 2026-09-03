@@ -258,7 +258,7 @@ describe("room layout adoption and scene routes", () => {
 
   it("places both Koon scenes on the front rug without walking", () => {
     expect(resolveSceneRoute("brushingMaineCoon", DEFAULT_ROOM_LAYOUT)).toEqual([
-      expect.objectContaining({ x: 98, y: 320, action: true }),
+      expect.objectContaining({ x: 98, y: 320, action: true, actionScale: 1.4 }),
     ]);
     expect(resolveSceneRoute("nappingOnMaineCoon", DEFAULT_ROOM_LAYOUT)).toEqual([
       expect.objectContaining({ x: 98, y: 320 }),

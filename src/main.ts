@@ -1,9 +1,9 @@
 import "./styles.css";
 import { countDiscoveries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
-import { isRandomDebugMode } from "./game/debug.ts";
+import { getDebugSceneId, isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
 import { formatLocalDate, getSlotKey, millisecondsUntilNextMinute, TIME_BAND_LABELS } from "./game/time.ts";
-import type { GameState, StateRepository, VisitView } from "./game/types.ts";
+import type { GameState, SceneId, StateRepository, VisitView } from "./game/types.ts";
 import { IndexedDbStateRepository, MemoryStateRepository } from "./persistence/indexed-db-repository.ts";
 import { renderRoom, type RenderedRoom } from "./rendering/room.ts";
 import { createCollectionLayer } from "./ui/collection.ts";
@@ -12,6 +12,7 @@ interface LaunchOptions {
   getNow: () => Date;
   liveTime: boolean;
   debugRandom: boolean;
+  debugSceneId?: SceneId;
 }
 
 interface ShellElements {
@@ -36,6 +37,7 @@ function getLaunchOptions(): LaunchOptions {
     getNow: fixedNow ? () => new Date(fixedNow) : () => new Date(),
     liveTime: !fixedNow,
     debugRandom: isRandomDebugMode(parameters),
+    debugSceneId: getDebugSceneId(parameters),
   };
 }
 
@@ -247,6 +249,7 @@ async function bootstrap(): Promise<void> {
   let state = pruneOldSlots(loaded.state, formatLocalDate(initialNow));
   const resolved = resolveVisit(initialNow, state, {
     randomSeed: options.debugRandom ? crypto.randomUUID() : undefined,
+    sceneId: options.debugSceneId,
   });
   state = resolved.state;
   await loaded.repository.save(state);
@@ -370,6 +373,7 @@ async function bootstrap(): Promise<void> {
     state = pruneOldSlots(state, formatLocalDate(now));
     const next = resolveVisit(now, state, {
       randomSeed: options.debugRandom ? crypto.randomUUID() : undefined,
+      sceneId: options.debugSceneId,
     });
     state = next.state;
     await loaded.repository.save(state);
