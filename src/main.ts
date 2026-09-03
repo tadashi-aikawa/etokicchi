@@ -2,14 +2,15 @@ import "./styles.css";
 import { countDiscoveries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
 import { isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
-import { formatLocalDate, TIME_BAND_LABELS } from "./game/time.ts";
+import { formatLocalDate, getSlotKey, millisecondsUntilNextMinute, TIME_BAND_LABELS } from "./game/time.ts";
 import type { GameState, StateRepository, VisitView } from "./game/types.ts";
 import { IndexedDbStateRepository, MemoryStateRepository } from "./persistence/indexed-db-repository.ts";
-import { renderRoom } from "./rendering/room.ts";
+import { renderRoom, type RenderedRoom } from "./rendering/room.ts";
 import { createCollectionLayer } from "./ui/collection.ts";
 
 interface LaunchOptions {
-  now: Date;
+  getNow: () => Date;
+  liveTime: boolean;
   debugRandom: boolean;
 }
 
@@ -22,14 +23,18 @@ interface ShellElements {
   toast: HTMLElement;
   openButton: HTMLButtonElement;
   openSheet: () => void;
+  updateClock: (now: Date) => void;
+  dispose: () => void;
 }
 
 function getLaunchOptions(): LaunchOptions {
   const parameters = new URLSearchParams(window.location.search);
   const requested = parameters.get("time");
-  const parsed = requested ? new Date(requested) : new Date();
+  const parsed = requested ? new Date(requested) : undefined;
+  const fixedNow = parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
   return {
-    now: Number.isNaN(parsed.getTime()) ? new Date() : parsed,
+    getNow: fixedNow ? () => new Date(fixedNow) : () => new Date(),
+    liveTime: !fixedNow,
     debugRandom: isRandomDebugMode(parameters),
   };
 }
@@ -90,8 +95,6 @@ function createShell(
   const dateLabel = document.createElement("small");
   dateLabel.textContent = formatDateLabel(now);
   const time = document.createElement("time");
-  time.dateTime = now.toISOString();
-  time.textContent = formatClock(now);
   clock.append(dateLabel, time);
   topBar.append(topMenu, clock);
 
@@ -186,16 +189,35 @@ function createShell(
   scrim.addEventListener("click", closeSheet);
   collectionButton.addEventListener("click", openCollection);
   collection.closeButton.addEventListener("click", closeCollection);
-  document.addEventListener("keydown", (event) => {
+  const handleKeydown = (event: KeyboardEvent): void => {
     if (event.key !== "Escape") return;
     if (collection.closeViewer()) return;
     if (!collection.layer.hidden) closeCollection();
     else if (!sheetLayer.hidden) closeSheet();
-  });
+  };
+  document.addEventListener("keydown", handleKeydown);
+
+  const updateClock = (nextNow: Date): void => {
+    dateLabel.textContent = formatDateLabel(nextNow);
+    time.dateTime = nextNow.toISOString();
+    time.textContent = formatClock(nextNow);
+  };
+  updateClock(now);
 
   shell.append(roomHost, topBar, hud, sheetLayer, collection.layer, toast);
   root.replaceChildren(shell);
-  return { roomHost, summarySpeech, sheetSpeech, choices, result, toast, openButton, openSheet };
+  return {
+    roomHost,
+    summarySpeech,
+    sheetSpeech,
+    choices,
+    result,
+    toast,
+    openButton,
+    openSheet,
+    updateClock,
+    dispose: () => document.removeEventListener("keydown", handleKeydown),
+  };
 }
 
 async function loadRepository(): Promise<{ repository: StateRepository; state: GameState; persistent: boolean }> {
@@ -221,41 +243,36 @@ async function bootstrap(): Promise<void> {
 
   const options = getLaunchOptions();
   const loaded = options.debugRandom ? await loadDebugRepository() : await loadRepository();
-  let state = pruneOldSlots(loaded.state, formatLocalDate(options.now));
-  const resolved = resolveVisit(options.now, state, {
+  const initialNow = options.getNow();
+  let state = pruneOldSlots(loaded.state, formatLocalDate(initialNow));
+  const resolved = resolveVisit(initialNow, state, {
     randomSeed: options.debugRandom ? crypto.randomUUID() : undefined,
   });
   state = resolved.state;
   await loaded.repository.save(state);
 
-  const elements = createShell(root, resolved.visit, options.now, options.debugRandom, state);
-  const showObservation = (text: string): void => {
-    elements.summarySpeech.textContent = text;
-    elements.sheetSpeech.textContent = text;
-  };
-  const roomCallbacks = {
-    onObservation: showObservation,
-    onCharacterTap: elements.openSheet,
-  };
-  let roomApp = await renderRoom(elements.roomHost, resolved.visit, roomCallbacks, options.now);
+  let currentVisit: VisitView | undefined;
+  let currentElements: ShellElements | undefined;
+  let currentRoom: RenderedRoom | undefined;
+  let operationQueue = Promise.resolve();
 
-  if (!loaded.persistent) {
-    const warning = createParagraph(
-      "storage-warning",
-      "ブラウザ保存を利用できないため、このタブを閉じると記録が消えます。",
-    );
-    elements.roomHost.parentElement?.append(warning);
-  }
+  const enqueue = (operation: () => Promise<void>): Promise<void> => {
+    operationQueue = operationQueue.then(operation).catch((error: unknown) => {
+      console.error("時刻との同期に失敗しました。", error);
+    });
+    return operationQueue;
+  };
 
-  if (resolved.visit.discoveredNow && !options.debugRandom) {
+  const showAchievement = (elements: ShellElements, visit: VisitView): void => {
+    if (!visit.discoveredNow || options.debugRandom) return;
     const illustration = document.createElement("img");
     illustration.className = "achievement-illustration";
-    illustration.src = `${import.meta.env.BASE_URL}${getCollectionImagePath(resolved.visit.scene.id)}`;
+    illustration.src = `${import.meta.env.BASE_URL}${getCollectionImagePath(visit.scene.id)}`;
     illustration.alt = "";
     const label = createParagraph("achievement-label", "実績解除");
     const title = document.createElement("strong");
     title.textContent = "新しい暮らしを発見！";
-    const scene = createParagraph("achievement-scene", resolved.visit.scene.title);
+    const scene = createParagraph("achievement-scene", visit.scene.title);
     const progress = createParagraph(
       "achievement-progress",
       `暮らし図鑑 ${countDiscoveries(state.discoveries)} / ${SCENE_COUNT}`,
@@ -268,39 +285,122 @@ async function bootstrap(): Promise<void> {
     window.setTimeout(() => {
       elements.toast.hidden = true;
     }, 4500);
-  }
+  };
 
-  const existingInteraction = resolved.visit.interaction;
-  if (existingInteraction) {
-    elements.result.textContent = existingInteraction.immediate;
-    elements.result.hidden = false;
-    elements.openButton.textContent = "結果";
-  } else {
-    for (const choice of resolved.visit.scene.choices ?? []) {
+  const mountVisit = async (now: Date, visit: VisitView): Promise<void> => {
+    currentRoom?.destroy();
+    currentElements?.dispose();
+    currentVisit = visit;
+    const elements = createShell(root, visit, now, options.debugRandom, state);
+    currentElements = elements;
+    const showObservation = (text: string): void => {
+      elements.summarySpeech.textContent = text;
+      elements.sheetSpeech.textContent = text;
+    };
+    const roomCallbacks = {
+      onObservation: showObservation,
+      onCharacterTap: elements.openSheet,
+    };
+    currentRoom = await renderRoom(elements.roomHost, visit, roomCallbacks, now);
+
+    if (!loaded.persistent) {
+      const warning = createParagraph(
+        "storage-warning",
+        "ブラウザ保存を利用できないため、このタブを閉じると記録が消えます。",
+      );
+      elements.roomHost.parentElement?.append(warning);
+    }
+
+    showAchievement(elements, visit);
+    const existingInteraction = visit.interaction;
+    if (existingInteraction) {
+      elements.result.textContent = existingInteraction.immediate;
+      elements.result.hidden = false;
+      elements.openButton.textContent = "結果";
+      return;
+    }
+
+    for (const choice of visit.scene.choices ?? []) {
       const button = document.createElement("button");
       button.className = "choice-button";
       button.type = "button";
       button.textContent = choice.label;
-      button.addEventListener("click", async () => {
-        const applied = applyInteraction(state, resolved.visit.assignment.slotKey, choice.id, options.now);
-        state = applied.state;
-        await loaded.repository.save(state);
-        elements.choices.replaceChildren();
-        elements.result.textContent = applied.interaction.immediate;
-        elements.result.hidden = false;
-        elements.summarySpeech.textContent = applied.interaction.immediate;
-        elements.openButton.textContent = "結果";
-        const previousRoomApp = roomApp;
-        roomApp = await renderRoom(
-          elements.roomHost,
-          { ...resolved.visit, interaction: applied.interaction },
-          roomCallbacks,
-          options.now,
-        );
-        previousRoomApp.destroy({ removeView: true }, { children: true });
+      button.addEventListener("click", () => {
+        void enqueue(async () => {
+          if (currentVisit !== visit || currentElements !== elements) return;
+          const interactionNow = options.getNow();
+          if (getSlotKey(interactionNow) !== visit.assignment.slotKey) {
+            await refreshAt(interactionNow);
+            return;
+          }
+          const applied = applyInteraction(state, visit.assignment.slotKey, choice.id, interactionNow);
+          state = applied.state;
+          await loaded.repository.save(state);
+          elements.choices.replaceChildren();
+          elements.result.textContent = applied.interaction.immediate;
+          elements.result.hidden = false;
+          elements.summarySpeech.textContent = applied.interaction.immediate;
+          elements.openButton.textContent = "結果";
+          const nextRoom = await renderRoom(
+            elements.roomHost,
+            { ...visit, interaction: applied.interaction },
+            roomCallbacks,
+            interactionNow,
+          );
+          if (currentVisit !== visit || currentElements !== elements) {
+            nextRoom.destroy();
+            return;
+          }
+          currentRoom?.destroy();
+          currentRoom = nextRoom;
+        });
       });
       elements.choices.append(button);
     }
+  };
+
+  async function refreshAt(now: Date): Promise<void> {
+    if (!currentVisit || !currentElements || !currentRoom) return;
+    currentElements.updateClock(now);
+    if (getSlotKey(now) === currentVisit.assignment.slotKey) {
+      currentRoom.updateClock(now);
+      return;
+    }
+
+    state = pruneOldSlots(state, formatLocalDate(now));
+    const next = resolveVisit(now, state, {
+      randomSeed: options.debugRandom ? crypto.randomUUID() : undefined,
+    });
+    state = next.state;
+    await loaded.repository.save(state);
+    await mountVisit(now, next.visit);
+  }
+
+  await mountVisit(initialNow, resolved.visit);
+
+  if (options.liveTime) {
+    let timerId: number | undefined;
+    let scheduleVersion = 0;
+    const scheduleNextMinute = (): void => {
+      const version = ++scheduleVersion;
+      timerId = window.setTimeout(() => {
+        if (version !== scheduleVersion) return;
+        void enqueue(() => refreshAt(options.getNow())).finally(() => {
+          if (version === scheduleVersion) scheduleNextMinute();
+        });
+      }, millisecondsUntilNextMinute(options.getNow()));
+    };
+    const syncWhenVisible = (): void => {
+      if (document.visibilityState !== "visible") return;
+      scheduleVersion += 1;
+      if (timerId !== undefined) window.clearTimeout(timerId);
+      const version = scheduleVersion;
+      void enqueue(() => refreshAt(options.getNow())).finally(() => {
+        if (version === scheduleVersion) scheduleNextMinute();
+      });
+    };
+    document.addEventListener("visibilitychange", syncWhenVisible);
+    scheduleNextMinute();
   }
 }
 

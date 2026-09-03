@@ -190,7 +190,26 @@ function createDepthDecorationSprites(
   });
 }
 
-function createClockLayer(texture: Texture, now: Date, tint: RoomTint): Container {
+interface RoomClockLayer {
+  container: Container;
+  update: (now: Date) => void;
+}
+
+function drawClockHands(hands: Graphics, now: Date): void {
+  const angles = resolveClockHandAngles(now);
+  hands
+    .clear()
+    .moveTo(ROOM_CLOCK.x, ROOM_CLOCK.y)
+    .lineTo(ROOM_CLOCK.x + Math.sin(angles.hour) * 4.4, ROOM_CLOCK.y - Math.cos(angles.hour) * 4.4)
+    .stroke({ color: 0x3b241b, width: 1.4, pixelLine: true })
+    .moveTo(ROOM_CLOCK.x, ROOM_CLOCK.y)
+    .lineTo(ROOM_CLOCK.x + Math.sin(angles.minute) * 6.6, ROOM_CLOCK.y - Math.cos(angles.minute) * 6.6)
+    .stroke({ color: 0x3b241b, width: 1, pixelLine: true })
+    .circle(ROOM_CLOCK.x, ROOM_CLOCK.y, 1)
+    .fill(0x3b241b);
+}
+
+function createClockLayer(texture: Texture, now: Date, tint: RoomTint): RoomClockLayer {
   texture.source.scaleMode = "nearest";
   const layer = new Container();
   layer.label = "roomClock";
@@ -201,20 +220,14 @@ function createClockLayer(texture: Texture, now: Date, tint: RoomTint): Containe
   face.position.set(ROOM_CLOCK.x, ROOM_CLOCK.y);
   face.roundPixels = true;
 
-  const angles = resolveClockHandAngles(now);
   const hands = new Graphics();
-  hands
-    .moveTo(ROOM_CLOCK.x, ROOM_CLOCK.y)
-    .lineTo(ROOM_CLOCK.x + Math.sin(angles.hour) * 4.4, ROOM_CLOCK.y - Math.cos(angles.hour) * 4.4)
-    .stroke({ color: 0x3b241b, width: 1.4, pixelLine: true })
-    .moveTo(ROOM_CLOCK.x, ROOM_CLOCK.y)
-    .lineTo(ROOM_CLOCK.x + Math.sin(angles.minute) * 6.6, ROOM_CLOCK.y - Math.cos(angles.minute) * 6.6)
-    .stroke({ color: 0x3b241b, width: 1, pixelLine: true })
-    .circle(ROOM_CLOCK.x, ROOM_CLOCK.y, 1)
-    .fill(0x3b241b);
+  drawClockHands(hands, now);
   layer.addChild(face, hands);
   applyLighting(layer, tint);
-  return layer;
+  return {
+    container: layer,
+    update: (nextNow) => drawClockHands(hands, nextNow),
+  };
 }
 
 function createTimeLightingLayer(visit: VisitView): Container {
@@ -715,13 +728,18 @@ function createWindowForeground(): Graphics {
   return new Graphics().rect(49, 29, 2, 49).fill(0x4a3028).rect(22, 77, 56, 2).fill(0x65402d);
 }
 
+export interface RenderedRoom {
+  updateClock: (now: Date) => void;
+  destroy: () => void;
+}
+
 export async function renderRoom(
   host: HTMLElement,
   visit: VisitView,
   callbacks: RoomCallbacks,
   now: Date,
   layout: RoomLayout = DEFAULT_ROOM_LAYOUT,
-): Promise<Application> {
+): Promise<RenderedRoom> {
   const layoutErrors = validateRoomLayout(layout);
   if (layoutErrors.length > 0) {
     throw new Error(`不正な家具配置は描画できません: ${layoutErrors.map(({ message }) => message).join("、")}`);
@@ -872,12 +890,15 @@ export async function renderRoom(
   if (companion) depthContainer.addChild(companion);
   depthContainer.addChild(character);
 
-  app.stage.addChild(base, windowLayer, floorDecor, fixtureLayer, wallDecor, clockLayer);
+  app.stage.addChild(base, windowLayer, floorDecor, fixtureLayer, wallDecor, clockLayer.container);
   if (visitor) app.stage.addChild(visitor);
   app.stage.addChild(createWindowForeground(), depthContainer, createTimeLightingLayer(visit));
   const characterBubble = presentation.characterBubble
     ? createCharacterBubbleElement(app, character, presentation.characterBubble)
     : undefined;
   host.replaceChildren(app.canvas, ...(characterBubble ? [characterBubble] : []));
-  return app;
+  return {
+    updateClock: clockLayer.update,
+    destroy: () => app.destroy({ removeView: true }, { children: true }),
+  };
 }

@@ -33,6 +33,14 @@ export function makeSlotKey(localDate: string, band: TimeBand): string {
   return `${localDate}:${band}`;
 }
 
+export function getSlotKey(date: Date): string {
+  return makeSlotKey(formatSlotDate(date), getTimeBand(date));
+}
+
+export function millisecondsUntilNextMinute(date: Date): number {
+  return 60_000 - (date.getSeconds() * 1_000 + date.getMilliseconds());
+}
+
 export function formatSlotDate(date: Date): string {
   const localDate = formatLocalDate(date);
   const minutes = date.getHours() * 60 + date.getMinutes();
