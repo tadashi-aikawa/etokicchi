@@ -174,6 +174,10 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
       { destination: point(105, 252), pauseMs: 650 },
     ],
   },
+  brushingMaineCoon: {
+    movement: "nonWalking",
+    waypoints: [{ destination: point(98, 320), pauseMs: 5000, action: true }],
+  },
   foundOldToy: {
     movement: "walking",
     waypoints: [
@@ -185,6 +189,10 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
   windowNap: {
     movement: "nonWalking",
     waypoints: [{ destination: point(72, 178), pauseMs: 5000 }],
+  },
+  nappingOnMaineCoon: {
+    movement: "nonWalking",
+    waypoints: [{ destination: point(98, 320), pauseMs: 5000 }],
   },
   wateringPlants: {
     movement: "walking",

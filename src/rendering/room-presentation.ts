@@ -78,6 +78,7 @@ interface RoomPresentationCommon {
   visitor?: PositionedGuestPresentation;
   furnitureAssetNames?: Partial<Record<FurnitureId, string>>;
   hiddenFurnitureIds?: readonly FurnitureId[];
+  hiddenDepthDecorationIds?: readonly RoomDepthDecorationId[];
   depthDecorationOverrides?: Partial<Record<RoomDepthDecorationId, RoomDepthDecorationOverride>>;
   sceneProps?: readonly AttachedSceneProp[];
   hideCharacterShadow?: boolean;
@@ -255,6 +256,22 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
           observation: "クーンちゃんも、窓から差す日なたを選んで気持ちよさそうに眠っている。",
         },
       },
+    });
+  }
+
+  if (visit.scene.id === "brushingMaineCoon") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      hiddenDepthDecorationIds: ["maineCoon"],
+    });
+  }
+
+  if (visit.scene.id === "nappingOnMaineCoon") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-napping-on-maine-coon-pixel.webp",
+      sleeperHeight: 60,
+      hiddenDepthDecorationIds: ["maineCoon"],
     });
   }
 

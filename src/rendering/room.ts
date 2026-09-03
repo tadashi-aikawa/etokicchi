@@ -79,6 +79,7 @@ const actionAssetNames: Partial<Record<SceneId, string>> = {
   tooMuchBreakfast: "etokichi-breakfast-pixel.webp",
   overslept: "etokichi-overslept-pixel.webp",
   morningTea: "etokichi-morning-tea-pixel.webp",
+  brushingMaineCoon: "etokichi-brushing-maine-coon-pixel.webp",
   foundOldToy: "etokichi-old-toy-pixel.webp",
   wateringPlants: "etokichi-watering-directions-pixel.webp",
   muddyReturn: "etokichi-muddy-return-pixel.webp",
@@ -140,8 +141,10 @@ function createDepthDecorationSprites(
   callbacks: RoomCallbacks,
   overrides: ReturnType<typeof getRoomPresentation>["depthDecorationOverrides"],
   furniture: FurnitureLayout,
+  hiddenIds: ReturnType<typeof getRoomPresentation>["hiddenDepthDecorationIds"],
 ): readonly Sprite[] {
-  return definitions.map((definition, tieBreak) => {
+  const visibleDefinitions = definitions.filter((definition) => !hiddenIds?.includes(definition.id));
+  return visibleDefinitions.map((definition, tieBreak) => {
     const override = overrides?.[definition.id];
     const assetName = override?.assetName ?? definition.assetName;
     const texture = textures.get(assetName);
@@ -883,6 +886,7 @@ export async function renderRoom(
       callbacks,
       presentation.depthDecorationOverrides,
       sceneLayout.furniture,
+      presentation.hiddenDepthDecorationIds,
     ),
     ...createSceneProps(scenePropTextures, sceneProps, sceneLayout, presentation.tint),
   );

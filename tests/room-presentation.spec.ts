@@ -368,6 +368,17 @@ describe("room presentation", () => {
     });
   });
 
+  it("uses each combined Koon scene asset without rendering the room's default Koon twice", () => {
+    expect(getRoomPresentation(visitFor("brushingMaineCoon"))).toMatchObject({
+      hiddenDepthDecorationIds: ["maineCoon"],
+    });
+    expect(getRoomPresentation(visitFor("nappingOnMaineCoon"))).toMatchObject({
+      sleeperAssetName: "etokichi-napping-on-maine-coon-pixel.webp",
+      sleeperHeight: 60,
+      hiddenDepthDecorationIds: ["maineCoon"],
+    });
+  });
+
   it("uses layered rendering for every scene", () => {
     for (const scene of SCENES) {
       const visit = visitFor(scene.id);

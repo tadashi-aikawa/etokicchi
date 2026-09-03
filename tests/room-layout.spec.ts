@@ -221,7 +221,9 @@ describe("room layout adoption and scene routes", () => {
       "kickedBlanket",
       "almostAwake",
       "tatsuoWakeUp",
+      "brushingMaineCoon",
       "windowNap",
+      "nappingOnMaineCoon",
       "simmeringDinner",
       "foldingLaundry",
       "tatsuoTooComfortable",
@@ -251,6 +253,15 @@ describe("room layout adoption and scene routes", () => {
   it("folds laundry without walking in the open space near the bed", () => {
     expect(resolveSceneRoute("foldingLaundry", DEFAULT_ROOM_LAYOUT)).toEqual([
       expect.objectContaining({ x: 98, y: 176, action: true }),
+    ]);
+  });
+
+  it("places both Koon scenes on the front rug without walking", () => {
+    expect(resolveSceneRoute("brushingMaineCoon", DEFAULT_ROOM_LAYOUT)).toEqual([
+      expect.objectContaining({ x: 98, y: 320, action: true }),
+    ]);
+    expect(resolveSceneRoute("nappingOnMaineCoon", DEFAULT_ROOM_LAYOUT)).toEqual([
+      expect.objectContaining({ x: 98, y: 320 }),
     ]);
   });
 

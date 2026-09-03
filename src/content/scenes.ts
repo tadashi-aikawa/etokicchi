@@ -186,6 +186,22 @@ export const SCENES: readonly SceneDefinition[] = [
     accent: "#e8a45a",
   },
   {
+    id: "brushingMaineCoon",
+    band: "morning",
+    title: "クーンちゃんの朝ブラシ",
+    description: "朝の光の中、クーンちゃんの長い毛をブラシでゆっくり整えている。",
+    lines: [
+      "じっとしててね。あと背中をひと往復……わっ、まだ取れるキチ！",
+      "クーンちゃん、ぴかぴか！ この毛の山、もう一匹ぶんありそう。",
+    ],
+    details: [
+      "ブラシを通すたび、ふわふわの毛が小さな雲のように舞っている",
+      "クーンちゃんは目を細め、エトキチの手へ背中を預けている",
+    ],
+    characterPose: "busy",
+    accent: "#e5a55e",
+  },
+  {
     id: "foundOldToy",
     band: "daytime",
     title: "昔のおもちゃを発見",
@@ -227,6 +243,24 @@ export const SCENES: readonly SceneDefinition[] = [
     details: ["読みかけの本が胸の上で開いている", "カーテンの影がゆっくり動いている"],
     characterPose: "sleep",
     accent: "#7fba76",
+  },
+  {
+    id: "nappingOnMaineCoon",
+    band: "daytime",
+    title: "クーンちゃん枕でお昼寝",
+    description: "ブラシですっかりふわふわになったクーンちゃんを枕に、エトキチが安心して眠っている。",
+    lines: ["むにゃ……クーンちゃん、ふかふか……", "すー……すー……雲の枕みたいだね……"],
+    details: [
+      "エトキチの頭が、クーンちゃんの長い毛へゆっくり沈んでいる",
+      "クーンちゃんの大きなしっぽが、エトキチを毛布のように包んでいる",
+    ],
+    unlockRequirement: {
+      kind: "sceneDiscovery",
+      sceneId: "brushingMaineCoon",
+      hint: "クーンちゃんの朝ブラシを見ると解放",
+    },
+    characterPose: "sleep",
+    accent: "#78b47a",
   },
   {
     id: "wateringPlants",

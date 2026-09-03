@@ -23,4 +23,15 @@ describe("scene unlocks", () => {
       }),
     ).toBe(true);
   });
+
+  it("unlocks the Koon pillow nap after discovering the morning brushing scene", () => {
+    const scene = getScene("nappingOnMaineCoon");
+
+    expect(isSceneUnlocked(scene, {})).toBe(false);
+    expect(
+      isSceneUnlocked(scene, {
+        brushingMaineCoon: { firstSeenAt: "2026-09-04T00:00:00.000Z", seenCount: 1 },
+      }),
+    ).toBe(true);
+  });
 });

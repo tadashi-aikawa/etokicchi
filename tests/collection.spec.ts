@@ -13,18 +13,19 @@ describe("scene collection", () => {
   it("lists every scene as undiscovered for an empty history", () => {
     const entries = getCollectionEntries({});
 
-    expect(entries).toHaveLength(23);
-    expect(SCENE_COUNT).toBe(23);
+    expect(entries).toHaveLength(25);
+    expect(SCENE_COUNT).toBe(25);
     expect(entries.every((entry) => entry.discovery === undefined)).toBe(true);
-    expect(entries.filter((entry) => entry.status === "available")).toHaveLength(18);
+    expect(entries.filter((entry) => entry.status === "available")).toHaveLength(19);
     expect(entries.filter((entry) => entry.status === "locked").map((entry) => entry.scene.id)).toEqual([
       "sleepingWithTatsuo",
       "morningStretch",
       "mimizouFarewell",
+      "nappingOnMaineCoon",
       "tatsuoTooComfortable",
       "mimizouVisit",
     ]);
-    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(23);
+    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(25);
     expect(entries.every((entry) => entry.imagePath.endsWith(".webp"))).toBe(true);
     expect(getCollectionImagePath("watchingStars")).toBe("assets/collection/watching-stars.webp");
     expect(getCollectionImagePath("sleepingWithTatsuo")).toBe("assets/collection/sleeping-with-tatsuo.webp");
@@ -38,6 +39,7 @@ describe("scene collection", () => {
     expect(lockedEntries.find((entry) => entry.scene.id === "planningDay")?.status).toBe("available");
     expect(lockedEntries.find((entry) => entry.scene.id === "morningStretch")?.status).toBe("locked");
     expect(lockedEntries.find((entry) => entry.scene.id === "mimizouFarewell")?.status).toBe("locked");
+    expect(lockedEntries.find((entry) => entry.scene.id === "nappingOnMaineCoon")?.status).toBe("locked");
 
     const unlockedEntries = getCollectionEntries({
       mimizouVisit: { firstSeenAt: "2026-09-02T12:00:00.000Z", seenCount: 1 },
@@ -48,11 +50,13 @@ describe("scene collection", () => {
   it("unlocks the added scenes after discovering their prerequisites", () => {
     const entries = getCollectionEntries({
       almostAwake: { firstSeenAt: "2026-09-01T21:00:00.000Z", seenCount: 1 },
+      brushingMaineCoon: { firstSeenAt: "2026-09-04T00:00:00.000Z", seenCount: 1 },
       tatsuoWakeUp: { firstSeenAt: "2026-09-02T21:00:00.000Z", seenCount: 1 },
       watchingStars: { firstSeenAt: "2026-09-02T16:00:00.000Z", seenCount: 1 },
     });
 
     expect(entries.find((entry) => entry.scene.id === "morningStretch")?.status).toBe("available");
+    expect(entries.find((entry) => entry.scene.id === "nappingOnMaineCoon")?.status).toBe("available");
     expect(entries.find((entry) => entry.scene.id === "sleepingWithTatsuo")?.status).toBe("available");
     expect(entries.find((entry) => entry.scene.id === "tatsuoTooComfortable")?.status).toBe("available");
     expect(entries.find((entry) => entry.scene.id === "mimizouVisit")?.status).toBe("available");
