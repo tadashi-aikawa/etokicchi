@@ -387,7 +387,7 @@ describe("room presentation", () => {
   it("uses the combined sleeping asset without rendering the room's default Koon twice", () => {
     expect(getRoomPresentation(visitFor("nappingOnMaineCoon"))).toMatchObject({
       sleeperAssetName: "etokichi-napping-on-maine-coon-pixel.webp",
-      sleeperHeight: 60,
+      sleeperHeight: 56,
       sleeperBreathing: "alternating",
       hiddenDepthDecorationIds: ["maineCoon"],
     });

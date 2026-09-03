@@ -282,7 +282,7 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
   if (visit.scene.id === "nappingOnMaineCoon") {
     return layeredPresentation(visit, {
       sleeperAssetName: "etokichi-napping-on-maine-coon-pixel.webp",
-      sleeperHeight: 60,
+      sleeperHeight: 56,
       sleeperBreathing: "alternating",
       hiddenDepthDecorationIds: ["maineCoon"],
     });
