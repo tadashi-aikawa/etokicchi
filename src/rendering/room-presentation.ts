@@ -70,7 +70,7 @@ export interface CharacterBubblePresentation {
 interface RoomPresentationCommon {
   sleeperAssetName: string;
   sleeperHeight: number;
-  sleeperBreathing?: "smooth" | "alternating";
+  sleeperBreathing?: "smooth" | "subtle" | "alternating";
   sleeperBase?: {
     assetName: string;
     height: number;
@@ -244,6 +244,7 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     return layeredPresentation(visit, {
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
       sleeperHeight: 64,
+      sleeperBreathing: "subtle",
       sleeperBase: {
         assetName: "etokichi-window-nap-cushion-base-pixel.png",
         height: 64,

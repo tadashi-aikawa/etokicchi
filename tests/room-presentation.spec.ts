@@ -243,6 +243,7 @@ describe("room presentation", () => {
       windowAssetName: "room-background-daytime-pixel.webp",
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
       sleeperHeight: 64,
+      sleeperBreathing: "subtle",
       sleeperBase: {
         assetName: "etokichi-window-nap-cushion-base-pixel.png",
         height: 64,

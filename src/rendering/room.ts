@@ -626,7 +626,7 @@ function createSleeper(
   depthY: number,
   height: number,
   callbacks: RoomCallbacks,
-  breathing: "smooth" | "alternating" = "smooth",
+  breathing: "smooth" | "subtle" | "alternating" = "smooth",
 ): Sprite {
   texture.source.scaleMode = "nearest";
   const sleeper = new Sprite(texture);
@@ -646,9 +646,10 @@ function createSleeper(
     elapsed += ticker.deltaMS;
     const breath =
       breathing === "alternating" ? (Math.floor(elapsed / 1200) % 2 === 0 ? 0.75 : 1) : Math.sin(elapsed / 620);
-    sleeper.scale.x = baseScaleX * (1 + breath * 0.018);
-    sleeper.scale.y = baseScaleY * (1 + breath * 0.045);
-    sleeper.y = position.y + breath * 0.8;
+    const breathStrength = breathing === "subtle" ? 0.25 : 1;
+    sleeper.scale.x = baseScaleX * (1 + breath * 0.018 * breathStrength);
+    sleeper.scale.y = baseScaleY * (1 + breath * 0.045 * breathStrength);
+    sleeper.y = position.y + breath * 0.8 * breathStrength;
     sleeper.zIndex = getDepthZIndex(depthY, 50);
   });
   return sleeper;
