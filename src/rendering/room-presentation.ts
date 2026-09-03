@@ -70,6 +70,7 @@ export interface CharacterBubblePresentation {
 interface RoomPresentationCommon {
   sleeperAssetName: string;
   sleeperHeight: number;
+  sleeperBreathing?: "smooth" | "alternating";
   sleeperBase?: {
     assetName: string;
     height: number;
@@ -263,7 +264,17 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     return layeredPresentation(visit, {
       sleeperAssetName: "etokichi-sleep-pixel.webp",
       sleeperHeight: 42,
-      hiddenDepthDecorationIds: ["maineCoon"],
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "absolute",
+          x: 108,
+          y: 322,
+          depthY: 320,
+          width: 68,
+          height: 54,
+          observation: "クーンちゃんが、ブラシへ背中を預けて気持ちよさそうに目を細めている。",
+        },
+      },
     });
   }
 
@@ -271,6 +282,7 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     return layeredPresentation(visit, {
       sleeperAssetName: "etokichi-napping-on-maine-coon-pixel.webp",
       sleeperHeight: 60,
+      sleeperBreathing: "alternating",
       hiddenDepthDecorationIds: ["maineCoon"],
     });
   }

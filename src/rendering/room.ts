@@ -626,6 +626,7 @@ function createSleeper(
   depthY: number,
   height: number,
   callbacks: RoomCallbacks,
+  breathing: "smooth" | "alternating" = "smooth",
 ): Sprite {
   texture.source.scaleMode = "nearest";
   const sleeper = new Sprite(texture);
@@ -643,7 +644,8 @@ function createSleeper(
   let elapsed = 0;
   app.ticker.add((ticker) => {
     elapsed += ticker.deltaMS;
-    const breath = Math.sin(elapsed / 620);
+    const breath =
+      breathing === "alternating" ? (Math.floor(elapsed / 1200) % 2 === 0 ? 0.75 : 1) : Math.sin(elapsed / 620);
     sleeper.scale.x = baseScaleX * (1 + breath * 0.018);
     sleeper.scale.y = baseScaleY * (1 + breath * 0.045);
     sleeper.y = position.y + breath * 0.8;
@@ -796,7 +798,15 @@ export async function renderRoom(
       : undefined;
   const character =
     visit.scene.characterPose === "sleep"
-      ? createSleeper(app, characterTexture, initialPosition, initialDepthY, presentation.sleeperHeight, callbacks)
+      ? createSleeper(
+          app,
+          characterTexture,
+          initialPosition,
+          initialDepthY,
+          presentation.sleeperHeight,
+          callbacks,
+          presentation.sleeperBreathing,
+        )
       : createWalker(
           app,
           characterTexture,

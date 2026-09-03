@@ -368,13 +368,26 @@ describe("room presentation", () => {
     });
   });
 
-  it("uses each combined Koon scene asset without rendering the room's default Koon twice", () => {
+  it("keeps Koon in a separate stationary layer during brushing", () => {
     expect(getRoomPresentation(visitFor("brushingMaineCoon"))).toMatchObject({
-      hiddenDepthDecorationIds: ["maineCoon"],
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "absolute",
+          x: 108,
+          y: 322,
+          depthY: 320,
+          width: 68,
+          height: 54,
+        },
+      },
     });
+  });
+
+  it("uses the combined sleeping asset without rendering the room's default Koon twice", () => {
     expect(getRoomPresentation(visitFor("nappingOnMaineCoon"))).toMatchObject({
       sleeperAssetName: "etokichi-napping-on-maine-coon-pixel.webp",
       sleeperHeight: 60,
+      sleeperBreathing: "alternating",
       hiddenDepthDecorationIds: ["maineCoon"],
     });
   });

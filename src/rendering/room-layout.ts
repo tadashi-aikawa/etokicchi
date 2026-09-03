@@ -176,7 +176,7 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
   },
   brushingMaineCoon: {
     movement: "nonWalking",
-    waypoints: [{ destination: point(98, 320), pauseMs: 5000, action: true, actionScale: 1.4 }],
+    waypoints: [{ destination: point(70, 320), pauseMs: 5000, action: true }],
   },
   foundOldToy: {
     movement: "walking",
