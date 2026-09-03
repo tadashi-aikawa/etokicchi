@@ -198,7 +198,7 @@ describe("room layout adoption and scene routes", () => {
     ]);
     expect(routes.sleeping).toMatchObject({ x: 29, y: 124 });
     expect(resolveSceneInitialDepthY("sleeping", DEFAULT_ROOM_LAYOUT)).toBe(DEFAULT_ROOM_LAYOUT.furniture.bed.footY);
-    expect(resolveSceneInitialDepthY("windowNap", DEFAULT_ROOM_LAYOUT)).toBe(178);
+    expect(resolveSceneInitialDepthY("windowNap", DEFAULT_ROOM_LAYOUT)).toBe(184);
   });
 
   it("moves furniture-dependent destinations with an adopted layout", () => {

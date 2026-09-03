@@ -242,11 +242,11 @@ describe("room presentation", () => {
       baseAssetName: "room-base-empty-daytime-pixel.webp",
       windowAssetName: "room-background-daytime-pixel.webp",
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
-      sleeperHeight: 64,
+      sleeperHeight: 72,
       sleeperBreathing: "subtle",
       sleeperBase: {
         assetName: "etokichi-window-nap-cushion-base-pixel.png",
-        height: 64,
+        height: 72,
       },
       depthDecorationOverrides: {
         maineCoon: {

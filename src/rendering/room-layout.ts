@@ -188,7 +188,7 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
   },
   windowNap: {
     movement: "nonWalking",
-    waypoints: [{ destination: point(72, 178), pauseMs: 5000 }],
+    waypoints: [{ destination: point(82, 184), pauseMs: 5000 }],
   },
   nappingOnMaineCoon: {
     movement: "nonWalking",

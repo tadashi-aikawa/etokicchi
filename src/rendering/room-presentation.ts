@@ -243,11 +243,11 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
   if (visit.scene.id === "windowNap") {
     return layeredPresentation(visit, {
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
-      sleeperHeight: 64,
+      sleeperHeight: 72,
       sleeperBreathing: "subtle",
       sleeperBase: {
         assetName: "etokichi-window-nap-cushion-base-pixel.png",
-        height: 64,
+        height: 72,
       },
       depthDecorationOverrides: {
         maineCoon: {
