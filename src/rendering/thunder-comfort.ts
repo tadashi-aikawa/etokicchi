@@ -1,5 +1,14 @@
 const THUNDER_COMFORT_CYCLE_MS = 7_200;
 
+export const THUNDER_FLASH_COLOR = 0xffd45c;
+
+export const RAIN_WINDOW_BOUNDS = {
+  x: 34,
+  y: 29,
+  width: 34,
+  height: 47,
+} as const;
+
 interface FlashPulse {
   startMs: number;
   peakMs: number;
@@ -94,7 +103,7 @@ export function getThunderComfortFrame(elapsedMs: number): ThunderComfortFrame {
 export function getRainDropPosition(seed: RainDropSeed, elapsedMs: number): { x: number; y: number } {
   const distance = (elapsedMs / 1_000) * seed.speed;
   return {
-    x: 22 + loop(seed.x - distance * 0.18, 56),
-    y: 25 + loop(seed.y + distance, 54),
+    x: RAIN_WINDOW_BOUNDS.x + loop(seed.x - distance * 0.18, RAIN_WINDOW_BOUNDS.width),
+    y: RAIN_WINDOW_BOUNDS.y + loop(seed.y + distance, RAIN_WINDOW_BOUNDS.height),
   };
 }

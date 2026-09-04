@@ -54,6 +54,8 @@ import {
   getRainDropPosition,
   getThunderComfortFrame,
   RAIN_DROP_SEEDS,
+  RAIN_WINDOW_BOUNDS,
+  THUNDER_FLASH_COLOR,
   type ThunderComfortFrame,
 } from "./thunder-comfort.ts";
 
@@ -273,7 +275,11 @@ function createRainWindowLayer(app: Application): Container {
   const layer = new Container();
   layer.label = "rainWindow";
   const rain = new Container();
-  const stormShade = new Graphics().rect(22, 25, 56, 54).fill({ color: 0x243a56, alpha: 0.58 });
+  const { x, y, height } = RAIN_WINDOW_BOUNDS;
+  const stormShade = new Graphics()
+    .rect(x, y, 15, height)
+    .rect(x + 17, y, 17, height)
+    .fill({ color: 0x243a56, alpha: 0.58 });
   const drops = RAIN_DROP_SEEDS.map((seed) => {
     const drop = new Graphics()
       .moveTo(0, 0)
@@ -282,7 +288,10 @@ function createRainWindowLayer(app: Application): Container {
     rain.addChild(drop);
     return drop;
   });
-  const mask = new Graphics().rect(22, 25, 56, 54).fill(0xffffff);
+  const mask = new Graphics()
+    .rect(x, y, 15, height)
+    .rect(x + 17, y, 17, height)
+    .fill(0xffffff);
   rain.mask = mask;
   layer.addChild(stormShade, rain, mask);
 
@@ -300,7 +309,7 @@ function createRainWindowLayer(app: Application): Container {
 }
 
 function createThunderFlashLayer(app: Application, getFrame: ThunderComfortFrameProvider): Graphics {
-  const flash = new Graphics().rect(0, 0, WIDTH, BACKGROUND_HEIGHT).fill(0xc8dcff);
+  const flash = new Graphics().rect(0, 0, WIDTH, BACKGROUND_HEIGHT).fill(THUNDER_FLASH_COLOR);
   flash.label = "thunderFlash";
   flash.blendMode = "screen";
   flash.eventMode = "none";

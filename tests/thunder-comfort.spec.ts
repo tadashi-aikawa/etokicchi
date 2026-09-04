@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getRainDropPosition, getThunderComfortFrame, RAIN_DROP_SEEDS } from "../src/rendering/thunder-comfort.ts";
+import {
+  getRainDropPosition,
+  getThunderComfortFrame,
+  RAIN_DROP_SEEDS,
+  RAIN_WINDOW_BOUNDS,
+  THUNDER_FLASH_COLOR,
+} from "../src/rendering/thunder-comfort.ts";
 
 describe("thunder comfort animation", () => {
   it("flashes, trembles, and then shows the reassurance", () => {
@@ -17,11 +23,15 @@ describe("thunder comfort animation", () => {
     for (const elapsedMs of [0, 1_000, 9_000, 80_000]) {
       for (const seed of RAIN_DROP_SEEDS) {
         const position = getRainDropPosition(seed, elapsedMs);
-        expect(position.x).toBeGreaterThanOrEqual(22);
-        expect(position.x).toBeLessThan(78);
-        expect(position.y).toBeGreaterThanOrEqual(25);
-        expect(position.y).toBeLessThan(79);
+        expect(position.x).toBeGreaterThanOrEqual(RAIN_WINDOW_BOUNDS.x);
+        expect(position.x).toBeLessThan(RAIN_WINDOW_BOUNDS.x + RAIN_WINDOW_BOUNDS.width);
+        expect(position.y).toBeGreaterThanOrEqual(RAIN_WINDOW_BOUNDS.y);
+        expect(position.y).toBeLessThan(RAIN_WINDOW_BOUNDS.y + RAIN_WINDOW_BOUNDS.height);
       }
     }
+  });
+
+  it("uses a warm yellow flash instead of a white flash", () => {
+    expect(THUNDER_FLASH_COLOR).toBe(0xffd45c);
   });
 });
