@@ -42,6 +42,7 @@ const COLLECTION_IMAGE_PATHS: Record<SceneId, string> = {
   simmeringDinner: "assets/collection/simmering-dinner.webp",
   foldingLaundry: "assets/collection/folding-laundry.webp",
   tatsuoTooComfortable: "assets/collection/tatsuo-too-comfortable.webp",
+  comfortingMaineCoon: "assets/collection/comforting-maine-coon.webp",
   packingTomorrow: "assets/collection/packing-tomorrow.webp",
   littleNightSnack: "assets/collection/little-night-snack.webp",
   readingComics: "assets/collection/reading-comics.webp",

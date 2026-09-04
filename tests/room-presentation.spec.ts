@@ -70,6 +70,7 @@ function visitFor(sceneId: SceneId, mimizouPresent = false): VisitView {
     foundOldToy: "daytime",
     muddyReturn: "evening",
     tatsuoTooComfortable: "evening",
+    comfortingMaineCoon: "evening",
     packingTomorrow: "night",
     sleeping: "deepNight",
   };
@@ -365,6 +366,24 @@ describe("room presentation", () => {
             frameDurationsMs: [2600, 80, 110, 80],
           },
         },
+      },
+    });
+  });
+
+  it("shows the reassuring embrace during the rainy thunder scene", () => {
+    expect(getRoomPresentation(visitFor("comfortingMaineCoon"))).toMatchObject({
+      tint: { color: 0x364963, alpha: 0.32 },
+      hiddenDepthDecorationIds: ["maineCoon"],
+      thunderstorm: true,
+      comfortingMaineCoon: {
+        assetName: "etokichi-comforting-maine-coon-pixel.webp",
+        height: 73,
+        x: 96,
+        y: 326,
+      },
+      characterBubble: {
+        kind: "speech",
+        text: "大丈夫だよー",
       },
     });
   });

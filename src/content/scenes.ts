@@ -347,6 +347,16 @@ export const SCENES: readonly SceneDefinition[] = [
     accent: "#c97861",
   },
   {
+    id: "comfortingMaineCoon",
+    band: "evening",
+    title: "大丈夫だよー",
+    description: "雷を怖がるクーンちゃんを抱きしめ、そばにいることを伝えている。",
+    lines: ["大丈夫だよー。ぼくがぎゅってしてるからね。", "びっくりしたね。でも、ここなら一緒だよ。"],
+    details: ["雷が光るたび、エトキチの腕に少し力がこもる", "窓の外では、雨粒が絶え間なく斜めに流れている"],
+    characterPose: "busy",
+    accent: "#607b9d",
+  },
+  {
     id: "packingTomorrow",
     band: "night",
     title: "明日の持ち物を準備",

@@ -22,6 +22,7 @@ export type SceneId =
   | "simmeringDinner"
   | "foldingLaundry"
   | "tatsuoTooComfortable"
+  | "comfortingMaineCoon"
   | "packingTomorrow"
   | "littleNightSnack"
   | "readingComics"

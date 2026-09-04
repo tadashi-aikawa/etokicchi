@@ -67,6 +67,15 @@ export interface CharacterBubblePresentation {
   height: number;
 }
 
+export interface ComfortingMaineCoonPresentation {
+  assetName: string;
+  height: number;
+  x: number;
+  y: number;
+  depthOffset: number;
+  observation: string;
+}
+
 interface RoomPresentationCommon {
   sleeperAssetName: string;
   sleeperHeight: number;
@@ -84,6 +93,8 @@ interface RoomPresentationCommon {
   sceneProps?: readonly AttachedSceneProp[];
   hideCharacterShadow?: boolean;
   characterBubble?: CharacterBubblePresentation;
+  comfortingMaineCoon?: ComfortingMaineCoonPresentation;
+  thunderstorm?: boolean;
 }
 
 export interface LayeredRoomPresentation extends RoomPresentationCommon {
@@ -167,7 +178,11 @@ export function getRoomTint(visit: VisitView): RoomTint {
   return TIME_TINTS[visit.assignment.band];
 }
 
-function layeredPresentation(visit: VisitView, character: RoomPresentationCommon): LayeredRoomPresentation {
+function layeredPresentation(
+  visit: VisitView,
+  character: RoomPresentationCommon,
+  tint: RoomTint = getRoomTint(visit),
+): LayeredRoomPresentation {
   const furnitureAssetNames = BED_SIDE_ACTION_SCENES.has(visit.scene.id)
     ? { bed: "furniture-bed-bare-pixel.webp", ...character.furnitureAssetNames }
     : character.furnitureAssetNames;
@@ -175,7 +190,7 @@ function layeredPresentation(visit: VisitView, character: RoomPresentationCommon
     kind: "layered",
     baseAssetName: "room-base-empty-daytime-pixel.webp",
     windowAssetName: TIME_WINDOW_ASSET_NAMES[visit.assignment.band],
-    tint: getRoomTint(visit),
+    tint,
     ...character,
     furnitureAssetNames,
   };
@@ -388,6 +403,34 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         },
       },
     });
+  }
+
+  if (visit.scene.id === "comfortingMaineCoon") {
+    return layeredPresentation(
+      visit,
+      {
+        sleeperAssetName: "etokichi-sleep-pixel.webp",
+        sleeperHeight: 42,
+        hiddenDepthDecorationIds: ["maineCoon"],
+        comfortingMaineCoon: {
+          assetName: "etokichi-comforting-maine-coon-pixel.webp",
+          height: 73,
+          x: 96,
+          y: 326,
+          depthOffset: 20,
+          observation: "怖がるクーンちゃんを、エトキチが離さないようにやさしく抱きしめている。",
+        },
+        characterBubble: {
+          kind: "speech",
+          text: "大丈夫だよー",
+          offset: { x: 8, y: -94 },
+          width: 80,
+          height: 27,
+        },
+        thunderstorm: true,
+      },
+      { color: 0x364963, alpha: 0.32 },
+    );
   }
 
   if (visit.scene.id === "simmeringDinner") {

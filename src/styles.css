@@ -92,6 +92,7 @@ button {
   letter-spacing: 0.02em;
   white-space: nowrap;
   pointer-events: none;
+  transition: opacity 120ms linear;
 }
 
 .room-character-bubble.is-thought::before,

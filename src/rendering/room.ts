@@ -47,8 +47,15 @@ import {
   resolveGuestPosition,
   type AttachedSceneProp,
   type CharacterBubblePresentation,
+  type ComfortingMaineCoonPresentation,
   type RoomTint,
 } from "./room-presentation.ts";
+import {
+  getRainDropPosition,
+  getThunderComfortFrame,
+  RAIN_DROP_SEEDS,
+  type ThunderComfortFrame,
+} from "./thunder-comfort.ts";
 
 const WIDTH = 195;
 const HEIGHT = 422;
@@ -250,6 +257,60 @@ function createTimeLightingLayer(visit: VisitView): Container {
   return layer;
 }
 
+type ThunderComfortFrameProvider = () => ThunderComfortFrame;
+
+function createThunderComfortFrameProvider(app: Application): ThunderComfortFrameProvider {
+  let elapsedMs = 0;
+  let frame = getThunderComfortFrame(elapsedMs);
+  app.ticker.add((ticker) => {
+    elapsedMs += ticker.deltaMS;
+    frame = getThunderComfortFrame(elapsedMs);
+  });
+  return () => frame;
+}
+
+function createRainWindowLayer(app: Application): Container {
+  const layer = new Container();
+  layer.label = "rainWindow";
+  const rain = new Container();
+  const stormShade = new Graphics().rect(22, 25, 56, 54).fill({ color: 0x243a56, alpha: 0.58 });
+  const drops = RAIN_DROP_SEEDS.map((seed) => {
+    const drop = new Graphics()
+      .moveTo(0, 0)
+      .lineTo(-1.4, seed.length)
+      .stroke({ color: 0xbdd9ef, alpha: seed.alpha, width: 0.8, pixelLine: true });
+    rain.addChild(drop);
+    return drop;
+  });
+  const mask = new Graphics().rect(22, 25, 56, 54).fill(0xffffff);
+  rain.mask = mask;
+  layer.addChild(stormShade, rain, mask);
+
+  let elapsedMs = 0;
+  app.ticker.add((ticker) => {
+    elapsedMs += ticker.deltaMS;
+    drops.forEach((drop, index) => {
+      const seed = RAIN_DROP_SEEDS[index];
+      if (!seed) return;
+      const position = getRainDropPosition(seed, elapsedMs);
+      drop.position.set(position.x, position.y);
+    });
+  });
+  return layer;
+}
+
+function createThunderFlashLayer(app: Application, getFrame: ThunderComfortFrameProvider): Graphics {
+  const flash = new Graphics().rect(0, 0, WIDTH, BACKGROUND_HEIGHT).fill(0xc8dcff);
+  flash.label = "thunderFlash";
+  flash.blendMode = "screen";
+  flash.eventMode = "none";
+  flash.alpha = 0;
+  app.ticker.add(() => {
+    flash.alpha = getFrame().flashAlpha;
+  });
+  return flash;
+}
+
 function createLayeredBackground(baseTexture: Texture, tint: RoomTint): Container {
   baseTexture.source.scaleMode = "nearest";
   const background = new Container();
@@ -389,10 +450,41 @@ function createSceneProps(
   });
 }
 
+function createComfortingMaineCoon(
+  app: Application,
+  texture: Texture,
+  presentation: ComfortingMaineCoonPresentation,
+  tint: RoomTint,
+  callbacks: RoomCallbacks,
+  getFrame: ThunderComfortFrameProvider,
+): Sprite {
+  texture.source.scaleMode = "nearest";
+  const pair = new Sprite(texture);
+  const baseScale = presentation.height / texture.height;
+  pair.anchor.set(0.5, 1);
+  pair.position.set(presentation.x, presentation.y);
+  pair.scale.set(baseScale);
+  pair.roundPixels = true;
+  pair.zIndex = getDepthZIndex(presentation.y, presentation.depthOffset);
+  pair.label = "抱き合うエトキチとクーンちゃん";
+  pair.eventMode = "static";
+  pair.cursor = "pointer";
+  pair.on("pointertap", () => callbacks.onObservation(presentation.observation));
+  applyLighting(pair, tint);
+
+  app.ticker.add(() => {
+    const frame = getFrame();
+    pair.x = presentation.x + frame.trembleX;
+    pair.scale.set(baseScale * frame.embraceScale);
+  });
+  return pair;
+}
+
 function createCharacterBubbleElement(
   app: Application,
   character: Container,
   presentation: CharacterBubblePresentation,
+  opacity?: () => number,
 ): HTMLDivElement {
   const bubble = document.createElement("div");
   bubble.className = `room-character-bubble is-${presentation.kind}`;
@@ -403,6 +495,7 @@ function createCharacterBubbleElement(
   const updatePosition = (): void => {
     bubble.style.left = `${((character.x + presentation.offset.x) / WIDTH) * 100}%`;
     bubble.style.top = `${((character.y + presentation.offset.y) / HEIGHT) * 100}%`;
+    if (opacity) bubble.style.opacity = `${opacity()}`;
   };
   updatePosition();
   app.ticker.add(updatePosition);
@@ -766,25 +859,30 @@ export async function renderRoom(
 
   const actionAssetName = actionAssetNames[visit.scene.id];
   const presentation = getRoomPresentation(visit);
+  const getThunderFrame = presentation.thunderstorm ? createThunderComfortFrameProvider(app) : undefined;
   const sceneLayout = layout;
   const route = resolveSceneRoute(visit.scene.id, sceneLayout);
   const initialPosition = route[0] ?? { x: 30, y: 154, pauseMs: 5000 };
   const initialDepthY = resolveSceneInitialDepthY(visit.scene.id, sceneLayout);
   const guestPresentation = presentation.visitor ?? presentation.companion;
-  const [characterTexture, actionTexture, guestTexture, sleeperBaseTexture] = await Promise.all([
-    Assets.load<Texture>(
-      `${import.meta.env.BASE_URL}assets/${
-        visit.scene.characterPose === "sleep" ? presentation.sleeperAssetName : "etokichi-walk-pixel-v2.webp"
-      }`,
-    ),
-    actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
-    guestPresentation
-      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${guestPresentation.assetName}`)
-      : undefined,
-    presentation.sleeperBase
-      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.sleeperBase.assetName}`)
-      : undefined,
-  ]);
+  const [characterTexture, actionTexture, guestTexture, sleeperBaseTexture, comfortingMaineCoonTexture] =
+    await Promise.all([
+      Assets.load<Texture>(
+        `${import.meta.env.BASE_URL}assets/${
+          visit.scene.characterPose === "sleep" ? presentation.sleeperAssetName : "etokichi-walk-pixel-v2.webp"
+        }`,
+      ),
+      actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
+      guestPresentation
+        ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${guestPresentation.assetName}`)
+        : undefined,
+      presentation.sleeperBase
+        ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.sleeperBase.assetName}`)
+        : undefined,
+      presentation.comfortingMaineCoon
+        ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.comfortingMaineCoon.assetName}`)
+        : undefined,
+    ]);
   const companion =
     guestTexture && presentation.companion
       ? createCompanion(guestTexture, presentation.companion, initialDepthY, sceneLayout.furniture, callbacks)
@@ -818,6 +916,18 @@ export async function renderRoom(
           callbacks,
           presentation.hideCharacterShadow ?? false,
         );
+  const comfortingMaineCoon =
+    comfortingMaineCoonTexture && presentation.comfortingMaineCoon && getThunderFrame
+      ? createComfortingMaineCoon(
+          app,
+          comfortingMaineCoonTexture,
+          presentation.comfortingMaineCoon,
+          presentation.tint,
+          callbacks,
+          getThunderFrame,
+        )
+      : undefined;
+  if (comfortingMaineCoon) character.visible = false;
 
   const furnitureAssetNames = FURNITURE_DEFINITIONS.map(
     ({ id, assetName }) => presentation.furnitureAssetNames?.[id] ?? assetName,
@@ -870,6 +980,7 @@ export async function renderRoom(
   );
   const base = createLayeredBackground(baseTexture, presentation.tint);
   const windowLayer = createWindowLayer(windowTexture, presentation.tint, callbacks);
+  const rainWindowLayer = presentation.thunderstorm ? createRainWindowLayer(app) : undefined;
   const fixtureLayer = createFixtureLayer(textureByFixtureId, sceneLayout.fixtures, presentation.tint, callbacks);
   const floorDecor = createDecorationLayer(
     FLOOR_DECORATIONS,
@@ -903,13 +1014,23 @@ export async function renderRoom(
   );
   if (sleeperBase) depthContainer.addChild(sleeperBase);
   if (companion) depthContainer.addChild(companion);
+  if (comfortingMaineCoon) depthContainer.addChild(comfortingMaineCoon);
   depthContainer.addChild(character);
 
-  app.stage.addChild(base, windowLayer, floorDecor, fixtureLayer, wallDecor, clockLayer.container);
+  app.stage.addChild(base, windowLayer);
+  if (rainWindowLayer) app.stage.addChild(rainWindowLayer);
+  app.stage.addChild(floorDecor, fixtureLayer, wallDecor, clockLayer.container);
   if (visitor) app.stage.addChild(visitor);
   app.stage.addChild(createWindowForeground(), depthContainer, createTimeLightingLayer(visit));
+  if (getThunderFrame) app.stage.addChild(createThunderFlashLayer(app, getThunderFrame));
+  const bubbleTarget = comfortingMaineCoon ?? character;
   const characterBubble = presentation.characterBubble
-    ? createCharacterBubbleElement(app, character, presentation.characterBubble)
+    ? createCharacterBubbleElement(
+        app,
+        bubbleTarget,
+        presentation.characterBubble,
+        getThunderFrame ? () => getThunderFrame().bubbleOpacity : undefined,
+      )
     : undefined;
   host.replaceChildren(app.canvas, ...(characterBubble ? [characterBubble] : []));
   return {

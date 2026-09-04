@@ -227,6 +227,7 @@ describe("room layout adoption and scene routes", () => {
       "simmeringDinner",
       "foldingLaundry",
       "tatsuoTooComfortable",
+      "comfortingMaineCoon",
       "packingTomorrow",
       "readingComics",
       "mimizouVisit",
@@ -268,6 +269,12 @@ describe("room layout adoption and scene routes", () => {
   it("shows Etokichi worrying beside Tatsuo's occupied sofa without walking", () => {
     expect(resolveSceneRoute("tatsuoTooComfortable", DEFAULT_ROOM_LAYOUT)).toEqual([
       expect.objectContaining({ x: 76, y: 271, action: true }),
+    ]);
+  });
+
+  it("holds Koon-chan on the front rug without walking", () => {
+    expect(resolveSceneRoute("comfortingMaineCoon", DEFAULT_ROOM_LAYOUT)).toEqual([
+      expect.objectContaining({ x: 96, y: 326 }),
     ]);
   });
 

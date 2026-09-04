@@ -243,6 +243,10 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     movement: "nonWalking",
     waypoints: [{ destination: point(76, 271), pauseMs: 5000, action: true }],
   },
+  comfortingMaineCoon: {
+    movement: "nonWalking",
+    waypoints: [{ destination: point(96, 326), pauseMs: 5000 }],
+  },
   packingTomorrow: {
     movement: "nonWalking",
     waypoints: [{ destination: furnitureAction("bookshelf", "packing"), pauseMs: 5000, action: true }],
