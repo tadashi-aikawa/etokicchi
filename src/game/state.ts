@@ -73,6 +73,14 @@ function chooseScene(
   return candidate;
 }
 
+function chooseMimizouPresent(sceneId: SceneId, slotKey: string, discoveries: GameState["discoveries"]): boolean {
+  return (
+    sceneId === "watchingStars" &&
+    Boolean(discoveries.mimizouVisit) &&
+    indexFromSeed(`${slotKey}:mimizou-companion`, 3) === 0
+  );
+}
+
 function createAssignment(now: Date, state: GameState, randomSeed?: string, forcedSceneId?: SceneId): SlotAssignment {
   const localDate = formatSlotDate(now);
   const band = getTimeBand(now);
@@ -86,6 +94,7 @@ function createAssignment(now: Date, state: GameState, randomSeed?: string, forc
     sceneId: scene.id,
     lineIndex: indexFromSeed(`${variantSeed}:${scene.id}:line`, scene.lines.length),
     detailIndex: indexFromSeed(`${variantSeed}:${scene.id}:detail`, scene.details.length),
+    mimizouPresent: chooseMimizouPresent(scene.id, slotKey, state.discoveries),
     createdAt: now.toISOString(),
   };
 }
@@ -129,10 +138,8 @@ export function resolveVisit(
   const line = scene.lines[assignment.lineIndex];
   const detail = scene.details[assignment.detailIndex];
   if (line === undefined || detail === undefined) throw new Error(`Invalid variants for ${scene.id}`);
-  const mimizouPresent =
-    scene.id === "watchingStars" &&
-    Boolean(state.discoveries.mimizouVisit) &&
-    indexFromSeed(`${slotKey}:mimizou-companion`, 3) === 0;
+  // 抽選し直すと再読み込みで同席が変わる。決めた値を持たないのは古いセーブだけ。
+  const mimizouPresent = assignment.mimizouPresent ?? chooseMimizouPresent(scene.id, slotKey, state.discoveries);
 
   return {
     state,

@@ -117,11 +117,14 @@ describe("visit resolution", () => {
   });
 
   it("unlocks a stable low-frequency Mimizou companion after discovering the visit scene", () => {
-    const stargazingResults = Array.from({ length: 90 }, (_, index) => {
-      const now = new Date(2026, 8, index + 1, 1);
+    const unlockedState = (): GameState => {
       const state = createInitialState();
       state.discoveries.mimizouVisit = { firstSeenAt: "2026-08-31T12:00:00.000Z", seenCount: 1 };
-      const first = resolveVisit(now, state);
+      return state;
+    };
+    const stargazingResults = Array.from({ length: 90 }, (_, index) => {
+      const now = new Date(2026, 8, index + 1, 1);
+      const first = resolveVisit(now, unlockedState());
       const second = resolveVisit(now, first.state);
       expect(second.visit.mimizouPresent).toBe(first.visit.mimizouPresent);
       return first.visit.scene.id === "watchingStars" ? first.visit.mimizouPresent : undefined;
@@ -130,6 +133,23 @@ describe("visit resolution", () => {
 
     expect(companionResults).toContain(true);
     expect(companionResults).toContain(false);
+
+    const stargazingDate = Array.from({ length: 90 }, (_, index) => new Date(2026, 8, index + 1, 1)).find(
+      (date) => resolveVisit(date, unlockedState()).visit.scene.id === "watchingStars",
+    );
+    expect(stargazingDate).toBeDefined();
+    if (!stargazingDate) throw new Error("watchingStars was not selected");
+
+    const stargazing = resolveVisit(stargazingDate, unlockedState());
+    const slotKey = stargazing.visit.assignment.slotKey;
+    expect(stargazing.state.assignments[slotKey]?.mimizouPresent).toBe(stargazing.visit.mimizouPresent);
+
+    // 保存済みスロットは抽選し直さない。書き換えた値がそのまま返る。
+    const flipped = structuredClone(stargazing.state);
+    const flippedAssignment = flipped.assignments[slotKey];
+    if (!flippedAssignment) throw new Error("the stargazing slot is missing");
+    flippedAssignment.mimizouPresent = !stargazing.visit.mimizouPresent;
+    expect(resolveVisit(stargazingDate, flipped).visit.mimizouPresent).toBe(!stargazing.visit.mimizouPresent);
 
     const locked = createInitialState();
     const lockedVisit = Array.from(

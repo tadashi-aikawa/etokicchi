@@ -64,6 +64,8 @@ export interface SlotAssignment {
   sceneId: SceneId;
   lineIndex: number;
   detailIndex: number;
+  // このフィールドを持たないのは、みみぞうの同席を保存するより前のセーブだけ。
+  mimizouPresent?: boolean;
   createdAt: string;
 }
 
