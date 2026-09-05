@@ -583,14 +583,18 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     return layeredPresentation(visit, {
       sleeperAssetName: "etokichi-sleep-pixel.webp",
       sleeperHeight: 42,
+      // 鉢とマグを載せない天板で、6皿ぶんの朝食を置く場所を空ける。
+      furnitureAssetNames: {
+        diningSet: "furniture-dining-table-chair-bare-pixel.webp",
+      },
       sceneProps: [
         {
           type: "furniture",
           assetName: "scene-breakfast-dishes-pixel.webp",
-          height: 15,
+          height: 22,
           furnitureId: "diningSet",
-          // 天板の手前寄り。奥へ置くと鉢とカップの背後で浮いて見える。
-          offset: { x: -4, y: -42 },
+          // 天板の中央。幅いっぱいに広げ、皿の下端を手前の縁へ揃える。
+          offset: { x: -4, y: -41 },
           // 食卓の足元より1px手前に置き、天板の上へ載って見えるようにする。
           depthY: 265,
           revealAtWaypoint: 2,
@@ -607,10 +611,10 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         {
           type: "absolute",
           assetName: "scene-mud-footprints-pixel.webp",
-          height: 38,
-          // 玄関マットの下端から室内へ斜めに続かせる。エトキチの立ち位置より右へ寄せて隠れないようにする。
-          x: 152,
-          y: 166,
+          height: 30,
+          // 玄関マットからエトキチの立ち位置へ向かう二歩。エトキチの右脇で止め、体で隠れないようにする。
+          x: 166,
+          y: 148,
           // 玄関の床装飾の直上、家具より奥へ描く。
           depthY: 81,
         },
@@ -627,10 +631,10 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
           type: "absolute",
           assetName: "scene-toy-box-pixel.webp",
           height: 22,
-          // 行動地点の左脇。手前の丸椅子と重ならない高さへ置く。
-          x: 85,
-          y: 218,
-          depthY: 214,
+          // 行動地点の右上寄り。手前の丸椅子と重ならない高さへ置く。
+          x: 97,
+          y: 208,
+          depthY: 204,
         },
       ],
     });
@@ -644,10 +648,11 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         {
           type: "absolute",
           assetName: "scene-laundry-basket-pixel.webp",
-          height: 24,
-          x: 124,
-          y: 181,
-          depthY: 172,
+          height: 33,
+          // 行動地点の左下。エトキチより手前へ描き、たたんだ先へ積んでいるように見せる。
+          x: 108,
+          y: 193,
+          depthY: 182,
         },
       ],
       depthDecorationOverrides: {

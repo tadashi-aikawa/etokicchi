@@ -514,6 +514,18 @@ describe("scene props", () => {
     }
   });
 
+  it("swaps in furniture variants that exist under public/assets", () => {
+    const overrides = SCENES.flatMap((scene) =>
+      Object.values(getRoomPresentation(visitFor(scene.id)).furnitureAssetNames ?? {}),
+    );
+    expect(overrides).toEqual(
+      expect.arrayContaining(["furniture-bed-bare-pixel.webp", "furniture-dining-table-chair-bare-pixel.webp"]),
+    );
+    for (const assetName of overrides) {
+      expect(bundledAssetNames, assetName).toContain(assetName);
+    }
+  });
+
   it("lays the breakfast dishes on the dining table in front of the table itself", () => {
     const [dishes] = propsFor("tooMuchBreakfast");
     if (!dishes) throw new Error("breakfast dishes are missing");
@@ -521,11 +533,15 @@ describe("scene props", () => {
       type: "furniture",
       assetName: "scene-breakfast-dishes-pixel.webp",
       furnitureId: "diningSet",
-      height: 15,
+      height: 22,
+    });
+    // 鉢とマグの無い天板へ差し替えて、6皿ぶんの場所を空ける。
+    expect(getRoomPresentation(visitFor("tooMuchBreakfast")).furnitureAssetNames).toMatchObject({
+      diningSet: "furniture-dining-table-chair-bare-pixel.webp",
     });
 
     const position = resolveScenePropPosition(dishes, DEFAULT_ROOM_LAYOUT);
-    expect(position).toEqual({ x: 48, y: 222 });
+    expect(position).toEqual({ x: 48, y: 223 });
     // 天板の高さに置きつつ、深度だけ食卓の足元より手前へずらす。
     expect(resolveScenePropDepthY(dishes, position)).toBeGreaterThan(DEFAULT_ROOM_LAYOUT.furniture.diningSet.footY);
     expect(getDepthZIndex(resolveScenePropDepthY(dishes, position), 20)).toBeGreaterThan(
@@ -550,7 +566,7 @@ describe("scene props", () => {
       ...DEFAULT_ROOM_LAYOUT,
       furniture: resolveFurnitureLayout(createFurnitureAnchors({ diningSet: { x: 47, y: 264 } })),
     };
-    expect(resolveScenePropPosition(dishes, moved)).toEqual({ x: 43, y: 222 });
+    expect(resolveScenePropPosition(dishes, moved)).toEqual({ x: 43, y: 223 });
   });
 
   it("keeps every other prop visible from the first frame", () => {
@@ -577,7 +593,7 @@ describe("scene props", () => {
   it("draws the muddy footprints above the entrance mat but behind every furniture piece", () => {
     const [footprints] = propsFor("muddyReturn");
     if (!footprints || footprints.type !== "absolute") throw new Error("muddy footprints are missing");
-    expect(footprints).toMatchObject({ assetName: "scene-mud-footprints-pixel.webp", height: 38, x: 152, y: 166 });
+    expect(footprints).toMatchObject({ assetName: "scene-mud-footprints-pixel.webp", height: 30, x: 166, y: 148 });
 
     const depth = getDepthZIndex(resolveScenePropDepthY(footprints, footprints), 20);
     for (const { id } of FURNITURE_DEFINITIONS) {
@@ -585,18 +601,19 @@ describe("scene props", () => {
     }
   });
 
-  it("stands the laundry basket and the toy box just behind their action spots", () => {
+  it("piles the laundry basket in front of Etokichi and keeps the toy box behind her", () => {
     const [basket] = propsFor("foldingLaundry");
     const [toyBox] = propsFor("foundOldToy");
     if (!basket || !toyBox) throw new Error("folding or toy props are missing");
-    expect(basket).toMatchObject({ assetName: "scene-laundry-basket-pixel.webp", height: 24 });
+    expect(basket).toMatchObject({ assetName: "scene-laundry-basket-pixel.webp", height: 33 });
     expect(toyBox).toMatchObject({ assetName: "scene-toy-box-pixel.webp", height: 22 });
 
     const foldingSpot = resolveSceneRoute("foldingLaundry", DEFAULT_ROOM_LAYOUT)[0];
     const toySpot = resolveSceneRoute("foundOldToy", DEFAULT_ROOM_LAYOUT)[0];
     if (!foldingSpot || !toySpot) throw new Error("action spots are missing");
-    expect(resolveScenePropPosition(basket, DEFAULT_ROOM_LAYOUT).x).toBeGreaterThan(foldingSpot.x);
-    expect(resolveScenePropDepthY(basket, resolveScenePropPosition(basket, DEFAULT_ROOM_LAYOUT))).toBeLessThan(
+    // かごはたたんでいる手の先。エトキチより手前へ描く。
+    expect(resolveScenePropPosition(basket, DEFAULT_ROOM_LAYOUT).y).toBeGreaterThan(foldingSpot.y);
+    expect(resolveScenePropDepthY(basket, resolveScenePropPosition(basket, DEFAULT_ROOM_LAYOUT))).toBeGreaterThan(
       foldingSpot.y,
     );
     expect(resolveScenePropPosition(toyBox, DEFAULT_ROOM_LAYOUT).x).toBeLessThan(toySpot.x);
