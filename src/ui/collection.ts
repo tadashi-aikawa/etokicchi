@@ -81,10 +81,10 @@ function createCollectionCard(
   openViewer: (entry: CollectionEntry, trigger: HTMLButtonElement, imageSource: string) => void,
 ): HTMLElement {
   const card = document.createElement("article");
-  const lockDepthClass = entry.status === "locked" ? ` is-lock-depth-${Math.min(entry.remainingUnlockSteps, 3)}` : "";
+  const lockTierClass = entry.status === "locked" ? ` is-lock-tier-${Math.min(entry.unlockDepth, 3)}` : "";
   const rewardTierClass =
     entry.status !== "locked" && entry.unlockDepth > 0 ? ` is-reward-tier-${Math.min(entry.unlockDepth, 3)}` : "";
-  card.className = `collection-card is-${entry.status}${lockDepthClass}${rewardTierClass}`;
+  card.className = `collection-card is-${entry.status}${lockTierClass}${rewardTierClass}`;
   card.style.setProperty("--card-accent", entry.scene.accent);
 
   const illustration = document.createElement("img");
@@ -98,7 +98,18 @@ function createCollectionCard(
   const emblem = document.createElement("div");
   emblem.className = "collection-emblem";
   emblem.setAttribute("aria-hidden", "true");
-  emblem.textContent = entry.status === "discovered" ? "★" : entry.status === "available" ? "？" : "";
+  if (entry.status === "locked") {
+    emblem.classList.add("collection-lock-progress");
+    const lockCount = Math.min(entry.unlockDepth, 3);
+    const unlockedCount = Math.min(lockCount, Math.max(0, entry.unlockDepth - entry.remainingUnlockSteps));
+    for (let index = 0; index < lockCount; index += 1) {
+      const lock = document.createElement("span");
+      lock.className = `collection-lock-mark${index < unlockedCount ? " is-open" : ""}`;
+      emblem.append(lock);
+    }
+  } else {
+    emblem.textContent = entry.status === "discovered" ? "★" : "？";
+  }
 
   const stateLabel = createParagraph(
     "collection-state-label",
