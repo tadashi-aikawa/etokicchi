@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { getScene } from "../src/content/scenes.ts";
 import {
   applyInteraction,
   createInitialState,
   migrateGameState,
   pruneOldSlots,
   resolveVisit,
+  sanitizeGameState,
 } from "../src/game/state.ts";
 import { addDays, makeSlotKey } from "../src/game/time.ts";
 import type { GameState, SlotAssignment } from "../src/game/types.ts";
@@ -341,6 +343,112 @@ describe("state migration", () => {
       ]),
     );
     expect(migrated.discoveries.sleeping?.seenCount).toBe(1);
+  });
+});
+
+describe("state sanitization", () => {
+  function retiredSceneState(): GameState {
+    return {
+      dataVersion: 2,
+      assignments: {
+        "2026-09-01:morning": {
+          slotKey: "2026-09-01:morning",
+          localDate: "2026-09-01",
+          band: "morning",
+          sceneId: "retiredScene",
+          lineIndex: 0,
+          detailIndex: 0,
+          createdAt: "2026-08-31T21:00:00.000Z",
+        },
+        "2026-09-01:daytime": {
+          slotKey: "2026-09-01:daytime",
+          localDate: "2026-09-01",
+          band: "daytime",
+          sceneId: "wateringPlants",
+          lineIndex: 0,
+          detailIndex: 0,
+          createdAt: "2026-09-01T03:00:00.000Z",
+        },
+      },
+      histories: {
+        earlyMorning: [],
+        morning: ["retiredScene", "tooMuchBreakfast"],
+        daytime: ["wateringPlants"],
+        evening: [],
+        night: [],
+        deepNight: [],
+      },
+      interactions: {
+        "2026-09-01:morning": {
+          slotKey: "2026-09-01:morning",
+          choiceId: "eatTogether",
+          immediate: "いっしょに食べた",
+          selectedAt: "2026-08-31T21:10:00.000Z",
+        },
+      },
+      echoes: [
+        {
+          id: "2026-09-01:morning:eatTogether:later",
+          sourceSlotKey: "2026-09-01:morning",
+          targetSlotKey: "2026-09-01:daytime",
+          text: "退役したシーンの余韻",
+          kind: "later",
+        },
+        {
+          id: "2026-09-01:daytime:water:later",
+          sourceSlotKey: "2026-09-01:daytime",
+          targetSlotKey: "2026-09-01:evening",
+          text: "水やりの余韻",
+          kind: "later",
+        },
+      ],
+      discoveries: {
+        wateringPlants: { firstSeenAt: "2026-09-01T03:00:00.000Z", seenCount: 2 },
+        retiredScene: { firstSeenAt: "2026-08-31T21:00:00.000Z", seenCount: 5 },
+      },
+    } as unknown as GameState;
+  }
+
+  it("drops slots whose scene no longer exists together with their interaction and echoes", () => {
+    const sanitized = sanitizeGameState(retiredSceneState());
+
+    expect(sanitized.assignments["2026-09-01:morning"]).toBeUndefined();
+    expect(sanitized.interactions["2026-09-01:morning"]).toBeUndefined();
+    expect(sanitized.echoes.map((echo) => echo.id)).toEqual(["2026-09-01:daytime:water:later"]);
+    expect(sanitized.assignments["2026-09-01:daytime"]).toBeDefined();
+  });
+
+  it("wraps line and detail indexes that fell outside the current content", () => {
+    const state = retiredSceneState();
+    const assignment = state.assignments["2026-09-01:daytime"];
+    if (!assignment) throw new Error("the daytime slot is missing");
+    assignment.lineIndex = 12;
+    assignment.detailIndex = -3;
+
+    const scene = getScene("wateringPlants");
+    const sanitized = sanitizeGameState(state);
+
+    expect(sanitized.assignments["2026-09-01:daytime"]).toMatchObject({
+      sceneId: "wateringPlants",
+      lineIndex: 12 % scene.lines.length,
+      detailIndex: ((-3 % scene.details.length) + scene.details.length) % scene.details.length,
+    });
+  });
+
+  it("removes unknown scenes from the histories and the discoveries", () => {
+    const sanitized = sanitizeGameState(retiredSceneState());
+
+    expect(sanitized.histories.morning).toEqual(["tooMuchBreakfast"]);
+    expect(sanitized.discoveries.wateringPlants?.seenCount).toBe(2);
+    expect(Object.keys(sanitized.discoveries)).toEqual(["wateringPlants"]);
+  });
+
+  it("leaves a consistent saved state untouched", () => {
+    const resolved = resolveVisit(new Date(2026, 8, 1, 12), createInitialState());
+    const interacted = pruneOldSlots(resolved.state, "2026-09-01");
+
+    expect(sanitizeGameState(interacted)).toEqual(interacted);
+    expect(migrateGameState(interacted)).toEqual(interacted);
   });
 });
 

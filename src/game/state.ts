@@ -1,4 +1,4 @@
-import { getScene, getScenesForBand } from "../content/scenes.ts";
+import { findScene, getScene, getScenesForBand } from "../content/scenes.ts";
 import { indexFromSeed } from "./random.ts";
 import { isSceneUnlocked } from "./scene-unlock.ts";
 import { addDays, formatSlotDate, getTimeBand, makeSlotKey, nextChronologicalSlot, TIME_BANDS } from "./time.ts";
@@ -325,8 +325,48 @@ function migrateLegacyState(state: LegacyGameState): GameState {
   };
 }
 
+function wrapVariantIndex(index: number, length: number): number {
+  if (length <= 0 || !Number.isFinite(index)) return 0;
+  const whole = Math.trunc(index);
+  return ((whole % length) + length) % length;
+}
+
+// セリフを減らしたりシーンを改名したりすると、保存済みのスロットがコンテンツを指せなくなる。
+// 起動を止めずに済むよう、指せなくなった分だけ落として残りは範囲内へ丸める。
+export function sanitizeGameState(state: GameState): GameState {
+  const sanitized = cloneState(state);
+  const droppedSlotKeys = new Set<string>();
+
+  for (const [slotKey, assignment] of Object.entries(sanitized.assignments)) {
+    const scene = findScene(assignment.sceneId);
+    if (!scene) {
+      delete sanitized.assignments[slotKey];
+      delete sanitized.interactions[slotKey];
+      droppedSlotKeys.add(slotKey);
+      continue;
+    }
+    // 発見回数を二重に数えないよう、範囲外のindexは削除ではなく丸めて残す。
+    assignment.lineIndex = wrapVariantIndex(assignment.lineIndex, scene.lines.length);
+    assignment.detailIndex = wrapVariantIndex(assignment.detailIndex, scene.details.length);
+  }
+
+  if (droppedSlotKeys.size > 0) {
+    sanitized.echoes = sanitized.echoes.filter((echo) => !droppedSlotKeys.has(echo.sourceSlotKey));
+  }
+
+  for (const band of TIME_BANDS) {
+    sanitized.histories[band] = sanitized.histories[band].filter((sceneId) => findScene(sceneId));
+  }
+
+  for (const sceneId of Object.keys(sanitized.discoveries)) {
+    if (!findScene(sceneId)) delete sanitized.discoveries[sceneId as SceneId];
+  }
+
+  return sanitized;
+}
+
 export function migrateGameState(value: unknown): GameState {
-  if (isGameState(value)) return structuredClone(value);
-  if (isLegacyGameState(value)) return migrateLegacyState(value);
+  if (isGameState(value)) return sanitizeGameState(value);
+  if (isLegacyGameState(value)) return sanitizeGameState(migrateLegacyState(value));
   return createInitialState();
 }

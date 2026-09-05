@@ -461,6 +461,10 @@ export const SCENES: readonly SceneDefinition[] = [
 
 const sceneById = new Map<SceneId, SceneDefinition>(SCENES.map((scene) => [scene.id, scene]));
 
+export function findScene(sceneId: string): SceneDefinition | undefined {
+  return sceneById.get(sceneId as SceneId);
+}
+
 export function getScene(sceneId: SceneId): SceneDefinition {
   const scene = sceneById.get(sceneId);
   if (!scene) throw new Error(`Unknown scene: ${sceneId}`);
