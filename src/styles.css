@@ -632,12 +632,59 @@ button {
 }
 
 .collection-card.is-locked {
+  --lock-metal: #c78553;
+  --lock-metal-dark: #6d4029;
+  --lock-panel: #b79075;
+  --lock-ink: #49372d;
   border-style: double;
   border-width: 5px;
-  border-color: #6f6965;
-  background: #a9a39d;
-  color: #68635f;
+  border-color: var(--lock-metal-dark);
+  background: var(--lock-panel);
+  color: var(--lock-ink);
   box-shadow: none;
+}
+
+.collection-card.is-locked.is-lock-depth-2 {
+  --lock-metal: #e0e5e9;
+  --lock-metal-dark: #616a74;
+  --lock-panel: #b8bec4;
+  --lock-ink: #3e464d;
+}
+
+.collection-card.is-locked.is-lock-depth-3 {
+  --lock-metal: #f2ce64;
+  --lock-metal-dark: #765816;
+  --lock-panel: #c5a653;
+  --lock-ink: #493a17;
+}
+
+.collection-card.is-reward-tier-1 {
+  --reward-metal: #c78553;
+  --reward-metal-light: #f0c39e;
+  --reward-metal-dark: #6d4029;
+  --reward-ink: #49372d;
+}
+
+.collection-card.is-reward-tier-2 {
+  --reward-metal: #cbd1d6;
+  --reward-metal-light: #f3f6f8;
+  --reward-metal-dark: #616a74;
+  --reward-ink: #3e464d;
+}
+
+.collection-card.is-reward-tier-3 {
+  --reward-metal: #e7bc3f;
+  --reward-metal-light: #fff0a8;
+  --reward-metal-dark: #765816;
+  --reward-ink: #493a17;
+}
+
+.collection-card:is(.is-available, .is-discovered):is(.is-reward-tier-1, .is-reward-tier-2, .is-reward-tier-3) {
+  border: 5px double var(--reward-metal-dark);
+  background: color-mix(in srgb, var(--reward-metal) 12%, #fffaf0);
+  box-shadow:
+    0 4px 0 color-mix(in srgb, var(--reward-metal-dark) 40%, transparent),
+    inset 0 0 0 1px var(--reward-metal-light);
 }
 
 .collection-card.is-available::after {
@@ -651,8 +698,50 @@ button {
 
 .collection-card.is-locked::after {
   background:
-    repeating-linear-gradient(-45deg, rgba(45, 42, 40, 0.11) 0 6px, transparent 6px 12px),
-    linear-gradient(to bottom, rgba(39, 37, 36, 0.8), rgba(193, 187, 180, 0.96) 58%, #c1bbb4 72%);
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--lock-metal-dark) 20%, transparent) 0 6px,
+      transparent 6px 12px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--lock-metal-dark) 80%, transparent),
+      color-mix(in srgb, var(--lock-panel) 72%, #f3e9dc) 58%,
+      var(--lock-panel) 72%
+    );
+}
+
+.collection-card:is(.is-available, .is-discovered):is(.is-reward-tier-1, .is-reward-tier-2, .is-reward-tier-3)::after {
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0 68%,
+      color-mix(in srgb, var(--reward-metal-light) 30%, transparent) 69% 72%,
+      transparent 73%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(28, 20, 16, 0.05) 0%,
+      rgba(28, 20, 16, 0.1) 38%,
+      color-mix(in srgb, var(--reward-metal) 13%, rgba(255, 250, 240, 0.92)) 59%,
+      color-mix(in srgb, var(--reward-metal) 16%, #fffaf0) 72%
+    );
+}
+
+.collection-card.is-available:is(.is-reward-tier-1, .is-reward-tier-2, .is-reward-tier-3)::after {
+  background:
+    linear-gradient(
+      115deg,
+      transparent 0 68%,
+      color-mix(in srgb, var(--reward-metal-light) 24%, transparent) 69% 72%,
+      transparent 73%
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--reward-metal-dark) 28%, rgba(44, 35, 28, 0.55)),
+      color-mix(in srgb, var(--reward-metal) 14%, rgba(239, 226, 205, 0.94)) 58%,
+      color-mix(in srgb, var(--reward-metal) 18%, #efe2cd) 72%
+    );
 }
 
 .collection-illustration {
@@ -726,29 +815,48 @@ button {
 
 .is-locked .collection-emblem {
   border-radius: 5px;
-  background: #77716c;
+  background: var(--lock-metal-dark);
   box-shadow:
-    3px 0 #4f4b48,
-    0 3px #4f4b48;
-  color: white;
+    3px 0 color-mix(in srgb, var(--lock-metal-dark) 72%, #211a16),
+    0 3px color-mix(in srgb, var(--lock-metal-dark) 72%, #211a16);
+  color: var(--lock-metal);
   font-size: 15px;
+}
+
+.is-locked .collection-emblem::before {
+  position: absolute;
+  top: 12px;
+  left: 7px;
+  width: 16px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--lock-metal) 22%, var(--lock-metal-dark));
+  content: "";
 }
 
 .is-locked .collection-emblem::after {
   position: absolute;
-  right: -5px;
-  bottom: -5px;
-  display: grid;
-  width: 15px;
-  height: 15px;
-  place-items: center;
-  border: 1px solid #4f4b48;
-  border-radius: 50%;
-  background: #f4c989;
-  color: #34261f;
-  content: attr(data-lock-steps);
-  font-size: 8px;
-  font-weight: 950;
+  top: 4px;
+  left: 10px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-bottom: 0;
+  border-radius: 7px 7px 0 0;
+  content: "";
+}
+
+.is-reward-tier-1 .collection-emblem,
+.is-reward-tier-2 .collection-emblem,
+.is-reward-tier-3 .collection-emblem {
+  border: 1px solid var(--reward-metal-light);
+  background: var(--reward-metal);
+  box-shadow:
+    3px 0 var(--reward-metal-dark),
+    0 3px var(--reward-metal-dark);
+  color: var(--reward-ink);
+  text-shadow: 1px 1px var(--reward-metal-light);
 }
 
 .collection-state-label {
@@ -768,9 +876,17 @@ button {
 }
 
 .is-locked .collection-state-label {
-  border-color: #77716c;
-  background: #68635f;
+  border-color: var(--lock-metal-dark);
+  background: var(--lock-metal-dark);
   color: #fffaf0;
+}
+
+.is-reward-tier-1 .collection-state-label,
+.is-reward-tier-2 .collection-state-label,
+.is-reward-tier-3 .collection-state-label {
+  border-color: var(--reward-metal-dark);
+  background: color-mix(in srgb, var(--reward-metal) 22%, #fffaf0);
+  color: var(--reward-ink);
 }
 
 .collection-card h4 {

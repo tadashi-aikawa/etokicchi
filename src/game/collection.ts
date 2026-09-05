@@ -17,6 +17,7 @@ export interface CollectionEntry {
   discovery?: DiscoveryRecord;
   imagePath: string;
   status: CollectionEntryStatus;
+  unlockDepth: number;
   remainingUnlockSteps: number;
   achievement: SceneAchievement;
 }
@@ -88,6 +89,10 @@ export function getRemainingUnlockSteps(
   return steps;
 }
 
+export function getUnlockDepth(scene: SceneDefinition): number {
+  return getRemainingUnlockSteps(scene, {});
+}
+
 export function getCollectionEntries(discoveries: Partial<Record<SceneId, DiscoveryRecord>>): CollectionEntry[] {
   return SCENES.map((scene) => {
     const discovery = discoveries[scene.id];
@@ -97,6 +102,7 @@ export function getCollectionEntries(discoveries: Partial<Record<SceneId, Discov
       discovery,
       imagePath: getCollectionImagePath(scene.id),
       status,
+      unlockDepth: getUnlockDepth(scene),
       remainingUnlockSteps: status === "locked" ? getRemainingUnlockSteps(scene, discoveries) : 0,
       achievement: getSceneAchievement(discovery?.seenCount ?? 0),
     };

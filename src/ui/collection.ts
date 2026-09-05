@@ -82,7 +82,9 @@ function createCollectionCard(
 ): HTMLElement {
   const card = document.createElement("article");
   const lockDepthClass = entry.status === "locked" ? ` is-lock-depth-${Math.min(entry.remainingUnlockSteps, 3)}` : "";
-  card.className = `collection-card is-${entry.status}${lockDepthClass}`;
+  const rewardTierClass =
+    entry.status !== "locked" && entry.unlockDepth > 0 ? ` is-reward-tier-${Math.min(entry.unlockDepth, 3)}` : "";
+  card.className = `collection-card is-${entry.status}${lockDepthClass}${rewardTierClass}`;
   card.style.setProperty("--card-accent", entry.scene.accent);
 
   const illustration = document.createElement("img");
@@ -96,16 +98,11 @@ function createCollectionCard(
   const emblem = document.createElement("div");
   emblem.className = "collection-emblem";
   emblem.setAttribute("aria-hidden", "true");
-  emblem.textContent = entry.status === "discovered" ? "★" : entry.status === "locked" ? "🔒" : "？";
-  if (entry.status === "locked") emblem.dataset.lockSteps = String(entry.remainingUnlockSteps);
+  emblem.textContent = entry.status === "discovered" ? "★" : entry.status === "available" ? "？" : "";
 
   const stateLabel = createParagraph(
     "collection-state-label",
-    entry.status === "discovered"
-      ? "発見済み"
-      : entry.status === "locked"
-        ? `あと${entry.remainingUnlockSteps}段階`
-        : "未遭遇",
+    entry.status === "discovered" ? "発見済み" : entry.status === "locked" ? "ロック中" : "未遭遇",
   );
   const cardTitle = document.createElement("h4");
   cardTitle.textContent = entry.status === "discovered" ? entry.scene.title : "？？？";

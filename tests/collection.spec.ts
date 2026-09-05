@@ -72,18 +72,22 @@ describe("scene collection", () => {
     const initial = getCollectionEntries({});
     expect(initial.find((entry) => entry.scene.id === "tatsuoAtWindow")).toMatchObject({
       status: "available",
+      unlockDepth: 0,
       remainingUnlockSteps: 0,
     });
     expect(initial.find((entry) => entry.scene.id === "tatsuoWakeUp")).toMatchObject({
       status: "locked",
+      unlockDepth: 1,
       remainingUnlockSteps: 1,
     });
     expect(initial.find((entry) => entry.scene.id === "tatsuoTooComfortable")).toMatchObject({
       status: "locked",
+      unlockDepth: 2,
       remainingUnlockSteps: 2,
     });
     expect(initial.find((entry) => entry.scene.id === "sleepingWithTatsuo")).toMatchObject({
       status: "locked",
+      unlockDepth: 3,
       remainingUnlockSteps: 3,
     });
 
@@ -92,6 +96,7 @@ describe("scene collection", () => {
     });
     expect(afterWindow.find((entry) => entry.scene.id === "tatsuoWakeUp")).toMatchObject({
       status: "available",
+      unlockDepth: 1,
       remainingUnlockSteps: 0,
     });
     expect(afterWindow.find((entry) => entry.scene.id === "tatsuoTooComfortable")).toMatchObject({
@@ -109,6 +114,7 @@ describe("scene collection", () => {
     });
     expect(afterWakeUp.find((entry) => entry.scene.id === "tatsuoTooComfortable")).toMatchObject({
       status: "available",
+      unlockDepth: 2,
       remainingUnlockSteps: 0,
     });
     expect(afterWakeUp.find((entry) => entry.scene.id === "sleepingWithTatsuo")).toMatchObject({
@@ -123,6 +129,7 @@ describe("scene collection", () => {
     });
     expect(afterSofa.find((entry) => entry.scene.id === "sleepingWithTatsuo")).toMatchObject({
       status: "available",
+      unlockDepth: 3,
       remainingUnlockSteps: 0,
     });
   });
