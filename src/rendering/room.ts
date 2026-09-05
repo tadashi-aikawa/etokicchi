@@ -41,6 +41,7 @@ import {
   validateRoomLayout,
 } from "./room-layout.ts";
 import { getRoomLights } from "./room-lighting.ts";
+import { resolveSpeechBubblePlacement } from "./room-speech.ts";
 import {
   getLightingColorMatrix,
   getRoomPresentation,
@@ -554,7 +555,11 @@ function createComfortingMaineCoon(
   pair.label = "抱き合うエトキチとクーンちゃん";
   pair.eventMode = "static";
   pair.cursor = "pointer";
-  pair.on("pointertap", () => callbacks.onObservation(presentation.observation, "クーン"));
+  // 抱き合う姿はエトキチ本体でもあるので、クーンの観察文とセリフのフキダシを同時に出す
+  pair.on("pointertap", () => {
+    callbacks.onObservation(presentation.observation, "クーン");
+    callbacks.onCharacterTap();
+  });
   applyLighting(pair, tint);
 
   app.ticker.add(() => {
@@ -584,6 +589,103 @@ function createCharacterBubbleElement(
   updatePosition();
   app.ticker.add(updatePosition);
   return bubble;
+}
+
+interface SpeechBubble {
+  element: HTMLDivElement;
+  show: (text: string, durationMs: number) => void;
+  destroy: () => void;
+}
+
+function createSpeechBubble(
+  app: Application,
+  host: HTMLElement,
+  target: Container,
+  onVisibilityChange: (visible: boolean) => void,
+): SpeechBubble {
+  const element = document.createElement("div");
+  element.className = "room-speech-bubble";
+  const label = document.createElement("span");
+  label.className = "room-speech-bubble-text";
+  const tail = document.createElement("span");
+  tail.className = "room-speech-bubble-tail";
+  element.append(label, tail);
+
+  let roomWidth = host.clientWidth;
+  let roomHeight = host.clientHeight;
+  const roomResize = new ResizeObserver(() => {
+    roomWidth = host.clientWidth;
+    roomHeight = host.clientHeight;
+  });
+  roomResize.observe(host);
+
+  let visible = false;
+  let bubbleWidth = 0;
+  let bubbleHeight = 0;
+  let characterTop = 0;
+  let characterWidth = 0;
+  let tailSide = "";
+  let timerId: number | undefined;
+
+  const update = (): void => {
+    if (!visible) return;
+    const scaleX = roomWidth / WIDTH;
+    const scaleY = roomHeight / HEIGHT;
+    const placement = resolveSpeechBubblePlacement({
+      roomWidth,
+      roomHeight,
+      characterX: target.x * scaleX,
+      characterTopY: (target.y + characterTop) * scaleY,
+      characterWidth: characterWidth * scaleX,
+      bubbleWidth,
+      bubbleHeight,
+    });
+    element.style.left = `${placement.left}px`;
+    element.style.top = `${placement.top}px`;
+    element.style.setProperty("--tail-offset", `${placement.tailOffset}px`);
+    if (tailSide !== placement.tail) {
+      element.classList.remove(`tail-${tailSide}`);
+      element.classList.add(`tail-${placement.tail}`);
+      tailSide = placement.tail;
+    }
+  };
+
+  const hide = (): void => {
+    if (timerId !== undefined) window.clearTimeout(timerId);
+    timerId = undefined;
+    if (!visible) return;
+    visible = false;
+    element.classList.remove("is-visible");
+    onVisibilityChange(false);
+  };
+
+  const show = (text: string, durationMs: number): void => {
+    label.textContent = text;
+    // 見かけの大きさは描画後の座標系で測る。歩行中も使えるよう、上端は基準点からの相対位置で持つ
+    const bounds = target.getBounds();
+    characterTop = bounds.y - target.y;
+    characterWidth = bounds.width;
+    roomWidth = host.clientWidth;
+    roomHeight = host.clientHeight;
+    element.classList.add("is-visible");
+    bubbleWidth = element.offsetWidth;
+    bubbleHeight = element.offsetHeight;
+    visible = true;
+    update();
+    if (timerId !== undefined) window.clearTimeout(timerId);
+    timerId = window.setTimeout(hide, durationMs);
+    onVisibilityChange(true);
+  };
+
+  app.ticker.add(update);
+  return {
+    element,
+    show,
+    destroy: () => {
+      if (timerId !== undefined) window.clearTimeout(timerId);
+      roomResize.disconnect();
+    },
+  };
 }
 
 function createGridFrames(
@@ -915,6 +1017,8 @@ function createWindowForeground(): Graphics {
 
 export interface RenderedRoom {
   updateClock: (now: Date) => void;
+  /** エトキチの頭上へセリフのフキダシを出し、`durationMs`後に自動で消す */
+  showSpeech: (text: string, durationMs: number) => void;
   destroy: () => void;
 }
 
@@ -1149,9 +1253,16 @@ export async function renderRoom(
   const characterBubble = presentation.characterBubble
     ? createCharacterBubbleElement(app, character, presentation.characterBubble)
     : undefined;
-  host.replaceChildren(app.canvas, ...(characterBubble ? [characterBubble] : []));
+  const speechBubble = createSpeechBubble(app, host, comfortingMaineCoon ?? character, (speechVisible) => {
+    characterBubble?.classList.toggle("is-muted", speechVisible);
+  });
+  host.replaceChildren(app.canvas, ...(characterBubble ? [characterBubble] : []), speechBubble.element);
   return {
     updateClock: clockLayer.update,
-    destroy: () => app.destroy({ removeView: true }, { children: true }),
+    showSpeech: speechBubble.show,
+    destroy: () => {
+      speechBubble.destroy();
+      app.destroy({ removeView: true }, { children: true });
+    },
   };
 }

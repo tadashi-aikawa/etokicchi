@@ -6,6 +6,7 @@ import { formatLocalDate, getSlotKey, millisecondsUntilNextMinute, TIME_BAND_LAB
 import type { GameState, SceneId, StateRepository, VisitView } from "./game/types.ts";
 import { IndexedDbStateRepository, MemoryStateRepository } from "./persistence/indexed-db-repository.ts";
 import { renderRoom, type RenderedRoom } from "./rendering/room.ts";
+import { SPEECH_DURATION_MS } from "./rendering/room-speech.ts";
 import { createCollectionLayer } from "./ui/collection.ts";
 
 interface LaunchOptions {
@@ -17,7 +18,6 @@ interface LaunchOptions {
 
 interface ShellElements {
   roomHost: HTMLElement;
-  speechBubble: HTMLElement;
   sheetSpeech: HTMLElement;
   choicesLabel: HTMLElement;
   choices: HTMLElement;
@@ -25,7 +25,6 @@ interface ShellElements {
   result: HTMLElement;
   toast: HTMLElement;
   openButton: HTMLButtonElement;
-  openSheet: () => void;
   showObservation: (text: string, targetName?: string) => void;
   updateClock: (now: Date) => void;
   dispose: () => void;
@@ -137,14 +136,6 @@ function createShell(
   openButton.textContent = visit.scene.choices?.length ? "関わる" : "見る";
   openButton.setAttribute("aria-haspopup", "dialog");
   hud.append(hudText, openButton);
-
-  const speechBubble = document.createElement("div");
-  speechBubble.className = "speech-bubble";
-  speechBubble.textContent = visit.interaction?.immediate ?? visit.line;
-  const hudResize = new ResizeObserver(() => {
-    shell.style.setProperty("--hud-height", `${hud.offsetHeight}px`);
-  });
-  hudResize.observe(hud);
 
   const sheetLayer = document.createElement("div");
   sheetLayer.className = "sheet-layer";
@@ -281,11 +272,10 @@ function createShell(
   };
   updateClock(now);
 
-  shell.append(roomHost, topBar, speechBubble, hud, sheetLayer, collection.layer, toast);
+  shell.append(roomHost, topBar, hud, sheetLayer, collection.layer, toast);
   root.replaceChildren(shell);
   return {
     roomHost,
-    speechBubble,
     sheetSpeech,
     choicesLabel,
     choices,
@@ -293,11 +283,9 @@ function createShell(
     result,
     toast,
     openButton,
-    openSheet,
     showObservation,
     updateClock,
     dispose: () => {
-      hudResize.disconnect();
       document.removeEventListener("keydown", handleKeydown);
     },
   };
@@ -377,9 +365,10 @@ async function bootstrap(): Promise<void> {
     currentVisit = visit;
     const elements = createShell(root, visit, now, options.debugRandom, state);
     currentElements = elements;
+    let speechLine = visit.interaction?.immediate ?? visit.line;
     const roomCallbacks = {
       onObservation: elements.showObservation,
-      onCharacterTap: elements.openSheet,
+      onCharacterTap: () => currentRoom?.showSpeech(speechLine, SPEECH_DURATION_MS),
     };
     currentRoom = await renderRoom(elements.roomHost, visit, roomCallbacks, now);
 
@@ -429,7 +418,7 @@ async function bootstrap(): Promise<void> {
           elements.result.textContent = applied.interaction.immediate;
           elements.result.hidden = false;
           elements.resultLabel.hidden = false;
-          elements.speechBubble.textContent = applied.interaction.immediate;
+          speechLine = applied.interaction.immediate;
           elements.openButton.textContent = "結果";
           const nextRoom = await renderRoom(
             elements.roomHost,

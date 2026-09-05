@@ -136,6 +136,79 @@ button {
   left: 10px;
 }
 
+.room-character-bubble.is-muted {
+  opacity: 0;
+}
+
+.room-speech-bubble {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(170px, calc(100% - 12px));
+  border: 2px solid #4d3326;
+  border-radius: 12px;
+  padding: 6px 8px;
+  background: #fff;
+  box-shadow: 0 3px 0 rgba(50, 29, 18, 0.28);
+  color: #3b291f;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms linear;
+}
+
+.room-speech-bubble.is-visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.room-speech-bubble-text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+.room-speech-bubble-tail {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  background: #fff;
+}
+
+.room-speech-bubble.tail-down > .room-speech-bubble-tail {
+  bottom: -6px;
+  left: var(--tail-offset, 50%);
+  margin-left: -5px;
+  border-right: 2px solid #4d3326;
+  border-bottom: 2px solid #4d3326;
+}
+
+.room-speech-bubble.tail-left > .room-speech-bubble-tail {
+  top: var(--tail-offset, 50%);
+  left: -6px;
+  margin-top: -5px;
+  border-bottom: 2px solid #4d3326;
+  border-left: 2px solid #4d3326;
+}
+
+.room-speech-bubble.tail-right > .room-speech-bubble-tail {
+  top: var(--tail-offset, 50%);
+  right: -6px;
+  margin-top: -5px;
+  border-top: 2px solid #4d3326;
+  border-right: 2px solid #4d3326;
+}
+
 .top-bar {
   position: absolute;
   z-index: 4;
@@ -255,44 +328,6 @@ button {
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.speech-bubble {
-  position: absolute;
-  z-index: 6;
-  right: 16px;
-  bottom: calc(var(--hud-height, 78px) + 10px + max(9px, env(safe-area-inset-bottom)));
-  left: 38%;
-  border: 2px solid #4d3326;
-  border-radius: 12px;
-  padding: 8px 10px;
-  background: #fff;
-  box-shadow: 0 3px 0 rgba(50, 29, 18, 0.28);
-  color: #3b291f;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1.45;
-}
-
-.speech-bubble::after {
-  position: absolute;
-  right: 34px;
-  bottom: -9px;
-  border: 8px solid transparent;
-  border-bottom: 0;
-  border-top: 9px solid #4d3326;
-  content: "";
-}
-
-.speech-bubble::before {
-  position: absolute;
-  z-index: 1;
-  right: 36px;
-  bottom: -6px;
-  border: 6px solid transparent;
-  border-bottom: 0;
-  border-top: 7px solid #fff;
-  content: "";
 }
 
 .hud-observe {
