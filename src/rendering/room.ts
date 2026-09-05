@@ -11,7 +11,7 @@ import {
   type Ticker,
 } from "pixi.js";
 import "pixi.js/browser";
-import type { SceneId, VisitView } from "../game/types.ts";
+import type { VisitView } from "../game/types.ts";
 import { getMimizouVisitFrame } from "./mimizou-visit.ts";
 import {
   DEPTH_DECORATIONS,
@@ -64,6 +64,7 @@ import {
   THUNDER_FLASH_COLOR,
   type ThunderComfortFrame,
 } from "./thunder-comfort.ts";
+import { ACTION_ASSET_NAMES, WALK_ASSET_NAME } from "./scene-assets.ts";
 import { getThunderWindowFrame, type ThunderWindowFrame } from "./thunder-window.ts";
 
 const WIDTH = 195;
@@ -85,27 +86,6 @@ const directionRows: Record<Direction, number> = {
   left: 1,
   right: 2,
   up: 3,
-};
-
-const actionAssetNames: Partial<Record<SceneId, string>> = {
-  watchingStars: "etokichi-watching-stars-pixel.webp",
-  morningStretch: "etokichi-morning-stretch-pixel.webp",
-  planningDay: "etokichi-planning-day-floor-pixel.webp",
-  mimizouFarewell: "etokichi-mimizou-farewell-pixel.webp",
-  tooMuchBreakfast: "etokichi-breakfast-pixel.webp",
-  overslept: "etokichi-overslept-pixel.webp",
-  morningTea: "etokichi-morning-tea-pixel.webp",
-  brushingMaineCoon: "etokichi-brushing-maine-coon-pixel.webp",
-  foundOldToy: "etokichi-old-toy-pixel.webp",
-  wateringPlants: "etokichi-watering-directions-pixel.webp",
-  muddyReturn: "etokichi-muddy-return-pixel.webp",
-  simmeringDinner: "etokichi-watching-pot-up-right-pixel.webp",
-  foldingLaundry: "etokichi-folding-laundry-pixel.webp",
-  tatsuoTooComfortable: "etokichi-troubled-pixel.webp",
-  packingTomorrow: "etokichi-packing-pixel.webp",
-  littleNightSnack: "etokichi-night-snack-pixel.webp",
-  readingComics: "etokichi-reading-comics-sofa-right-pixel.webp",
-  mimizouVisit: "etokichi-morning-tea-pixel.webp",
 };
 
 function applyLighting(displayObject: Container | Graphics | Sprite, tint: RoomTint): void {
@@ -1047,7 +1027,7 @@ export async function renderRoom(
   app.canvas.className = "room-canvas";
   app.canvas.setAttribute("aria-label", `${visit.scene.title}。${visit.scene.description}`);
 
-  const actionAssetName = actionAssetNames[visit.scene.id];
+  const actionAssetName = ACTION_ASSET_NAMES[visit.scene.id];
   const presentation = getRoomPresentation(visit);
   const getThunderWindowFrame = presentation.tatsuoWindow ? createThunderWindowFrameProvider(app) : undefined;
   const getThunderComfortFrame =
@@ -1068,7 +1048,7 @@ export async function renderRoom(
   ] = await Promise.all([
     Assets.load<Texture>(
       `${import.meta.env.BASE_URL}assets/${
-        visit.scene.characterPose === "sleep" ? presentation.sleeperAssetName : "etokichi-walk-pixel-v2.webp"
+        visit.scene.characterPose === "sleep" ? presentation.sleeperAssetName : WALK_ASSET_NAME
       }`,
     ),
     actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
