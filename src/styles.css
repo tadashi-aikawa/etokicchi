@@ -854,7 +854,7 @@ button {
 .collection-lock-mark::before {
   position: absolute;
   bottom: 4px;
-  left: calc(50% - 1px);
+  left: 50%;
   width: 12px;
   height: 9px;
   border: 2px solid currentColor;
@@ -867,7 +867,7 @@ button {
 .collection-lock-mark::after {
   position: absolute;
   top: 4px;
-  left: calc(50% - 1px);
+  left: 50%;
   width: 8px;
   height: 9px;
   border: 2px solid currentColor;
