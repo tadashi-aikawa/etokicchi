@@ -77,6 +77,13 @@ export interface ComfortingMaineCoonPresentation {
   observation: string;
 }
 
+export interface TatsuoWindowPresentation {
+  assetName: string;
+  height: number;
+  x: number;
+  y: number;
+}
+
 interface RoomPresentationCommon {
   sleeperAssetName: string;
   sleeperHeight: number;
@@ -96,6 +103,7 @@ interface RoomPresentationCommon {
   characterBubble?: CharacterBubblePresentation;
   comfortingMaineCoon?: ComfortingMaineCoonPresentation;
   thunderstorm?: boolean;
+  tatsuoWindow?: TatsuoWindowPresentation;
 }
 
 export interface LayeredRoomPresentation extends RoomPresentationCommon {
@@ -240,6 +248,25 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         depth: "scene",
       },
     });
+  }
+
+  if (visit.scene.id === "tatsuoAtWindow") {
+    return layeredPresentation(
+      visit,
+      {
+        sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
+        sleeperHeight: 30,
+        hiddenDepthDecorationIds: ["maineCoon"],
+        thunderstorm: true,
+        tatsuoWindow: {
+          assetName: "tatsuo-awake-pixel-v2.png",
+          height: 32,
+          x: 51,
+          y: 34,
+        },
+      },
+      { color: 0x101a3b, alpha: 0.72 },
+    );
   }
 
   if (visit.scene.id === "tatsuoWakeUp") {

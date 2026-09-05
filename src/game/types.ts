@@ -3,6 +3,7 @@ export type TimeBand = "earlyMorning" | "morning" | "daytime" | "evening" | "nig
 export type SceneId =
   | "sleeping"
   | "sleepingWithTatsuo"
+  | "tatsuoAtWindow"
   | "kickedBlanket"
   | "watchingStars"
   | "almostAwake"

@@ -49,6 +49,7 @@ import {
   type CharacterBubblePresentation,
   type ComfortingMaineCoonPresentation,
   type RoomTint,
+  type TatsuoWindowPresentation,
 } from "./room-presentation.ts";
 import {
   getRainDropPosition,
@@ -58,6 +59,7 @@ import {
   THUNDER_FLASH_COLOR,
   type ThunderComfortFrame,
 } from "./thunder-comfort.ts";
+import { getThunderWindowFrame, type ThunderWindowFrame } from "./thunder-window.ts";
 
 const WIDTH = 195;
 const HEIGHT = 422;
@@ -260,6 +262,8 @@ function createTimeLightingLayer(visit: VisitView): Container {
 }
 
 type ThunderComfortFrameProvider = () => ThunderComfortFrame;
+type ThunderWindowFrameProvider = () => ThunderWindowFrame;
+type ThunderFlashFrameProvider = () => Pick<ThunderComfortFrame, "flashAlpha">;
 
 function createThunderComfortFrameProvider(app: Application): ThunderComfortFrameProvider {
   let elapsedMs = 0;
@@ -267,6 +271,16 @@ function createThunderComfortFrameProvider(app: Application): ThunderComfortFram
   app.ticker.add((ticker) => {
     elapsedMs += ticker.deltaMS;
     frame = getThunderComfortFrame(elapsedMs);
+  });
+  return () => frame;
+}
+
+function createThunderWindowFrameProvider(app: Application): ThunderWindowFrameProvider {
+  let elapsedMs = 0;
+  let frame = getThunderWindowFrame(elapsedMs);
+  app.ticker.add((ticker) => {
+    elapsedMs += ticker.deltaMS;
+    frame = getThunderWindowFrame(elapsedMs);
   });
   return () => frame;
 }
@@ -308,7 +322,7 @@ function createRainWindowLayer(app: Application): Container {
   return layer;
 }
 
-function createThunderFlashLayer(app: Application, getFrame: ThunderComfortFrameProvider): Graphics {
+function createThunderFlashLayer(app: Application, getFrame: ThunderFlashFrameProvider): Graphics {
   const flash = new Graphics().rect(0, 0, WIDTH, BACKGROUND_HEIGHT).fill(THUNDER_FLASH_COLOR);
   flash.label = "thunderFlash";
   flash.blendMode = "screen";
@@ -318,6 +332,41 @@ function createThunderFlashLayer(app: Application, getFrame: ThunderComfortFrame
     flash.alpha = getFrame().flashAlpha;
   });
   return flash;
+}
+
+function createTatsuoWindowFaceLayer(
+  app: Application,
+  texture: Texture,
+  presentation: TatsuoWindowPresentation,
+  getFrame: ThunderWindowFrameProvider,
+): Container {
+  texture.source.scaleMode = "nearest";
+  const layer = new Container();
+  layer.label = "tatsuoWindowFace";
+  const faceHeight = Math.floor(texture.frame.height * 0.55);
+  const faceTexture = new Texture({
+    source: texture.source,
+    frame: new Rectangle(texture.frame.x, texture.frame.y, texture.frame.width, faceHeight),
+  });
+  const face = new Sprite(faceTexture);
+  face.anchor.set(0.5, 0);
+  face.scale.set(presentation.height / faceTexture.height);
+  face.position.set(presentation.x, presentation.y);
+  face.tint = 0xd8b470;
+  face.roundPixels = true;
+
+  const { x, y, height } = RAIN_WINDOW_BOUNDS;
+  const mask = new Graphics()
+    .rect(x, y, 15, height)
+    .rect(x + 17, y, 17, height)
+    .fill(0xffffff);
+  face.mask = mask;
+  layer.addChild(face, mask);
+  layer.alpha = 0;
+  app.ticker.add(() => {
+    layer.alpha = getFrame().tatsuoVisibility;
+  });
+  return layer;
 }
 
 function createLayeredBackground(baseTexture: Texture, tint: RoomTint): Container {
@@ -758,6 +807,78 @@ function createSleeper(
   return sleeper;
 }
 
+function createThunderWindowEtokichi(
+  app: Application,
+  texture: Texture,
+  position: ResolvedWaypoint,
+  depthY: number,
+  height: number,
+  callbacks: RoomCallbacks,
+  getFrame: ThunderWindowFrameProvider,
+): Container {
+  texture.source.scaleMode = "nearest";
+  const character = new Container();
+  character.label = "thunderWindowEtokichi";
+  character.position.set(position.x, position.y);
+  character.zIndex = getDepthZIndex(depthY, 50);
+  character.eventMode = "dynamic";
+  character.cursor = "pointer";
+  character.on("pointertap", callbacks.onCharacterTap);
+
+  const sleeper = new Sprite(texture);
+  sleeper.anchor.set(0.5, 1);
+  sleeper.scale.set(height / texture.height);
+  sleeper.roundPixels = true;
+
+  const awakeExpression = new Graphics()
+    .rect(-9, -18, 6, 7)
+    .rect(3, -18, 6, 7)
+    .fill(0xfff4df)
+    .rect(-7, -17, 2, 4)
+    .rect(5, -17, 2, 4)
+    .fill(0x3b211c)
+    .rect(-6, -16, 1, 1)
+    .rect(6, -16, 1, 1)
+    .fill(0xffffff)
+    .rect(-2, -8, 4, 2)
+    .fill(0x5c2d25);
+  awakeExpression.visible = false;
+
+  const startledExpression = new Graphics()
+    .rect(-10, -19, 7, 8)
+    .rect(3, -19, 7, 8)
+    .fill(0xfff4df)
+    .rect(-7, -17, 3, 5)
+    .rect(4, -17, 3, 5)
+    .fill(0x3b211c)
+    .rect(-6, -16, 1, 1)
+    .rect(5, -16, 1, 1)
+    .fill(0xffffff)
+    .rect(-2, -9, 4, 4)
+    .fill(0x6c2721);
+  startledExpression.visible = false;
+
+  character.addChild(sleeper, awakeExpression, startledExpression);
+
+  let elapsedMs = 0;
+  app.ticker.add((ticker) => {
+    elapsedMs += ticker.deltaMS;
+    const frame = getFrame();
+    awakeExpression.visible = frame.pose === "awake";
+    startledExpression.visible = frame.pose === "startled";
+    const sleeping = frame.pose === "sleeping";
+    const hidden = frame.pose === "hidden";
+    const breath = sleeping ? Math.sin(elapsedMs / 620) : 0;
+    character.x = position.x + frame.trembleX;
+    character.y = position.y + breath * 0.8 + (hidden ? 5 : frame.pose === "startled" ? -2 : 0);
+    character.scale.x = frame.pose === "startled" ? 1.08 : 1;
+    character.scale.y = hidden ? 0.72 : frame.pose === "startled" ? 1.08 : 1;
+    character.zIndex = getDepthZIndex(depthY, 50);
+  });
+
+  return character;
+}
+
 function createSleeperBase(
   texture: Texture,
   position: ResolvedWaypoint,
@@ -869,30 +990,42 @@ export async function renderRoom(
 
   const actionAssetName = actionAssetNames[visit.scene.id];
   const presentation = getRoomPresentation(visit);
-  const getThunderFrame = presentation.thunderstorm ? createThunderComfortFrameProvider(app) : undefined;
+  const getThunderWindowFrame = presentation.tatsuoWindow ? createThunderWindowFrameProvider(app) : undefined;
+  const getThunderComfortFrame =
+    presentation.thunderstorm && !presentation.tatsuoWindow ? createThunderComfortFrameProvider(app) : undefined;
+  const getThunderFlashFrame = getThunderWindowFrame ?? getThunderComfortFrame;
   const sceneLayout = layout;
   const route = resolveSceneRoute(visit.scene.id, sceneLayout);
   const initialPosition = route[0] ?? { x: 30, y: 154, pauseMs: 5000 };
   const initialDepthY = resolveSceneInitialDepthY(visit.scene.id, sceneLayout);
   const guestPresentation = presentation.visitor ?? presentation.companion;
-  const [characterTexture, actionTexture, guestTexture, sleeperBaseTexture, comfortingMaineCoonTexture] =
-    await Promise.all([
-      Assets.load<Texture>(
-        `${import.meta.env.BASE_URL}assets/${
-          visit.scene.characterPose === "sleep" ? presentation.sleeperAssetName : "etokichi-walk-pixel-v2.webp"
-        }`,
-      ),
-      actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
-      guestPresentation
-        ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${guestPresentation.assetName}`)
-        : undefined,
-      presentation.sleeperBase
-        ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.sleeperBase.assetName}`)
-        : undefined,
-      presentation.comfortingMaineCoon
-        ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.comfortingMaineCoon.assetName}`)
-        : undefined,
-    ]);
+  const [
+    characterTexture,
+    actionTexture,
+    guestTexture,
+    sleeperBaseTexture,
+    comfortingMaineCoonTexture,
+    tatsuoWindowTexture,
+  ] = await Promise.all([
+    Assets.load<Texture>(
+      `${import.meta.env.BASE_URL}assets/${
+        visit.scene.characterPose === "sleep" ? presentation.sleeperAssetName : "etokichi-walk-pixel-v2.webp"
+      }`,
+    ),
+    actionAssetName ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${actionAssetName}`) : undefined,
+    guestPresentation
+      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${guestPresentation.assetName}`)
+      : undefined,
+    presentation.sleeperBase
+      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.sleeperBase.assetName}`)
+      : undefined,
+    presentation.comfortingMaineCoon
+      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.comfortingMaineCoon.assetName}`)
+      : undefined,
+    presentation.tatsuoWindow
+      ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.tatsuoWindow.assetName}`)
+      : undefined,
+  ]);
   const companion =
     guestTexture && presentation.companion
       ? createCompanion(guestTexture, presentation.companion, initialDepthY, sceneLayout.furniture, callbacks)
@@ -905,8 +1038,17 @@ export async function renderRoom(
     sleeperBaseTexture && presentation.sleeperBase
       ? createSleeperBase(sleeperBaseTexture, initialPosition, initialDepthY, presentation.sleeperBase)
       : undefined;
-  const character =
-    visit.scene.characterPose === "sleep"
+  const character = getThunderWindowFrame
+    ? createThunderWindowEtokichi(
+        app,
+        characterTexture,
+        initialPosition,
+        initialDepthY,
+        presentation.sleeperHeight,
+        callbacks,
+        getThunderWindowFrame,
+      )
+    : visit.scene.characterPose === "sleep"
       ? createSleeper(
           app,
           characterTexture,
@@ -927,15 +1069,19 @@ export async function renderRoom(
           presentation.hideCharacterShadow ?? false,
         );
   const comfortingMaineCoon =
-    comfortingMaineCoonTexture && presentation.comfortingMaineCoon && getThunderFrame
+    comfortingMaineCoonTexture && presentation.comfortingMaineCoon && getThunderComfortFrame
       ? createComfortingMaineCoon(
           app,
           comfortingMaineCoonTexture,
           presentation.comfortingMaineCoon,
           presentation.tint,
           callbacks,
-          getThunderFrame,
+          getThunderComfortFrame,
         )
+      : undefined;
+  const tatsuoWindowFace =
+    tatsuoWindowTexture && presentation.tatsuoWindow && getThunderWindowFrame
+      ? createTatsuoWindowFaceLayer(app, tatsuoWindowTexture, presentation.tatsuoWindow, getThunderWindowFrame)
       : undefined;
   if (comfortingMaineCoon) character.visible = false;
 
@@ -1028,18 +1174,24 @@ export async function renderRoom(
   depthContainer.addChild(character);
 
   app.stage.addChild(base, windowLayer);
-  if (rainWindowLayer) app.stage.addChild(rainWindowLayer);
+  if (rainWindowLayer && !tatsuoWindowFace) app.stage.addChild(rainWindowLayer);
   app.stage.addChild(floorDecor, fixtureLayer, wallDecor, clockLayer.container);
   if (visitor) app.stage.addChild(visitor);
-  app.stage.addChild(createWindowForeground(), depthContainer, createTimeLightingLayer(visit));
-  if (getThunderFrame) app.stage.addChild(createThunderFlashLayer(app, getThunderFrame));
+  if (!tatsuoWindowFace) app.stage.addChild(createWindowForeground());
+  app.stage.addChild(depthContainer, createTimeLightingLayer(visit));
+  if (getThunderFlashFrame) app.stage.addChild(createThunderFlashLayer(app, getThunderFlashFrame));
+  if (tatsuoWindowFace) {
+    app.stage.addChild(tatsuoWindowFace);
+    if (rainWindowLayer) app.stage.addChild(rainWindowLayer);
+    app.stage.addChild(createWindowForeground());
+  }
   const bubbleTarget = comfortingMaineCoon ?? character;
   const characterBubble = presentation.characterBubble
     ? createCharacterBubbleElement(
         app,
         bubbleTarget,
         presentation.characterBubble,
-        getThunderFrame ? () => getThunderFrame().bubbleOpacity : undefined,
+        getThunderComfortFrame ? () => getThunderComfortFrame().bubbleOpacity : undefined,
       )
     : undefined;
   host.replaceChildren(app.canvas, ...(characterBubble ? [characterBubble] : []));

@@ -8,9 +8,9 @@ describe("scene catalog", () => {
     for (const band of TIME_BANDS) {
       const scenes = getScenesForBand(band);
       const expectedCount =
-        band === "earlyMorning" || band === "evening"
+        band === "earlyMorning" || band === "evening" || band === "deepNight"
           ? 5
-          : band === "deepNight" || band === "night" || band === "morning" || band === "daytime"
+          : band === "night" || band === "morning" || band === "daytime"
             ? 4
             : 3;
       expect(scenes).toHaveLength(expectedCount);

@@ -218,6 +218,7 @@ describe("room layout adoption and scene routes", () => {
     const expected = [
       "sleeping",
       "sleepingWithTatsuo",
+      "tatsuoAtWindow",
       "kickedBlanket",
       "almostAwake",
       "tatsuoWakeUp",

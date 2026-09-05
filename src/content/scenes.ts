@@ -27,6 +27,21 @@ export const SCENES: readonly SceneDefinition[] = [
     accent: "#706f9e",
   },
   {
+    id: "tatsuoAtWindow",
+    band: "deepNight",
+    title: "いま、窓にいた？",
+    description: "短い雷が二度光ったあと、長い稲光の中でタツヲの顔を見た気がする。",
+    lines: ["……いま、窓に……いたキチ？", "ピカッ、ピカッ……って、タツヲ！？"],
+    details: ["三度目の長い雷光の間だけ、窓に無表情な顔が浮かぶ", "エトキチは暗い窓を見つめ、布団へ潜り直した"],
+    unlockRequirement: {
+      kind: "sceneDiscovery",
+      sceneId: "sleepingWithTatsuo",
+      hint: "タツヲと眠る夜を見ると解放",
+    },
+    characterPose: "sleep",
+    accent: "#d3ad54",
+  },
+  {
     id: "kickedBlanket",
     band: "deepNight",
     title: "布団を蹴飛ばしている",

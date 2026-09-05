@@ -23,6 +23,7 @@ export interface CollectionEntry {
 const COLLECTION_IMAGE_PATHS: Record<SceneId, string> = {
   sleeping: "assets/collection/sleeping.webp",
   sleepingWithTatsuo: "assets/collection/sleeping-with-tatsuo.webp",
+  tatsuoAtWindow: "assets/collection/tatsuo-at-window.webp",
   kickedBlanket: "assets/collection/kicked-blanket.webp",
   watchingStars: "assets/collection/watching-stars.webp",
   almostAwake: "assets/collection/almost-awake.webp",

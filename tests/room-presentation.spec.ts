@@ -71,6 +71,7 @@ function visitFor(sceneId: SceneId, mimizouPresent = false): VisitView {
     muddyReturn: "evening",
     tatsuoTooComfortable: "evening",
     comfortingMaineCoon: "evening",
+    tatsuoAtWindow: "deepNight",
     packingTomorrow: "night",
     sleeping: "deepNight",
   };
@@ -151,6 +152,22 @@ describe("room presentation", () => {
         x: 61,
         y: 170,
         depth: "scene",
+      },
+    });
+  });
+
+  it("configures the rainy deep-night window encounter with Tatsuo", () => {
+    expect(getRoomPresentation(visitFor("tatsuoAtWindow"))).toMatchObject({
+      tint: { color: 0x101a3b, alpha: 0.72 },
+      sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
+      sleeperHeight: 30,
+      hiddenDepthDecorationIds: ["maineCoon"],
+      thunderstorm: true,
+      tatsuoWindow: {
+        assetName: "tatsuo-awake-pixel-v2.png",
+        height: 32,
+        x: 51,
+        y: 34,
       },
     });
   });

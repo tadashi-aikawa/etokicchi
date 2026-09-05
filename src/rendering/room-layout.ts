@@ -90,6 +90,10 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     movement: "nonWalking",
     waypoints: [{ destination: furnitureAction("bed", "sleepTogether"), pauseMs: 5000 }],
   },
+  tatsuoAtWindow: {
+    movement: "nonWalking",
+    waypoints: [{ destination: furnitureAction("bed", "sleep"), pauseMs: 5000 }],
+  },
   kickedBlanket: {
     movement: "nonWalking",
     waypoints: [{ destination: furnitureAction("bed", "kickedBlanket"), pauseMs: 5000 }],
