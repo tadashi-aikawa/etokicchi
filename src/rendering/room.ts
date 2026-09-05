@@ -251,10 +251,10 @@ function createClockLayer(texture: Texture, now: Date, tint: RoomTint): RoomCloc
   };
 }
 
-function createTimeLightingLayer(visit: VisitView): Container {
+function createTimeLightingLayer(visit: VisitView, sceneLayout: RoomLayout): Container {
   const layer = new Container();
   layer.label = "timeLighting";
-  const lights = getRoomLights(visit.assignment.band, visit.scene.characterPose === "sleep");
+  const lights = getRoomLights(visit.assignment.band, visit.scene.characterPose === "sleep", sceneLayout);
   for (const light of lights) {
     const graphic = new Graphics();
     if (light.kind === "circle") {
@@ -1243,7 +1243,7 @@ export async function renderRoom(
   app.stage.addChild(floorDecor, fixtureLayer, wallDecor, clockLayer.container);
   if (visitor) app.stage.addChild(visitor);
   if (!tatsuoWindowFace) app.stage.addChild(createWindowForeground());
-  app.stage.addChild(depthContainer, createTimeLightingLayer(visit));
+  app.stage.addChild(depthContainer, createTimeLightingLayer(visit, sceneLayout));
   if (getThunderFlashFrame) app.stage.addChild(createThunderFlashLayer(app, getThunderFlashFrame));
   if (tatsuoWindowFace) {
     app.stage.addChild(tatsuoWindowFace);

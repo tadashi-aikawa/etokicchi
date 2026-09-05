@@ -1,9 +1,21 @@
 import type { TimeBand } from "../game/types.ts";
+import type { FurnitureId, Point } from "./room-furniture.ts";
+import type { RoomLayout } from "./room-layout.ts";
 
 export interface CircleLight {
   kind: "circle";
   x: number;
   y: number;
+  radius: number;
+  color: number;
+  alpha: number;
+}
+
+/** 家具のアンカーからの相対位置で置く灯り。シーンごとの家具の置き直しへ自動で追随する。 */
+export interface AnchoredCircleLight {
+  kind: "anchoredCircle";
+  anchor: FurnitureId;
+  offset: Point;
   radius: number;
   color: number;
   alpha: number;
@@ -16,7 +28,9 @@ export interface PolygonLight {
   alpha: number;
 }
 
-export type RoomLight = CircleLight | PolygonLight;
+export type RoomLight = CircleLight | AnchoredCircleLight | PolygonLight;
+/** 絶対座標へ解決済みの灯り。描画側はこちらだけを扱う。 */
+export type ResolvedRoomLight = CircleLight | PolygonLight;
 
 const ceilingGlow = (alpha: number): readonly RoomLight[] => [
   { kind: "circle", x: 145, y: 43, radius: 19, color: 0xffd79b, alpha },
@@ -27,6 +41,16 @@ const ceilingGlow = (alpha: number): readonly RoomLight[] => [
     alpha: alpha * 0.42,
   },
 ];
+
+// 灯りは照明台のアンカーの約20px上に載っている。既定配置(61,125)では(61,105)になる。
+const bedsideGlow = (radius: number, color: number, alpha: number): AnchoredCircleLight => ({
+  kind: "anchoredCircle",
+  anchor: "bedsideTable",
+  offset: { x: 0, y: -20 },
+  radius,
+  color,
+  alpha,
+});
 
 export const TIME_LIGHTS: Readonly<Record<TimeBand, readonly RoomLight[]>> = {
   earlyMorning: [
@@ -47,15 +71,29 @@ export const TIME_LIGHTS: Readonly<Record<TimeBand, readonly RoomLight[]>> = {
     ...ceilingGlow(0.16),
     { kind: "polygon", points: [31, 76, 72, 76, 110, 300, 18, 300], color: 0xff8b4f, alpha: 0.16 },
   ],
-  night: [...ceilingGlow(0.2), { kind: "circle", x: 61, y: 105, radius: 18, color: 0xffbc73, alpha: 0.12 }],
-  deepNight: [...ceilingGlow(0.13), { kind: "circle", x: 61, y: 105, radius: 16, color: 0xffb565, alpha: 0.09 }],
+  night: [...ceilingGlow(0.2), bedsideGlow(18, 0xffbc73, 0.12)],
+  deepNight: [...ceilingGlow(0.13), bedsideGlow(16, 0xffb565, 0.09)],
 };
 
 const AWAKE_NIGHT_LIGHTS: Partial<Record<TimeBand, readonly RoomLight[]>> = {
-  night: [...ceilingGlow(0.28), { kind: "circle", x: 61, y: 105, radius: 18, color: 0xffbc73, alpha: 0.13 }],
-  deepNight: [...ceilingGlow(0.2), { kind: "circle", x: 61, y: 105, radius: 16, color: 0xffb565, alpha: 0.1 }],
+  night: [...ceilingGlow(0.28), bedsideGlow(18, 0xffbc73, 0.13)],
+  deepNight: [...ceilingGlow(0.2), bedsideGlow(16, 0xffb565, 0.1)],
 };
 
-export function getRoomLights(band: TimeBand, sleeping: boolean): readonly RoomLight[] {
-  return sleeping ? TIME_LIGHTS[band] : (AWAKE_NIGHT_LIGHTS[band] ?? TIME_LIGHTS[band]);
+export function resolveRoomLight(light: RoomLight, layout: RoomLayout): ResolvedRoomLight {
+  if (light.kind !== "anchoredCircle") return light;
+  const anchor = layout.anchors[light.anchor];
+  return {
+    kind: "circle",
+    x: anchor.x + light.offset.x,
+    y: anchor.y + light.offset.y,
+    radius: light.radius,
+    color: light.color,
+    alpha: light.alpha,
+  };
+}
+
+export function getRoomLights(band: TimeBand, sleeping: boolean, layout: RoomLayout): readonly ResolvedRoomLight[] {
+  const lights = sleeping ? TIME_LIGHTS[band] : (AWAKE_NIGHT_LIGHTS[band] ?? TIME_LIGHTS[band]);
+  return lights.map((light) => resolveRoomLight(light, layout));
 }
