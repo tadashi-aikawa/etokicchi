@@ -4,7 +4,11 @@ import { getDebugSceneId, isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
 import { formatLocalDate, getSlotKey, millisecondsUntilNextMinute, TIME_BAND_LABELS } from "./game/time.ts";
 import type { GameState, SceneId, StateRepository, VisitView } from "./game/types.ts";
-import { IndexedDbStateRepository, MemoryStateRepository } from "./persistence/indexed-db-repository.ts";
+import {
+  FallbackStateRepository,
+  IndexedDbStateRepository,
+  MemoryStateRepository,
+} from "./persistence/indexed-db-repository.ts";
 import { renderRoom, type RenderedRoom } from "./rendering/room.ts";
 import { SPEECH_DURATION_MS } from "./rendering/room-speech.ts";
 import { createCollectionLayer } from "./ui/collection.ts";
@@ -318,20 +322,20 @@ function createShell(
   };
 }
 
-async function loadRepository(): Promise<{ repository: StateRepository; state: GameState; persistent: boolean }> {
-  const repository = new IndexedDbStateRepository();
-  try {
-    return { repository, state: await repository.load(), persistent: true };
-  } catch (error) {
-    console.warn("IndexedDBを利用できないため、このタブだけの保存へ切り替えます。", error);
-    const fallback = new MemoryStateRepository();
-    return { repository: fallback, state: await fallback.load(), persistent: false };
-  }
+interface LoadedRepository {
+  repository: StateRepository;
+  state: GameState;
+  isPersistent: () => boolean;
 }
 
-async function loadDebugRepository(): Promise<{ repository: StateRepository; state: GameState; persistent: boolean }> {
+async function loadRepository(onFallback: (error: unknown) => void): Promise<LoadedRepository> {
+  const repository = new FallbackStateRepository(new IndexedDbStateRepository(), onFallback);
+  return { repository, state: await repository.load(), isPersistent: () => repository.persistent };
+}
+
+async function loadDebugRepository(): Promise<LoadedRepository> {
   const repository = new MemoryStateRepository(createInitialState());
-  return { repository, state: await repository.load(), persistent: true };
+  return { repository, state: await repository.load(), isPersistent: () => true };
 }
 
 async function bootstrap(): Promise<void> {
@@ -340,8 +344,26 @@ async function bootstrap(): Promise<void> {
   root.innerHTML = '<p class="loading">エトキチの暮らしを見に行っています……</p>';
   startRoomViewportSync();
 
+  let currentVisit: VisitView | undefined;
+  let currentElements: ShellElements | undefined;
+  let currentRoom: RenderedRoom | undefined;
+  let operationQueue = Promise.resolve();
+
+  const showStorageWarning = (): void => {
+    const shell = currentElements?.roomHost.parentElement;
+    if (!shell || shell.querySelector(".storage-warning")) return;
+    shell.append(
+      createParagraph("storage-warning", "ブラウザ保存を利用できないため、このタブを閉じると記録が消えます。"),
+    );
+  };
+
   const options = getLaunchOptions();
-  const loaded = options.debugRandom ? await loadDebugRepository() : await loadRepository();
+  const loaded = options.debugRandom
+    ? await loadDebugRepository()
+    : await loadRepository((error: unknown) => {
+        console.warn("ブラウザ保存を利用できないため、このタブだけの保存へ切り替えます。", error);
+        showStorageWarning();
+      });
   const initialNow = options.getNow();
   let state = pruneOldSlots(loaded.state, formatLocalDate(initialNow));
   const resolved = resolveVisit(initialNow, state, {
@@ -350,11 +372,6 @@ async function bootstrap(): Promise<void> {
   });
   state = resolved.state;
   await loaded.repository.save(state);
-
-  let currentVisit: VisitView | undefined;
-  let currentElements: ShellElements | undefined;
-  let currentRoom: RenderedRoom | undefined;
-  let operationQueue = Promise.resolve();
 
   const enqueue = (operation: () => Promise<void>): Promise<void> => {
     operationQueue = operationQueue.then(operation).catch((error: unknown) => {
@@ -400,13 +417,7 @@ async function bootstrap(): Promise<void> {
     };
     currentRoom = await renderRoom(elements.roomHost, visit, roomCallbacks, now);
 
-    if (!loaded.persistent) {
-      const warning = createParagraph(
-        "storage-warning",
-        "ブラウザ保存を利用できないため、このタブを閉じると記録が消えます。",
-      );
-      elements.roomHost.parentElement?.append(warning);
-    }
+    if (!loaded.isPersistent()) showStorageWarning();
 
     showAchievement(elements, visit);
     const existingInteraction = visit.interaction;

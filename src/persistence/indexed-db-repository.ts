@@ -93,3 +93,47 @@ export class MemoryStateRepository implements StateRepository {
     this.state = structuredClone(state);
   }
 }
+
+// 容量超過やプライベートモードでは保存も読み込みも投げる。落ちる代わりにこのタブだけの
+// 保存へ降りて、遊び続けられるようにする。
+export class FallbackStateRepository implements StateRepository {
+  private fallback: MemoryStateRepository | undefined;
+  private lastState: GameState | undefined;
+
+  constructor(
+    private readonly primary: StateRepository,
+    private readonly onFallback: (error: unknown) => void,
+  ) {}
+
+  get persistent(): boolean {
+    return this.fallback === undefined;
+  }
+
+  async load(): Promise<GameState> {
+    if (this.fallback) return this.fallback.load();
+    try {
+      const state = await this.primary.load();
+      this.lastState = state;
+      return state;
+    } catch (error) {
+      return this.switchToMemory(error).load();
+    }
+  }
+
+  async save(state: GameState): Promise<void> {
+    if (this.fallback) return this.fallback.save(state);
+    try {
+      await this.primary.save(state);
+      this.lastState = state;
+    } catch (error) {
+      await this.switchToMemory(error).save(state);
+    }
+  }
+
+  private switchToMemory(error: unknown): MemoryStateRepository {
+    const fallback = new MemoryStateRepository(this.lastState ?? createInitialState());
+    this.fallback = fallback;
+    this.onFallback(error);
+    return fallback;
+  }
+}
