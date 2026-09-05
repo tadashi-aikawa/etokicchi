@@ -1016,14 +1016,17 @@ button {
   transform: translateX(-50%);
 }
 
+/* 外れた錠前は目立たせない。カード全体はまだロック中なので、残っている錠前だけを主役にする */
 .collection-lock-mark.is-open {
-  border-color: var(--lock-open);
-  background: color-mix(in srgb, var(--lock-open) 18%, var(--lock-metal-dark));
-  color: var(--lock-open);
+  border-color: color-mix(in srgb, var(--lock-metal-dark) 60%, transparent);
+  background: color-mix(in srgb, var(--lock-metal-dark) 45%, transparent);
+  box-shadow: none;
+  color: color-mix(in srgb, var(--lock-metal) 45%, var(--lock-metal-dark));
+  opacity: 0.55;
 }
 
 .collection-lock-mark.is-open::before {
-  background: color-mix(in srgb, var(--lock-open) 18%, var(--lock-metal-dark));
+  background: transparent;
 }
 
 .collection-lock-mark.is-open::after {
