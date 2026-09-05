@@ -131,6 +131,11 @@ button {
   content: "";
 }
 
+.room-character-bubble.is-speech.tail-left::after {
+  right: auto;
+  left: 10px;
+}
+
 .top-bar {
   position: absolute;
   z-index: 4;

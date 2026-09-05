@@ -65,6 +65,7 @@ export interface CharacterBubblePresentation {
   offset: Point;
   width: number;
   height: number;
+  tailSide?: "left" | "right";
 }
 
 export interface ComfortingMaineCoonPresentation {
@@ -423,9 +424,10 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         characterBubble: {
           kind: "speech",
           text: "大丈夫だよー",
-          offset: { x: 8, y: -94 },
+          offset: { x: 0, y: -94 },
           width: 80,
           height: 27,
+          tailSide: "left",
         },
         thunderstorm: true,
       },

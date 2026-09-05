@@ -497,6 +497,7 @@ function createCharacterBubbleElement(
 ): HTMLDivElement {
   const bubble = document.createElement("div");
   bubble.className = `room-character-bubble is-${presentation.kind}`;
+  if (presentation.tailSide) bubble.classList.add(`tail-${presentation.tailSide}`);
   bubble.textContent = presentation.text;
   bubble.style.width = `${(presentation.width / WIDTH) * 100}%`;
   bubble.style.minHeight = `${(presentation.height / HEIGHT) * 100}%`;

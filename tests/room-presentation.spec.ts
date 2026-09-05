@@ -384,6 +384,8 @@ describe("room presentation", () => {
       characterBubble: {
         kind: "speech",
         text: "大丈夫だよー",
+        offset: { x: 0, y: -94 },
+        tailSide: "left",
       },
     });
   });
