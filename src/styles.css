@@ -52,7 +52,12 @@ button {
 
 .game-shell {
   position: relative;
-  width: min(100vw, 46.21dvh, 430px);
+  /* 広い画面で付く縁取りを内寸から差し引かせない。差し引くとCanvasの拡大率が整数でなくなる。 */
+  box-sizing: content-box;
+  /* JSが端末ピクセルで整数倍になる大きさを --room-width / --room-height へ入れる。
+     まだ入っていない間だけ、比率で近い大きさへ収めておく。 */
+  width: var(--room-width, min(100vw, 46.21dvh, 430px));
+  height: var(--room-height, auto);
   aspect-ratio: 195 / 422;
   overflow: hidden;
   background: #6d361d;

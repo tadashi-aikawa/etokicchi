@@ -8,6 +8,7 @@ import { IndexedDbStateRepository, MemoryStateRepository } from "./persistence/i
 import { renderRoom, type RenderedRoom } from "./rendering/room.ts";
 import { SPEECH_DURATION_MS } from "./rendering/room-speech.ts";
 import { createCollectionLayer } from "./ui/collection.ts";
+import { resolveRoomViewport } from "./ui/viewport.ts";
 
 interface LaunchOptions {
   getNow: () => Date;
@@ -43,6 +44,32 @@ function getLaunchOptions(): LaunchOptions {
     debugRandom: isRandomDebugMode(parameters),
     debugSceneId: getDebugSceneId(parameters),
   };
+}
+
+function applyRoomViewport(): void {
+  const viewport = resolveRoomViewport({
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    devicePixelRatio: window.devicePixelRatio,
+  });
+  const style = document.documentElement.style;
+  style.setProperty("--room-width", `${viewport.cssWidth}px`);
+  style.setProperty("--room-height", `${viewport.cssHeight}px`);
+}
+
+function startRoomViewportSync(): void {
+  let frameId: number | undefined;
+  const schedule = (): void => {
+    if (frameId !== undefined) return;
+    frameId = window.requestAnimationFrame(() => {
+      frameId = undefined;
+      applyRoomViewport();
+    });
+  };
+  applyRoomViewport();
+  window.addEventListener("resize", schedule);
+  window.addEventListener("orientationchange", schedule);
+  window.visualViewport?.addEventListener("resize", schedule);
 }
 
 function formatClock(date: Date): string {
@@ -311,6 +338,7 @@ async function bootstrap(): Promise<void> {
   const root = document.querySelector<HTMLElement>("#app");
   if (!root) throw new Error("Application root is missing");
   root.innerHTML = '<p class="loading">エトキチの暮らしを見に行っています……</p>';
+  startRoomViewportSync();
 
   const options = getLaunchOptions();
   const loaded = options.debugRandom ? await loadDebugRepository() : await loadRepository();
