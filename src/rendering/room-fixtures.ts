@@ -66,20 +66,23 @@ export const FIXTURE_DEFINITIONS = [
         id: "fridge",
         displayName: "冷蔵庫",
         observation: "冷蔵庫には、エトキチが選んだ小さな食材がきれいに並んでいる。",
-        area: { x: -44, y: -130, width: 23, height: 60 },
+        // 素材(192x600)の実測: 冷蔵庫は texY 0..148。displayHeight 130 換算で上端から32px分。
+        area: { x: -44, y: -130, width: 23, height: 32 },
         partId: "fridgeDoor",
       },
       {
         id: "sink",
         displayName: "流し台",
         observation: "流し台には、今日使った道具がきれいに並んでいる。",
-        area: { x: -34, y: -71, width: 23, height: 31 },
+        // 実測: 天板の上端 texY 148 からコンロ天板の上端 texY 308 まで。
+        area: { x: -34, y: -98, width: 23, height: 35 },
       },
       {
         id: "stove",
         displayName: "コンロ",
         observation: "コンロは、次の料理を始めるのを静かに待っている。",
-        area: { x: -29, y: -42, width: 24, height: 28 },
+        // 実測: コンロ天板 texY 308..377 と、その下の天板前縁 texY 377..408 まで。
+        area: { x: -29, y: -63, width: 24, height: 21 },
         partId: "stove",
       },
     ],
@@ -93,8 +96,9 @@ export const FIXTURE_DEFINITIONS = [
       {
         id: "fridgeDoor",
         defaultStateId: "closed",
-        offset: { x: -6, y: -108 },
-        displayHeight: 58,
+        // 実測: 扉の正面パネルは texY 46..148。下端を冷蔵庫の下端(-98)に合わせる。
+        offset: { x: -6, y: -98 },
+        displayHeight: 22,
         layer: "floorDepth",
         depthOffset: 10,
         states: [

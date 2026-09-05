@@ -29,9 +29,9 @@ describe("room fixtures", () => {
     expect(placed.anchor).toEqual({ x: 180, y: 300 });
     expect(placed.occupancy).toEqual({ x: 133, y: 280, width: 40, height: 20 });
     expect(placed.hotspots.map(({ id, area }) => ({ id, area }))).toEqual([
-      { id: "fridge", area: { x: 136, y: 170, width: 23, height: 60 } },
-      { id: "sink", area: { x: 146, y: 229, width: 23, height: 31 } },
-      { id: "stove", area: { x: 151, y: 258, width: 24, height: 28 } },
+      { id: "fridge", area: { x: 136, y: 170, width: 23, height: 32 } },
+      { id: "sink", area: { x: 146, y: 202, width: 23, height: 35 } },
+      { id: "stove", area: { x: 151, y: 237, width: 24, height: 21 } },
     ]);
     expect(placed.actionPoints).toEqual({
       fridgeFront: { x: 97, y: 218 },
@@ -39,6 +39,24 @@ describe("room fixtures", () => {
       stoveStool: { x: 136, y: 281 },
       sinkFront: { x: 97, y: 254 },
     });
+  });
+
+  it("stacks the fridge, sink, and stove hotspots seamlessly inside the drawn fixture", () => {
+    const { displayHeight, hotspots } = getFixtureDefinition("kitchenUnit");
+    const top = -displayHeight;
+
+    // 素材の見た目と判定がずれると、流し台をタップして冷蔵庫の説明が出るような取り違えが起きる。
+    expect(hotspots.map(({ id, area }) => ({ id, top: area.y, bottom: area.y + area.height }))).toEqual([
+      { id: "fridge", top: -130, bottom: -98 },
+      { id: "sink", top: -98, bottom: -63 },
+      { id: "stove", top: -63, bottom: -42 },
+    ]);
+    for (const [index, hotspot] of hotspots.entries()) {
+      expect(hotspot.area.y).toBeGreaterThanOrEqual(top);
+      expect(hotspot.area.y + hotspot.area.height).toBeLessThanOrEqual(0);
+      const previous = hotspots[index - 1];
+      if (previous) expect(hotspot.area.y).toBe(previous.area.y + previous.area.height);
+    }
   });
 
   it("builds the default layout and resolves each physical action point", () => {
@@ -67,6 +85,8 @@ describe("room fixtures", () => {
     const fixture = getFixtureDefinition("kitchenUnit");
     expect(getFixturePartDefinition(fixture, "fridgeDoor")).toMatchObject({
       defaultStateId: "closed",
+      offset: { x: -6, y: -98 },
+      displayHeight: 22,
       layer: "floorDepth",
       depthOffset: 10,
       states: [{ id: "closed" }, { id: "open", assetName: "fixture-kitchen-unit-fridge-door-open-pixel.webp" }],
