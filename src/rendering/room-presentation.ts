@@ -261,7 +261,7 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         tatsuoWindow: {
           assetName: "tatsuo-awake-pixel.png",
           height: 48,
-          x: 57,
+          x: 69,
           y: 25,
         },
       },
