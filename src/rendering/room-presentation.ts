@@ -254,15 +254,14 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     return layeredPresentation(
       visit,
       {
-        sleeperAssetName: "etokichi-thunder-window-patterns.webp",
-        sleeperHeight: 80,
-        hiddenFurnitureIds: ["bed"],
+        sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
+        sleeperHeight: 30,
         hiddenDepthDecorationIds: ["maineCoon"],
         thunderstorm: true,
         tatsuoWindow: {
           assetName: "tatsuo-awake-pixel.png",
           height: 48,
-          x: 51,
+          x: 57,
           y: 25,
         },
       },

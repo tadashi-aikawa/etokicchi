@@ -8,13 +8,9 @@ interface FlashPulse {
   alpha: number;
 }
 
-export type ThunderWindowPose = "sleeping" | "awake" | "startled" | "hidden";
-
 export interface ThunderWindowFrame {
   flashAlpha: number;
   tatsuoVisibility: number;
-  pose: ThunderWindowPose;
-  trembleX: number;
 }
 
 const FLASH_PULSES: readonly FlashPulse[] = [
@@ -42,21 +38,10 @@ function envelope(phaseMs: number, startMs: number, fadeInMs: number, holdMs: nu
   return 1 - (elapsed - fadeInMs - holdMs) / fadeOutMs;
 }
 
-function resolvePose(phaseMs: number): ThunderWindowPose {
-  if (phaseMs < 1_250 || phaseMs >= 8_050) return "sleeping";
-  if (phaseMs < 4_180) return "awake";
-  if (phaseMs < 5_650) return "startled";
-  if (phaseMs < 7_200) return "awake";
-  return "hidden";
-}
-
 export function getThunderWindowFrame(elapsedMs: number): ThunderWindowFrame {
   const phaseMs = loop(elapsedMs, THUNDER_WINDOW_CYCLE_MS);
-  const pose = resolvePose(phaseMs);
   return {
     flashAlpha: Math.max(...FLASH_PULSES.map((pulse) => pulseAlpha(phaseMs, pulse))),
     tatsuoVisibility: envelope(phaseMs, 3_400, 70, 420, 120),
-    pose,
-    trembleX: pose === "startled" ? (Math.floor((phaseMs - 4_180) / 65) % 2 === 0 ? -0.8 : 0.8) : 0,
   };
 }

@@ -807,48 +807,6 @@ function createSleeper(
   return sleeper;
 }
 
-function createThunderWindowEtokichi(
-  app: Application,
-  texture: Texture,
-  position: ResolvedWaypoint,
-  depthY: number,
-  height: number,
-  callbacks: RoomCallbacks,
-  getFrame: ThunderWindowFrameProvider,
-): Container {
-  texture.source.scaleMode = "nearest";
-  const character = new Container();
-  character.label = "thunderWindowEtokichi";
-  character.position.set(position.x, position.y);
-  character.zIndex = getDepthZIndex(depthY, 50);
-  character.eventMode = "dynamic";
-  character.cursor = "pointer";
-  character.on("pointertap", callbacks.onCharacterTap);
-
-  const frames = createGridFrames(texture, 4, 1)[0] ?? [];
-  if (frames.length !== 4) throw new Error("雷の夜のエトキチ素材は4コマ必要です");
-  const poseIndex = { sleeping: 0, awake: 1, startled: 2, hidden: 3 } as const;
-  const sleeper = new Sprite(frames[0]);
-  sleeper.anchor.set(0.5, 1);
-  sleeper.scale.set(height / (frames[0]?.height ?? height));
-  sleeper.roundPixels = true;
-  character.addChild(sleeper);
-
-  let elapsedMs = 0;
-  app.ticker.add((ticker) => {
-    elapsedMs += ticker.deltaMS;
-    const frame = getFrame();
-    sleeper.texture = frames[poseIndex[frame.pose]] ?? frames[0] ?? Texture.EMPTY;
-    const sleeping = frame.pose === "sleeping";
-    const breath = sleeping ? Math.sin(elapsedMs / 620) : 0;
-    character.x = position.x + frame.trembleX;
-    character.y = position.y + breath * 0.5;
-    character.zIndex = getDepthZIndex(depthY, 50);
-  });
-
-  return character;
-}
-
 function createSleeperBase(
   texture: Texture,
   position: ResolvedWaypoint,
@@ -1008,17 +966,8 @@ export async function renderRoom(
     sleeperBaseTexture && presentation.sleeperBase
       ? createSleeperBase(sleeperBaseTexture, initialPosition, initialDepthY, presentation.sleeperBase)
       : undefined;
-  const character = getThunderWindowFrame
-    ? createThunderWindowEtokichi(
-        app,
-        characterTexture,
-        initialPosition,
-        initialDepthY,
-        presentation.sleeperHeight,
-        callbacks,
-        getThunderWindowFrame,
-      )
-    : visit.scene.characterPose === "sleep"
+  const character =
+    visit.scene.characterPose === "sleep"
       ? createSleeper(
           app,
           characterTexture,

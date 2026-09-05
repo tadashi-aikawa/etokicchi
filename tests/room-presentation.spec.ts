@@ -159,15 +159,14 @@ describe("room presentation", () => {
   it("configures the rainy deep-night window encounter with Tatsuo", () => {
     expect(getRoomPresentation(visitFor("tatsuoAtWindow"))).toMatchObject({
       tint: { color: 0x101a3b, alpha: 0.72 },
-      sleeperAssetName: "etokichi-thunder-window-patterns.webp",
-      sleeperHeight: 80,
-      hiddenFurnitureIds: ["bed"],
+      sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
+      sleeperHeight: 30,
       hiddenDepthDecorationIds: ["maineCoon"],
       thunderstorm: true,
       tatsuoWindow: {
         assetName: "tatsuo-awake-pixel.png",
         height: 48,
-        x: 51,
+        x: 57,
         y: 25,
       },
     });
