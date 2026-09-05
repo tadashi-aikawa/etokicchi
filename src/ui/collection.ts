@@ -120,11 +120,7 @@ function createCollectionCard(
     viewerButton.setAttribute("aria-haspopup", "dialog");
     viewerButton.addEventListener("click", () => openViewer(entry, viewerButton, illustration.src));
     card.append(viewerButton);
-  } else if (entry.status === "locked") {
-    card.append(
-      createParagraph("collection-state-detail", entry.scene.unlockRequirement?.hint ?? "条件を満たすと解放"),
-    );
-  } else {
+  } else if (entry.status === "available") {
     card.append(createParagraph("collection-state-detail", "この時間帯の抽選で出会える"));
   }
 
