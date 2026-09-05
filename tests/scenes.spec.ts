@@ -48,6 +48,14 @@ describe("scene catalog", () => {
     }
   });
 
+  it("gives every choice of every interactive scene an icon", () => {
+    for (const scene of SCENES) {
+      for (const choice of scene.choices ?? []) {
+        expect(choice.icon.length, `${scene.id}/${choice.id}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it("keeps at least one initially available scene in every time band", () => {
     for (const band of TIME_BANDS) {
       expect(

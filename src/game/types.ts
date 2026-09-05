@@ -32,6 +32,7 @@ export type SceneId =
 export interface ChoiceDefinition {
   id: string;
   label: string;
+  icon: string;
   immediate: string;
   later: string;
   nextDay: string;

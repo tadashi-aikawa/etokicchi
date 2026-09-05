@@ -115,7 +115,7 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
   {
     id: "sofa",
     assetName: "furniture-sofa-right-two-seat-pixel.webp",
-    displayName: "右向きの二人掛けソファー",
+    displayName: "ソファー",
     observation: "長い座面には、誰かと並んで座れる余裕がある。",
     anchor: { x: 24, y: 340 },
     displayHeight: 80,

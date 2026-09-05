@@ -92,7 +92,7 @@ describe("furniture definitions", () => {
   it("uses a right-facing sofa along the left wall", () => {
     expect(getFurnitureDefinition("sofa")).toMatchObject({
       assetName: "furniture-sofa-right-two-seat-pixel.webp",
-      displayName: "右向きの二人掛けソファー",
+      displayName: "ソファー",
       displayWidth: 40,
       displayHeight: 80,
       actionPoints: { sit: { x: 7, y: -22 }, sitRear: { x: 7, y: -52 } },

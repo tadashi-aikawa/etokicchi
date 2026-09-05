@@ -47,6 +47,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "cover",
         label: "そっと布団を掛ける",
+        icon: "🛏️",
         immediate: "エトキチは目を覚まさず、ほっとした顔になった。",
         later: "布団にくるまり、さっきより静かな寝息を立てている。",
         nextDay: "あれ？ きのう、だれかが布団を掛けてくれたのかな。よく眠れたよ！",
@@ -54,6 +55,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "extraBlanket",
         label: "予備の毛布を置く",
+        icon: "🧣",
         immediate: "手の届く場所へ、やわらかい毛布を置いた。",
         later: "いつの間にか予備の毛布まで抱えて眠っている。",
         nextDay: "毛布が二枚もあった！ ふかふかだったよ。ありがとう！",
@@ -61,6 +63,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "warmRoom",
         label: "部屋を少し暖かくする",
+        icon: "🔥",
         immediate: "部屋の空気が、ほんのりやわらかくなった。",
         later: "大の字のまま、満足そうな寝顔を見せている。",
         nextDay: "きのうの夜、なんだか春みたいにあったかかったね！",
@@ -158,6 +161,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "eatTogether",
         label: "一緒に食べる",
+        icon: "🍞",
         immediate: "やった！ 朝は一緒に食べると、もっとおいしいね！",
         later: "洗い終えた二人分の食器が、仲良く並んで乾いている。",
         nextDay: "きのうの朝ごはん、楽しかったね。今日はちょうどよく作るよ！",
@@ -165,6 +169,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "makeLunch",
         label: "お弁当に詰める",
+        icon: "🍱",
         immediate: "なるほど！ お昼の楽しみに変身させるキチ！",
         later: "空っぽのお弁当箱に、小さな星のメモが入っている。",
         nextDay: "お弁当、ぴかぴかに食べたよ！ また一緒に詰めたいな。",
@@ -172,6 +177,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "saveForNight",
         label: "夜の分に取っておく",
+        icon: "🌙",
         immediate: "いい考え！ 夜にもう一回うれしくなれるね。",
         later: "取り分けた小皿が、夜食の準備をして待っている。",
         nextDay: "朝のぼくが夜のぼくを助けたんだ。すごい連係プレーだったよ！",
@@ -227,6 +233,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "playTogether",
         label: "一緒に遊ぶ",
+        icon: "🎲",
         immediate: "ほんと？ じゃあ三回勝負しよう！ 三回とも面白いよ！",
         later: "遊び終えたおもちゃが、床の真ん中でまだ出番を待っている。",
         nextDay: "きのうの勝負、楽しかったね！ 次は新しい遊び方を考えたよ。",
@@ -234,6 +241,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "displayIt",
         label: "きれいに飾る",
+        icon: "🏆",
         immediate: "ここなら毎日見えるね。なんだか誇らしいな！",
         later: "棚の一番よい場所に、おもちゃが飾られている。",
         nextDay: "飾った宝物を見ると、昨日のことを思い出すんだ。",
@@ -241,6 +249,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "helpCleaning",
         label: "掃除を手伝う",
+        icon: "🧹",
         immediate: "よーし、二人なら宝物も部屋もぴかぴかにできるキチ！",
         later: "床がきれいになり、見つけた品が小箱にまとまっている。",
         nextDay: "きれいな部屋って気持ちいいね！ 手伝ってくれてありがとう。",
@@ -301,6 +310,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "giveTowel",
         label: "タオルを渡す",
+        icon: "🧺",
         immediate: "助かった！ まず顔を拭けば、どこが顔か分かるね！",
         later: "洗ったタオルが、夕方の風に揺れている。",
         nextDay: "きのうはタオルありがとう。今日は泥のない道を選ぶよ！",
@@ -308,6 +318,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "suggestBath",
         label: "お風呂を勧める",
+        icon: "🛁",
         immediate: "賛成！ お湯が茶色くなるか、ちょっと見てみたいキチ！",
         later: "湯上がりのエトキチが、ほかほかの顔でくつろいでいる。",
         nextDay: "お風呂でぴかぴかになったよ。昨日より一段明るい気がする！",
@@ -315,6 +326,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "hearStory",
         label: "何があったか聞く",
+        icon: "💬",
         immediate: "それがね、道の向こうで困ってる子がいて……最初から話すね！",
         later: "拾ってきた葉っぱを手に、冒険の続きを身振りで話している。",
         nextDay: "話を聞いてくれてありがとう。思い出すと、また誰かを助けたくなるよ。",
@@ -385,6 +397,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "checkTogether",
         label: "一緒に確認する",
+        icon: "✅",
         immediate: "心強い！ ひとつずつ声に出して確認しよう。",
         later: "整理された鞄が、玄関の横で明日を待っている。",
         nextDay: "忘れ物なしだったよ！ 一緒に確認したおかげだね。",
@@ -392,6 +405,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "addTreat",
         label: "差し入れを入れる",
+        icon: "🍪",
         immediate: "あっ、これは明日のお楽しみだね。見なかったことにする！",
         later: "鞄の隙間から、差し入れの包みが少しだけ見えている。",
         nextDay: "差し入れ、すごくうれしかった！ 半分はお土産に取ってあるよ。",
@@ -399,6 +413,7 @@ export const SCENES: readonly SceneDefinition[] = [
       {
         id: "trustHim",
         label: "自分で任せる",
+        icon: "👍",
         immediate: "うん、自分で最後までやってみる。終わったら見せるね！",
         later: "何度もやり直した跡はあるが、鞄はきちんと閉じている。",
         nextDay: "自分で準備できたよ！ 任せてもらえると、ちょっと大人になった気分だね。",

@@ -72,7 +72,7 @@ const ACTION_FRAME_HEIGHT = 60;
 type Direction = "down" | "left" | "right" | "up";
 
 interface RoomCallbacks {
-  onObservation: (text: string) => void;
+  onObservation: (text: string, targetName: string) => void;
   onCharacterTap: () => void;
 }
 
@@ -199,7 +199,9 @@ function createDepthDecorationSprites(
     sprite.label = definition.displayName;
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
-    sprite.on("pointertap", () => callbacks.onObservation(override?.observation ?? definition.observation));
+    sprite.on("pointertap", () =>
+      callbacks.onObservation(override?.observation ?? definition.observation, definition.displayName),
+    );
     applyLighting(sprite, tint);
     return sprite;
   });
@@ -412,7 +414,7 @@ function createWindowLayer(
   const scaleX = windowTexture.width / WIDTH;
   const scaleY = windowTexture.height / BACKGROUND_HEIGHT;
   window.hitArea = new Rectangle(22 * scaleX, 25 * scaleY, 56 * scaleX, 54 * scaleY);
-  window.on("pointertap", () => callbacks.onObservation(observation));
+  window.on("pointertap", () => callbacks.onObservation(observation, "窓"));
   windowLayer.addChild(window, windowMask);
   return windowLayer;
 }
@@ -446,7 +448,7 @@ function createFurnitureSprites(
     const hitArea = resolveFurnitureSpriteHitArea(definition, texture.height);
     sprite.hitArea = new Rectangle(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
     const observation = observationOverrides[definition.id] ?? definition.observation;
-    sprite.on("pointertap", () => callbacks.onObservation(observation));
+    sprite.on("pointertap", () => callbacks.onObservation(observation, definition.displayName));
     return sprite;
   });
 }
@@ -475,7 +477,7 @@ function createFixtureLayer(
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
     const fixtureObservation = observationOverrides[definition.id] ?? definition.observation;
-    sprite.on("pointertap", () => callbacks.onObservation(fixtureObservation));
+    sprite.on("pointertap", () => callbacks.onObservation(fixtureObservation, definition.displayName));
     layer.addChild(sprite);
 
     for (const hotspot of placed.hotspots) {
@@ -486,7 +488,7 @@ function createFixtureLayer(
       target.eventMode = "static";
       target.cursor = "pointer";
       const hotspotObservation = observationOverrides[hotspot.id] ?? hotspot.observation;
-      target.on("pointertap", () => callbacks.onObservation(hotspotObservation));
+      target.on("pointertap", () => callbacks.onObservation(hotspotObservation, hotspot.displayName));
       layer.addChild(target);
     }
   }
@@ -538,7 +540,7 @@ function createComfortingMaineCoon(
   pair.label = "抱き合うエトキチとクーンちゃん";
   pair.eventMode = "static";
   pair.cursor = "pointer";
-  pair.on("pointertap", () => callbacks.onObservation(presentation.observation));
+  pair.on("pointertap", () => callbacks.onObservation(presentation.observation, "クーン"));
   applyLighting(pair, tint);
 
   app.ticker.add(() => {

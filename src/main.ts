@@ -17,16 +17,21 @@ interface LaunchOptions {
 
 interface ShellElements {
   roomHost: HTMLElement;
-  summarySpeech: HTMLElement;
+  speechBubble: HTMLElement;
   sheetSpeech: HTMLElement;
+  choicesLabel: HTMLElement;
   choices: HTMLElement;
+  resultLabel: HTMLElement;
   result: HTMLElement;
   toast: HTMLElement;
   openButton: HTMLButtonElement;
   openSheet: () => void;
+  showObservation: (text: string, targetName?: string) => void;
   updateClock: (now: Date) => void;
   dispose: () => void;
 }
+
+const OBSERVATION_HINT = "家具や窓をタップすると、よく見ることができる";
 
 function getLaunchOptions(): LaunchOptions {
   const parameters = new URLSearchParams(window.location.search);
@@ -58,6 +63,10 @@ function createParagraph(className: string, text: string): HTMLParagraphElement 
 
 function focusWithoutScroll(element: HTMLElement): void {
   element.focus({ preventScroll: true });
+}
+
+function createSheetLabel(text: string): HTMLParagraphElement {
+  return createParagraph("sheet-label", text);
 }
 
 function createShell(
@@ -108,14 +117,34 @@ function createShell(
   const title = document.createElement("h1");
   title.className = "scene-title";
   title.textContent = visit.scene.title;
-  const summarySpeech = createParagraph("summary-speech", visit.line);
-  hudText.append(kicker, title, summarySpeech);
+  const observe = document.createElement("div");
+  observe.className = "hud-observe";
+  const observeChip = document.createElement("span");
+  observeChip.className = "hud-observe-chip";
+  const observeText = document.createElement("span");
+  observeText.className = "hud-observe-text";
+  observe.append(observeChip, observeText);
+  const showObservation = (text: string, targetName?: string): void => {
+    observeChip.textContent = targetName ? `🔍 ${targetName}` : "🔍";
+    observeText.textContent = text;
+    observeText.classList.toggle("is-hint", targetName === undefined);
+  };
+  showObservation(OBSERVATION_HINT);
+  hudText.append(kicker, title, observe);
   const openButton = document.createElement("button");
   openButton.className = "hud-action";
   openButton.type = "button";
   openButton.textContent = visit.scene.choices?.length ? "関わる" : "見る";
   openButton.setAttribute("aria-haspopup", "dialog");
   hud.append(hudText, openButton);
+
+  const speechBubble = document.createElement("div");
+  speechBubble.className = "speech-bubble";
+  speechBubble.textContent = visit.interaction?.immediate ?? visit.line;
+  const hudResize = new ResizeObserver(() => {
+    shell.style.setProperty("--hud-height", `${hud.offsetHeight}px`);
+  });
+  hudResize.observe(hud);
 
   const sheetLayer = document.createElement("div");
   sheetLayer.className = "sheet-layer";
@@ -144,19 +173,65 @@ function createShell(
   closeButton.textContent = "閉じる";
   sheetHeader.append(sheetHeading, closeButton);
 
+  const descriptionLabel = createSheetLabel("いまのようす");
   const description = createParagraph("scene-description", visit.scene.description);
-  const detail = createParagraph("scene-detail", visit.detail);
+
+  const detailLabel = createSheetLabel("よく見ると");
+  const detail = document.createElement("p");
+  detail.className = "scene-detail";
+  const detailIcon = document.createElement("span");
+  detailIcon.className = "scene-detail-icon";
+  detailIcon.textContent = "🔍";
+  detailIcon.setAttribute("aria-hidden", "true");
+  const detailText = document.createElement("span");
+  detailText.textContent = visit.detail;
+  detail.append(detailIcon, detailText);
+
+  const speechLabel = createSheetLabel("エトキチ");
+  const talk = document.createElement("div");
+  talk.className = "sheet-talk";
+  const face = document.createElement("img");
+  face.className = "sheet-face";
+  face.src = `${import.meta.env.BASE_URL}favicon.png`;
+  face.alt = "";
   const sheetSpeech = createParagraph("speech", visit.line);
+  talk.append(face, sheetSpeech);
+
+  const echoLabel = createSheetLabel("つづき");
   const echoBox = document.createElement("div");
   echoBox.className = "echo-list";
   for (const echo of visit.echoes) {
     echoBox.append(createParagraph("echo", echo.text));
   }
+  echoLabel.hidden = visit.echoes.length === 0;
+  echoBox.hidden = visit.echoes.length === 0;
+
+  const choicesLabel = createSheetLabel("どうする？");
   const choices = document.createElement("div");
   choices.className = "choice-list";
+  const showsChoices = Boolean(visit.scene.choices?.length) && !visit.interaction;
+  choicesLabel.hidden = !showsChoices;
+  choices.hidden = !showsChoices;
+
+  const resultLabel = createSheetLabel("エトキチの返事");
+  resultLabel.hidden = true;
   const result = createParagraph("interaction-result", "");
   result.hidden = true;
-  sheet.append(sheetHeader, description, detail, sheetSpeech, echoBox, choices, result);
+  sheet.append(
+    sheetHeader,
+    descriptionLabel,
+    description,
+    detailLabel,
+    detail,
+    speechLabel,
+    talk,
+    echoLabel,
+    echoBox,
+    choicesLabel,
+    choices,
+    resultLabel,
+    result,
+  );
   sheetLayer.append(scrim, sheet);
 
   const collection = createCollectionLayer(state);
@@ -206,19 +281,25 @@ function createShell(
   };
   updateClock(now);
 
-  shell.append(roomHost, topBar, hud, sheetLayer, collection.layer, toast);
+  shell.append(roomHost, topBar, speechBubble, hud, sheetLayer, collection.layer, toast);
   root.replaceChildren(shell);
   return {
     roomHost,
-    summarySpeech,
+    speechBubble,
     sheetSpeech,
+    choicesLabel,
     choices,
+    resultLabel,
     result,
     toast,
     openButton,
     openSheet,
+    showObservation,
     updateClock,
-    dispose: () => document.removeEventListener("keydown", handleKeydown),
+    dispose: () => {
+      hudResize.disconnect();
+      document.removeEventListener("keydown", handleKeydown);
+    },
   };
 }
 
@@ -296,12 +377,8 @@ async function bootstrap(): Promise<void> {
     currentVisit = visit;
     const elements = createShell(root, visit, now, options.debugRandom, state);
     currentElements = elements;
-    const showObservation = (text: string): void => {
-      elements.summarySpeech.textContent = text;
-      elements.sheetSpeech.textContent = text;
-    };
     const roomCallbacks = {
-      onObservation: showObservation,
+      onObservation: elements.showObservation,
       onCharacterTap: elements.openSheet,
     };
     currentRoom = await renderRoom(elements.roomHost, visit, roomCallbacks, now);
@@ -319,6 +396,7 @@ async function bootstrap(): Promise<void> {
     if (existingInteraction) {
       elements.result.textContent = existingInteraction.immediate;
       elements.result.hidden = false;
+      elements.resultLabel.hidden = false;
       elements.openButton.textContent = "結果";
       return;
     }
@@ -327,7 +405,13 @@ async function bootstrap(): Promise<void> {
       const button = document.createElement("button");
       button.className = "choice-button";
       button.type = "button";
-      button.textContent = choice.label;
+      const choiceIcon = document.createElement("span");
+      choiceIcon.className = "choice-icon";
+      choiceIcon.textContent = choice.icon;
+      choiceIcon.setAttribute("aria-hidden", "true");
+      const choiceLabel = document.createElement("span");
+      choiceLabel.textContent = choice.label;
+      button.append(choiceIcon, choiceLabel);
       button.addEventListener("click", () => {
         void enqueue(async () => {
           if (currentVisit !== visit || currentElements !== elements) return;
@@ -340,9 +424,12 @@ async function bootstrap(): Promise<void> {
           state = applied.state;
           await loaded.repository.save(state);
           elements.choices.replaceChildren();
+          elements.choices.hidden = true;
+          elements.choicesLabel.hidden = true;
           elements.result.textContent = applied.interaction.immediate;
           elements.result.hidden = false;
-          elements.summarySpeech.textContent = applied.interaction.immediate;
+          elements.resultLabel.hidden = false;
+          elements.speechBubble.textContent = applied.interaction.immediate;
           elements.openButton.textContent = "結果";
           const nextRoom = await renderRoom(
             elements.roomHost,
