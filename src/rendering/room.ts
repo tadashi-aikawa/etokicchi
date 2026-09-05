@@ -48,6 +48,7 @@ import {
   type AttachedSceneProp,
   type CharacterBubblePresentation,
   type ComfortingMaineCoonPresentation,
+  type ObservationOverrides,
   type RoomTint,
   type TatsuoWindowPresentation,
 } from "./room-presentation.ts";
@@ -390,7 +391,12 @@ function createLayeredBackground(baseTexture: Texture, tint: RoomTint): Containe
   return background;
 }
 
-function createWindowLayer(windowTexture: Texture, tint: RoomTint, callbacks: RoomCallbacks): Container {
+function createWindowLayer(
+  windowTexture: Texture,
+  tint: RoomTint,
+  callbacks: RoomCallbacks,
+  observation: string,
+): Container {
   windowTexture.source.scaleMode = "nearest";
   const windowLayer = new Container();
   windowLayer.label = "timeWindow";
@@ -406,7 +412,7 @@ function createWindowLayer(windowTexture: Texture, tint: RoomTint, callbacks: Ro
   const scaleX = windowTexture.width / WIDTH;
   const scaleY = windowTexture.height / BACKGROUND_HEIGHT;
   window.hitArea = new Rectangle(22 * scaleX, 25 * scaleY, 56 * scaleX, 54 * scaleY);
-  window.on("pointertap", () => callbacks.onObservation("窓の外にも、同じ時間がゆっくり流れている。"));
+  window.on("pointertap", () => callbacks.onObservation(observation));
   windowLayer.addChild(window, windowMask);
   return windowLayer;
 }
@@ -416,6 +422,7 @@ function createFurnitureSprites(
   furniture: FurnitureLayout,
   tint: RoomTint,
   callbacks: RoomCallbacks,
+  observationOverrides: ObservationOverrides,
   hiddenFurnitureIds: readonly FurnitureId[] = [],
 ): readonly Sprite[] {
   const hiddenIds = new Set(hiddenFurnitureIds);
@@ -438,7 +445,8 @@ function createFurnitureSprites(
     sprite.cursor = "pointer";
     const hitArea = resolveFurnitureSpriteHitArea(definition, texture.height);
     sprite.hitArea = new Rectangle(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
-    sprite.on("pointertap", () => callbacks.onObservation(definition.observation));
+    const observation = observationOverrides[definition.id] ?? definition.observation;
+    sprite.on("pointertap", () => callbacks.onObservation(observation));
     return sprite;
   });
 }
@@ -448,6 +456,7 @@ function createFixtureLayer(
   fixtures: FixtureLayout,
   tint: RoomTint,
   callbacks: RoomCallbacks,
+  observationOverrides: ObservationOverrides,
 ): Container {
   const layer = new Container();
   layer.label = "fixedFixtures";
@@ -465,7 +474,8 @@ function createFixtureLayer(
     sprite.label = definition.displayName;
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
-    sprite.on("pointertap", () => callbacks.onObservation(definition.observation));
+    const fixtureObservation = observationOverrides[definition.id] ?? definition.observation;
+    sprite.on("pointertap", () => callbacks.onObservation(fixtureObservation));
     layer.addChild(sprite);
 
     for (const hotspot of placed.hotspots) {
@@ -475,7 +485,8 @@ function createFixtureLayer(
       target.label = hotspot.displayName;
       target.eventMode = "static";
       target.cursor = "pointer";
-      target.on("pointertap", () => callbacks.onObservation(hotspot.observation));
+      const hotspotObservation = observationOverrides[hotspot.id] ?? hotspot.observation;
+      target.on("pointertap", () => callbacks.onObservation(hotspotObservation));
       layer.addChild(target);
     }
   }
@@ -1052,9 +1063,15 @@ export async function renderRoom(
     decorationAssetNames.map((assetName, index) => [assetName, decorationTextures[index] as Texture]),
   );
   const base = createLayeredBackground(baseTexture, presentation.tint);
-  const windowLayer = createWindowLayer(windowTexture, presentation.tint, callbacks);
+  const windowLayer = createWindowLayer(windowTexture, presentation.tint, callbacks, presentation.windowObservation);
   const rainWindowLayer = presentation.thunderstorm ? createRainWindowLayer(app) : undefined;
-  const fixtureLayer = createFixtureLayer(textureByFixtureId, sceneLayout.fixtures, presentation.tint, callbacks);
+  const fixtureLayer = createFixtureLayer(
+    textureByFixtureId,
+    sceneLayout.fixtures,
+    presentation.tint,
+    callbacks,
+    presentation.observationOverrides,
+  );
   const floorDecor = createDecorationLayer(
     FLOOR_DECORATIONS,
     textureByDecorationAsset,
@@ -1072,6 +1089,7 @@ export async function renderRoom(
       sceneLayout.furniture,
       presentation.tint,
       callbacks,
+      presentation.observationOverrides,
       presentation.hiddenFurnitureIds,
     ),
     ...createDepthDecorationSprites(

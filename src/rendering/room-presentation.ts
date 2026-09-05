@@ -1,7 +1,7 @@
 import type { ColorMatrix } from "pixi.js";
 import type { SceneId, TimeBand, VisitView } from "../game/types.ts";
 import { type FurnitureId, type FurnitureLayout, type Point, resolveFurnitureActionPoint } from "./room-furniture.ts";
-import type { FixtureId } from "./room-fixtures.ts";
+import type { FixtureHotspotId, FixtureId } from "./room-fixtures.ts";
 import type { RoomDepthDecorationId, RoomDepthDecorationOverride } from "./room-decor.ts";
 
 const TIME_WINDOW_ASSET_NAMES: Record<TimeBand, string> = {
@@ -17,6 +17,20 @@ export interface RoomTint {
   color: number;
   alpha: number;
 }
+
+// タップで観察できる対象。家具・キッチンの部位・キッチン本体・窓をひとつの識別子空間にまとめる。
+export type ObservationTargetId = FurnitureId | FixtureHotspotId | FixtureId | "window";
+
+export type ObservationOverrides = Partial<Record<ObservationTargetId, string>>;
+
+export const WINDOW_OBSERVATIONS: Record<TimeBand, string> = {
+  earlyMorning: "空が白み始めて、街はまだ静かだ。",
+  morning: "朝の光が窓いっぱいに差し込んでいる。",
+  daytime: "昼の空が高く、遠くの洗濯物が風に揺れている。",
+  evening: "夕焼けが街の輪郭をオレンジに染めている。",
+  night: "街の明かりがぽつぽつと灯り始めている。",
+  deepNight: "街は眠り、窓には小さな星がいくつか見える。",
+};
 
 interface GuestPresentationCommon {
   assetName: string;
@@ -104,6 +118,7 @@ interface RoomPresentationCommon {
   comfortingMaineCoon?: ComfortingMaineCoonPresentation;
   thunderstorm?: boolean;
   tatsuoWindow?: TatsuoWindowPresentation;
+  observationOverrides?: ObservationOverrides;
 }
 
 export interface LayeredRoomPresentation extends RoomPresentationCommon {
@@ -111,6 +126,8 @@ export interface LayeredRoomPresentation extends RoomPresentationCommon {
   baseAssetName: "room-base-empty-daytime-pixel.webp";
   windowAssetName: string;
   tint: RoomTint;
+  observationOverrides: ObservationOverrides;
+  windowObservation: string;
 }
 
 export type RoomPresentation = LayeredRoomPresentation;
@@ -179,6 +196,151 @@ const AWAKE_NIGHT_TINTS: Partial<Record<TimeBand, RoomTint>> = {
 
 const BED_SIDE_ACTION_SCENES = new Set<SceneId>(["watchingStars", "morningStretch", "mimizouFarewell"]);
 
+// シーンごとの観察文。ここに無い対象は家具・設備・時間帯別の既定文をそのまま使う。
+const SCENE_OBSERVATION_OVERRIDES: Partial<Record<SceneId, ObservationOverrides>> = {
+  sleeping: {
+    bed: "エトキチの寝息に合わせて、掛け布団がゆっくり上下している。",
+    bedsideTable: "照明台の明かりは落とされ、コップの水だけが小さく光っている。",
+    bookshelf: "読みかけの本が、棚から少しだけ引き出されたままになっている。",
+  },
+  sleepingWithTatsuo: {
+    bed: "タツヲの大きな手が、ベッドの縁にそっと添えられている。",
+    bedsideTable: "枕元の水は、タツヲが持ってきてくれたものかもしれない。",
+    sofa: "タツヲにはソファーより、エトキチのそばのほうが落ち着くらしい。",
+  },
+  tatsuoAtWindow: {
+    window: "雨に濡れた窓に、雷が光るたび何かの影が浮かぶ。",
+    bed: "エトキチは布団を鼻まで引き上げ、窓のほうをちらちら見ている。",
+    bookshelf: "雷が鳴るたび、棚の写真立てがかたかたと鳴っている。",
+  },
+  kickedBlanket: {
+    bed: "布団は足元から床へずり落ち、エトキチは大の字で眠っている。",
+    window: "窓が少しだけ開いていて、冷たい夜風が入ってくる。",
+    bedsideTable: "照明台の上には、まだ半分残った水のコップがある。",
+  },
+  watchingStars: {
+    window: "窓の向こうで、小さな星がひとつずつ瞬いている。",
+    bed: "ベッドは空っぽで、枕だけが窓辺の主を待っている。",
+    bookshelf: "星座の本が、棚の一番手前に移されている。",
+    bedsideTable: "照明は消してある。星を見るには暗いほうがいいらしい。",
+  },
+  almostAwake: {
+    window: "カーテンの隙間から、細い朝日が布団の上へ伸びている。",
+    bed: "布団の中で何度ももぞもぞ動いている。もうすぐ起きそうだ。",
+    bedsideTable: "枕元の帽子に手が伸びかけて、また布団へ戻った。",
+  },
+  morningStretch: {
+    window: "朝の空気を吸い込むたび、窓の外が少し明るくなる気がする。",
+    bed: "起きたばかりのベッドは、掛け布団がめくれたままだ。",
+    bedsideTable: "窓のそばに、小さな水のコップが用意されている。",
+  },
+  planningDay: {
+    bookshelf: "棚の手帳置き場が空いている。今日の分は絨毯の上だ。",
+    diningSet: "食卓ではなく絨毯の上で書くのが、エトキチ流らしい。",
+    window: "静かな朝の光が、開いた手帳のページを照らしている。",
+  },
+  tatsuoWakeUp: {
+    bed: "タツヲの手がベッドの縁にあるのに、エトキチはまだ布団の中だ。",
+    bedsideTable: "枕元に朝の水が届いている。タツヲが運んできたらしい。",
+    window: "タツヲが来るのは、いつも空が白み始めたころだ。",
+  },
+  mimizouFarewell: {
+    window: "窓台に灰色の小さな羽が一枚残っている。",
+    bed: "ベッドは空っぽ。エトキチは窓辺で手を振っている。",
+    bookshelf: "棚の上のフクロウの置き物が、窓のほうを向いている。",
+  },
+  tooMuchBreakfast: {
+    diningSet: "食卓には、どう見ても二人では食べきれない量の朝食が並んでいる。",
+    stove: "コンロはまだ温かい。作りすぎた理由がここにある。",
+    fridge: "冷蔵庫の中身が、今朝だけでだいぶ減った気がする。",
+    sink: "流し台には、朝食に使ったボウルとフライパンが積まれている。",
+  },
+  overslept: {
+    bed: "布団が飛ばされたように乱れている。飛び起きたらしい。",
+    diningSet: "食卓の椅子に、なぜか帽子が掛かっている。",
+    bookshelf: "鞄の中身を探した跡が、棚の前に散らばっている。",
+    window: "窓の外はもうすっかり明るい。急がないと。",
+  },
+  morningTea: {
+    diningSet: "湯気の立つ黄色いカップを、両手で包んで飲んでいる。",
+    window: "窓から差す光が、お茶の湯気を照らしている。",
+    stove: "やかんを火にかけた跡が、コンロにまだ残っている。",
+    sink: "茶葉の缶が、流し台の脇に出しっぱなしになっている。",
+  },
+  brushingMaineCoon: {
+    sofa: "ソファーの上に、抜け毛がふわふわと集まっている。",
+    window: "朝の光で、クーンちゃんのしま模様までつやつやに見える。",
+  },
+  foundOldToy: {
+    bookshelf: "棚の奥から出てきた箱が、床に開けたまま置かれている。",
+    diningSet: "掃除の途中のはずが、雑巾は食卓の上で止まっている。",
+    sofa: "ソファーの下から、昔描いた絵が出てきた。",
+  },
+  windowNap: {
+    window: "窓から差す日なたが、ちょうど座布団の上に落ちている。",
+    bed: "ベッドではなく、日なたの座布団を選んだらしい。",
+    bookshelf: "読みかけの本は、胸の上で開いたままだ。",
+  },
+  nappingOnMaineCoon: {
+    sofa: "ソファーは空いているのに、今日の枕はクーンちゃんだ。",
+    window: "昼の光が、二人の寝息に合わせてゆらいで見える。",
+  },
+  wateringPlants: {
+    floorPlant: "大きな葉が、今もらった水できらきら光っている。",
+    diningSet: "食卓の鉢には小さな芽が出ていて、一口ぶんの水をもらった。",
+    window: "窓辺の緑が、水をもらって少し背伸びしたように見える。",
+    sink: "じょうろに水を汲んだ跡が、流し台に残っている。",
+  },
+  muddyReturn: {
+    window: "夕焼けの帰り道で、水たまりに落ちたらしい。",
+    sink: "泥だらけの手をこれから洗うのか、流し台が待っている。",
+    bed: "泥のついたまま、ベッドに飛び込まないでほしい。",
+    sofa: "ソファーにも泥がつきそうで、ちょっとひやひやする。",
+  },
+  simmeringDinner: {
+    stove: "鍋がことこと音を立てて、いい匂いが部屋いっぱいに広がっている。",
+    fridge: "星形に切ったにんじんの残りが、冷蔵庫にしまってある。",
+    sink: "切り終えたまな板と包丁が、流し台で出番を終えている。",
+    diningSet: "食卓にはもう二人分の器が並べてある。",
+  },
+  foldingLaundry: {
+    sofa: "ソファーの座面は、今日はクーンちゃんが占領している。",
+    bed: "たたんだタオルは、あとでベッド脇へしまうつもりらしい。",
+    window: "夕方の風で乾いた洗濯物は、太陽の匂いがする。",
+  },
+  tatsuoTooComfortable: {
+    sofa: "二人掛けのソファーは、タツヲひとりで満席だ。",
+    bed: "タツヲにはベッドも狭そうだけれど、ソファーよりはましかもしれない。",
+    window: "夕焼けが、眠るタツヲの背中をオレンジに染めている。",
+  },
+  comfortingMaineCoon: {
+    window: "稲光が走るたび、雨粒が窓を強く叩く。",
+    sofa: "いつもの丸まり場所は空っぽ。クーンちゃんはエトキチの腕の中だ。",
+    bed: "雷の夜は、ベッドより絨毯の上のほうが安心らしい。",
+  },
+  packingTomorrow: {
+    bookshelf: "棚の前に鞄を広げ、地図とおやつを出したり入れたりしている。",
+    diningSet: "食卓に、明日の持ち物リストが置いてある。",
+    fridge: "冷蔵庫から出したおやつが、鞄の半分を占めている。",
+  },
+  littleNightSnack: {
+    fridge: "冷蔵庫の扉を開けた回数が、今夜はいつもより多い気がする。",
+    stove: "温めたミルクの鍋が、コンロで静かに冷めている。",
+    diningSet: "食卓の上に、小さなプリンの空き容器がひとつ。",
+  },
+  readingComics: {
+    sofa: "ソファーの脇に、読み終えた巻が積まれている。",
+    bookshelf: "棚の漫画の並びに、一冊分の隙間が空いている。",
+    bedsideTable: "照明台の明かりが、ページの上だけを照らしている。",
+    window: "夜の窓に、漫画に夢中なエトキチが映っている。",
+  },
+  mimizouVisit: {
+    window: "窓ガラスの向こうで、大きな目がゆっくり瞬いた。",
+    diningSet: "飲みかけのお茶が、食卓の上で湯気を立てている。",
+    bookshelf: "フクロウの図鑑が、棚の一番上に置いてある。",
+  },
+};
+
 export function getRoomTint(visit: VisitView): RoomTint {
   if (visit.scene.characterPose !== "sleep") {
     const awakeTint = AWAKE_NIGHT_TINTS[visit.assignment.band];
@@ -195,6 +357,10 @@ function layeredPresentation(
   const furnitureAssetNames = BED_SIDE_ACTION_SCENES.has(visit.scene.id)
     ? { bed: "furniture-bed-bare-pixel.webp", ...character.furnitureAssetNames }
     : character.furnitureAssetNames;
+  const observationOverrides: ObservationOverrides = {
+    ...SCENE_OBSERVATION_OVERRIDES[visit.scene.id],
+    ...character.observationOverrides,
+  };
   return {
     kind: "layered",
     baseAssetName: "room-base-empty-daytime-pixel.webp",
@@ -202,6 +368,8 @@ function layeredPresentation(
     tint,
     ...character,
     furnitureAssetNames,
+    observationOverrides,
+    windowObservation: observationOverrides.window ?? WINDOW_OBSERVATIONS[visit.assignment.band],
   };
 }
 
@@ -214,6 +382,9 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
       furnitureAssetNames: {
         bed: "furniture-bed-bare-pixel.webp",
       },
+      observationOverrides: covered
+        ? { bed: "そっと掛け直した布団の中で、エトキチは安心した寝顔になっている。" }
+        : undefined,
       sceneProps: covered
         ? undefined
         : [

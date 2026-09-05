@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { getScene, SCENES } from "../src/content/scenes.ts";
 import type { SceneId, TimeBand, VisitView } from "../src/game/types.ts";
-import { createFurnitureAnchors, resolveFurnitureLayout } from "../src/rendering/room-furniture.ts";
+import { TIME_BANDS } from "../src/game/time.ts";
+import { FIXTURE_DEFINITIONS } from "../src/rendering/room-fixtures.ts";
+import {
+  createFurnitureAnchors,
+  FURNITURE_DEFINITIONS,
+  resolveFurnitureLayout,
+} from "../src/rendering/room-furniture.ts";
 import { DEFAULT_ROOM_LAYOUT, getDepthZIndex } from "../src/rendering/room-layout.ts";
 import {
   getLightingColorMatrix,
@@ -9,6 +15,7 @@ import {
   getRoomTint,
   resolveGuestDepthY,
   resolveGuestPosition,
+  WINDOW_OBSERVATIONS,
 } from "../src/rendering/room-presentation.ts";
 
 function kickedBlanketVisit(choiceId?: string): VisitView {
@@ -153,6 +160,12 @@ describe("room presentation", () => {
         y: 170,
         depth: "scene",
       },
+      observationOverrides: {
+        bed: "タツヲの大きな手が、ベッドの縁にそっと添えられている。",
+        bedsideTable: "枕元の水は、タツヲが持ってきてくれたものかもしれない。",
+        sofa: "タツヲにはソファーより、エトキチのそばのほうが落ち着くらしい。",
+      },
+      windowObservation: "街は眠り、窓には小さな星がいくつか見える。",
     });
   });
 
@@ -456,5 +469,63 @@ describe("room presentation", () => {
     const presentation = getRoomPresentation(visitFor(sceneId));
     expect(presentation.kind).toBe("layered");
     expect(presentation.tint).toEqual(tint);
+  });
+});
+
+describe("scene observations", () => {
+  const observationTargetIds = new Set<string>([
+    ...FURNITURE_DEFINITIONS.map(({ id }) => id),
+    ...FIXTURE_DEFINITIONS.flatMap(({ id, hotspots }) => [id, ...hotspots.map((hotspot) => hotspot.id)]),
+    "window",
+  ]);
+
+  it("overrides only tappable targets in every scene", () => {
+    for (const scene of SCENES) {
+      const visit = visitFor(scene.id);
+      visit.assignment.band = scene.band;
+      const overrides = getRoomPresentation(visit).observationOverrides;
+      expect(Object.keys(overrides).length, scene.id).toBeGreaterThan(0);
+      for (const [targetId, text] of Object.entries(overrides)) {
+        expect(observationTargetIds, `${scene.id}.${targetId}`).toContain(targetId);
+        expect(text, `${scene.id}.${targetId}`).toMatch(/。$/);
+      }
+    }
+  });
+
+  it("has a default window observation for every time band", () => {
+    for (const band of TIME_BANDS) {
+      expect(WINDOW_OBSERVATIONS[band], band).toBeTruthy();
+    }
+    expect(Object.keys(WINDOW_OBSERVATIONS)).toHaveLength(TIME_BANDS.length);
+  });
+
+  it("falls back to the time band window observation when the scene does not override it", () => {
+    const presentation = getRoomPresentation(visitFor("foundOldToy"));
+    expect(presentation.observationOverrides.window).toBeUndefined();
+    expect(presentation.windowObservation).toBe(WINDOW_OBSERVATIONS.daytime);
+  });
+
+  it("prefers the scene window observation over the time band default", () => {
+    const presentation = getRoomPresentation(visitFor("mimizouVisit"));
+    expect(presentation.windowObservation).toBe("窓ガラスの向こうで、大きな目がゆっくり瞬いた。");
+    expect(presentation.windowObservation).not.toBe(WINDOW_OBSERVATIONS.night);
+  });
+
+  it("rewrites the bed observation once the blanket is put back", () => {
+    expect(getRoomPresentation(kickedBlanketVisit()).observationOverrides.bed).toBe(
+      "布団は足元から床へずり落ち、エトキチは大の字で眠っている。",
+    );
+    expect(getRoomPresentation(kickedBlanketVisit("cover")).observationOverrides.bed).toBe(
+      "そっと掛け直した布団の中で、エトキチは安心した寝顔になっている。",
+    );
+  });
+
+  it("keeps the other kicked-blanket observations regardless of the choice", () => {
+    for (const choiceId of [undefined, "cover"]) {
+      expect(getRoomPresentation(kickedBlanketVisit(choiceId)).observationOverrides).toMatchObject({
+        window: "窓が少しだけ開いていて、冷たい夜風が入ってくる。",
+        bedsideTable: "照明台の上には、まだ半分残った水のコップがある。",
+      });
+    }
   });
 });

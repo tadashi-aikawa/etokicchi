@@ -1,6 +1,7 @@
 import type { Aabb, Point } from "./room-furniture.ts";
 
 export type FixtureId = "kitchenUnit";
+export type FixtureHotspotId = "fridge" | "sink" | "stove";
 export type FixturePartId = "fridgeDoor" | "stove";
 export type FixturePartLayer = "fixture" | "floorDepth";
 
@@ -20,7 +21,7 @@ export interface FixturePartDefinition {
 }
 
 export interface FixtureHotspot {
-  id: string;
+  id: FixtureHotspotId;
   displayName: string;
   observation: string;
   area: Aabb;
