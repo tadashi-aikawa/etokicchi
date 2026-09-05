@@ -92,7 +92,7 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
   },
   tatsuoAtWindow: {
     movement: "nonWalking",
-    waypoints: [{ destination: furnitureAction("bed", "sleep"), pauseMs: 5000 }],
+    waypoints: [{ destination: point(28, 165), pauseMs: 5000 }],
   },
   kickedBlanket: {
     movement: "nonWalking",

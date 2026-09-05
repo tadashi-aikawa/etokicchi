@@ -825,54 +825,24 @@ function createThunderWindowEtokichi(
   character.cursor = "pointer";
   character.on("pointertap", callbacks.onCharacterTap);
 
-  const sleeper = new Sprite(texture);
+  const frames = createGridFrames(texture, 4, 1)[0] ?? [];
+  if (frames.length !== 4) throw new Error("雷の夜のエトキチ素材は4コマ必要です");
+  const poseIndex = { sleeping: 0, awake: 1, startled: 2, hidden: 3 } as const;
+  const sleeper = new Sprite(frames[0]);
   sleeper.anchor.set(0.5, 1);
-  sleeper.scale.set(height / texture.height);
+  sleeper.scale.set(height / (frames[0]?.height ?? height));
   sleeper.roundPixels = true;
-
-  const awakeExpression = new Graphics()
-    .rect(-9, -18, 6, 7)
-    .rect(3, -18, 6, 7)
-    .fill(0xfff4df)
-    .rect(-7, -17, 2, 4)
-    .rect(5, -17, 2, 4)
-    .fill(0x3b211c)
-    .rect(-6, -16, 1, 1)
-    .rect(6, -16, 1, 1)
-    .fill(0xffffff)
-    .rect(-2, -8, 4, 2)
-    .fill(0x5c2d25);
-  awakeExpression.visible = false;
-
-  const startledExpression = new Graphics()
-    .rect(-10, -19, 7, 8)
-    .rect(3, -19, 7, 8)
-    .fill(0xfff4df)
-    .rect(-7, -17, 3, 5)
-    .rect(4, -17, 3, 5)
-    .fill(0x3b211c)
-    .rect(-6, -16, 1, 1)
-    .rect(5, -16, 1, 1)
-    .fill(0xffffff)
-    .rect(-2, -9, 4, 4)
-    .fill(0x6c2721);
-  startledExpression.visible = false;
-
-  character.addChild(sleeper, awakeExpression, startledExpression);
+  character.addChild(sleeper);
 
   let elapsedMs = 0;
   app.ticker.add((ticker) => {
     elapsedMs += ticker.deltaMS;
     const frame = getFrame();
-    awakeExpression.visible = frame.pose === "awake";
-    startledExpression.visible = frame.pose === "startled";
+    sleeper.texture = frames[poseIndex[frame.pose]] ?? frames[0] ?? Texture.EMPTY;
     const sleeping = frame.pose === "sleeping";
-    const hidden = frame.pose === "hidden";
     const breath = sleeping ? Math.sin(elapsedMs / 620) : 0;
     character.x = position.x + frame.trembleX;
-    character.y = position.y + breath * 0.8 + (hidden ? 5 : frame.pose === "startled" ? -2 : 0);
-    character.scale.x = frame.pose === "startled" ? 1.08 : 1;
-    character.scale.y = hidden ? 0.72 : frame.pose === "startled" ? 1.08 : 1;
+    character.y = position.y + breath * 0.5;
     character.zIndex = getDepthZIndex(depthY, 50);
   });
 
