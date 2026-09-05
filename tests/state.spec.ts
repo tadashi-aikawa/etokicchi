@@ -8,7 +8,7 @@ import {
   resolveVisit,
   sanitizeGameState,
 } from "../src/game/state.ts";
-import { addDays, makeSlotKey } from "../src/game/time.ts";
+import { addDays, getSlotKey, makeSlotKey } from "../src/game/time.ts";
 import type { GameState, SlotAssignment } from "../src/game/types.ts";
 
 function breakfastState(): { state: GameState; assignment: SlotAssignment } {
@@ -92,19 +92,28 @@ describe("visit resolution", () => {
   });
 
   it("keeps the same deep-night slot and interaction after midnight", () => {
-    const beforeMidnight = new Date(2026, 8, 2, 23, 30);
-    const state = createInitialState();
-    state.discoveries.tatsuoWakeUp = { firstSeenAt: "2026-09-01T21:00:00.000Z", seenCount: 1 };
-    const first = resolveVisit(beforeMidnight, state);
-    expect(first.visit.scene.id).toBe("kickedBlanket");
+    const blanketState = (): GameState => {
+      const state = createInitialState();
+      state.discoveries.tatsuoWakeUp = { firstSeenAt: "2026-09-01T21:00:00.000Z", seenCount: 1 };
+      return state;
+    };
+    const beforeMidnight = Array.from({ length: 90 }, (_, index) => new Date(2026, 8, index + 1, 23, 30)).find(
+      (date) => resolveVisit(date, blanketState()).visit.scene.id === "kickedBlanket",
+    );
+    expect(beforeMidnight).toBeDefined();
+    if (!beforeMidnight) throw new Error("kickedBlanket was not selected");
+
+    const first = resolveVisit(beforeMidnight, blanketState());
     const interacted = applyInteraction(first.state, first.visit.assignment.slotKey, "cover", beforeMidnight);
+    const afterMidnight = new Date(beforeMidnight.getFullYear(), beforeMidnight.getMonth(), beforeMidnight.getDate());
+    afterMidnight.setDate(afterMidnight.getDate() + 1);
+    afterMidnight.setHours(1);
+    const revisited = resolveVisit(afterMidnight, interacted.state);
 
-    const afterMidnight = resolveVisit(new Date(2026, 8, 3, 1), interacted.state);
-
-    expect(afterMidnight.visit.assignment).toEqual(first.visit.assignment);
-    expect(afterMidnight.visit.assignment.slotKey).toBe("2026-09-02:deepNight");
-    expect(afterMidnight.visit.interaction).toEqual(interacted.interaction);
-    expect(afterMidnight.state.echoes).toEqual(interacted.state.echoes);
+    expect(revisited.visit.assignment).toEqual(first.visit.assignment);
+    expect(revisited.visit.assignment.slotKey).toBe(getSlotKey(beforeMidnight));
+    expect(revisited.visit.interaction).toEqual(interacted.interaction);
+    expect(revisited.state.echoes).toEqual(interacted.state.echoes);
   });
 
   it("unlocks a stable low-frequency Mimizou companion after discovering the visit scene", () => {
@@ -136,8 +145,11 @@ describe("visit resolution", () => {
   it("unlocks the Mimizou visit after stargazing and then unlocks the companion", () => {
     const state = createInitialState();
     state.discoveries.watchingStars = { firstSeenAt: "2026-09-02T16:00:00.000Z", seenCount: 1 };
-    const visit = resolveVisit(new Date(2026, 8, 3, 21), state);
-    expect(visit.visit.scene.id).toBe("mimizouVisit");
+    const visit = Array.from({ length: 90 }, (_, index) => resolveVisit(new Date(2026, 8, index + 1, 21), state)).find(
+      (candidate) => candidate.visit.scene.id === "mimizouVisit",
+    );
+    expect(visit).toBeDefined();
+    if (!visit) throw new Error("mimizouVisit was not selected");
 
     const stargazing = Array.from({ length: 90 }, (_, index) =>
       resolveVisit(new Date(2026, 8, index + 1, 1), visit.state),
@@ -192,9 +204,12 @@ describe("visit resolution", () => {
     expect(migrated.dataVersion).toBe(2);
     expect(migrated.histories.morning).toEqual(["morningTea"]);
     expect(migrated.histories.earlyMorning).toEqual([]);
-    const resolved = resolveVisit(new Date(2026, 8, 3, 21), migrated);
+    const resolved = Array.from({ length: 90 }, (_, index) =>
+      resolveVisit(new Date(2026, 8, index + 1, 21), migrated),
+    ).find((candidate) => candidate.visit.scene.id === "mimizouVisit");
+    expect(resolved).toBeDefined();
+    if (!resolved) throw new Error("mimizouVisit was not selected");
     expect(resolved.state.discoveries.readingComics?.seenCount).toBe(2);
-    expect(resolved.visit.scene.id).toBe("mimizouVisit");
   });
 });
 

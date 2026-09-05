@@ -4,6 +4,13 @@ export function hashString(value: string): number {
     hash ^= value.charCodeAt(index);
     hash = Math.imul(hash, 16777619);
   }
+  // FNVのままでは似たseedの下位ビットが相関し、剰余で割ったときに偏る。
+  // MurmurHash3のfmix32で上位ビットを下位へ混ぜてから返す。
+  hash ^= hash >>> 16;
+  hash = Math.imul(hash, 0x85ebca6b);
+  hash ^= hash >>> 13;
+  hash = Math.imul(hash, 0xc2b2ae35);
+  hash ^= hash >>> 16;
   return hash >>> 0;
 }
 

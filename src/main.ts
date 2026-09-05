@@ -2,7 +2,7 @@ import "./styles.css";
 import { countDiscoveries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
 import { getDebugSceneId, isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
-import { formatLocalDate, getSlotKey, millisecondsUntilNextMinute, TIME_BAND_LABELS } from "./game/time.ts";
+import { formatSlotDate, getSlotKey, millisecondsUntilNextMinute, TIME_BAND_LABELS } from "./game/time.ts";
 import type { GameState, SceneId, StateRepository, VisitView } from "./game/types.ts";
 import {
   FallbackStateRepository,
@@ -77,7 +77,7 @@ function startRoomViewportSync(): void {
 }
 
 function formatClock(date: Date): string {
-  return new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+  return new Intl.DateTimeFormat("ja-JP", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
 }
 
 function formatDateLabel(date: Date): string {
@@ -365,7 +365,7 @@ async function bootstrap(): Promise<void> {
         showStorageWarning();
       });
   const initialNow = options.getNow();
-  let state = pruneOldSlots(loaded.state, formatLocalDate(initialNow));
+  let state = pruneOldSlots(loaded.state, formatSlotDate(initialNow));
   const resolved = resolveVisit(initialNow, state, {
     randomSeed: options.debugRandom ? crypto.randomUUID() : undefined,
     sceneId: options.debugSceneId,
@@ -485,7 +485,7 @@ async function bootstrap(): Promise<void> {
       return;
     }
 
-    state = pruneOldSlots(state, formatLocalDate(now));
+    state = pruneOldSlots(state, formatSlotDate(now));
     const next = resolveVisit(now, state, {
       randomSeed: options.debugRandom ? crypto.randomUUID() : undefined,
       sceneId: options.debugSceneId,

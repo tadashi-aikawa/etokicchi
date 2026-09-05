@@ -65,7 +65,9 @@ function chooseScene(
   const lastTwo = history.slice(-2);
   const candidateId = candidate.id;
   if (lastTwo.length === 2 && lastTwo.every((sceneId) => sceneId === candidateId)) {
-    const alternative = candidates.find((scene) => scene.id !== candidateId);
+    // 先頭から選ぶとリスト前方のシーンへ偏るため、残りからも抽選し直す。
+    const alternatives = candidates.filter((scene) => scene.id !== candidateId);
+    const alternative = alternatives[indexFromSeed(`${seed}:alternative`, alternatives.length || 1)];
     if (alternative) candidate = alternative;
   }
   return candidate;
@@ -130,7 +132,6 @@ export function resolveVisit(
   const mimizouPresent =
     scene.id === "watchingStars" &&
     Boolean(state.discoveries.mimizouVisit) &&
-    // 4択のシーン抽選と同じ法を使うと、FNVハッシュの下位ビットが相関して同時成立しない。
     indexFromSeed(`${slotKey}:mimizou-companion`, 3) === 0;
 
   return {
