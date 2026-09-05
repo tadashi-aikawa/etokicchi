@@ -542,7 +542,6 @@ function createCharacterBubbleElement(
   app: Application,
   character: Container,
   presentation: CharacterBubblePresentation,
-  opacity?: () => number,
 ): HTMLDivElement {
   const bubble = document.createElement("div");
   bubble.className = `room-character-bubble is-${presentation.kind}`;
@@ -554,7 +553,6 @@ function createCharacterBubbleElement(
   const updatePosition = (): void => {
     bubble.style.left = `${((character.x + presentation.offset.x) / WIDTH) * 100}%`;
     bubble.style.top = `${((character.y + presentation.offset.y) / HEIGHT) * 100}%`;
-    if (opacity) bubble.style.opacity = `${opacity()}`;
   };
   updatePosition();
   app.ticker.add(updatePosition);
@@ -1104,14 +1102,8 @@ export async function renderRoom(
     if (rainWindowLayer) app.stage.addChild(rainWindowLayer);
     app.stage.addChild(createWindowForeground());
   }
-  const bubbleTarget = comfortingMaineCoon ?? character;
   const characterBubble = presentation.characterBubble
-    ? createCharacterBubbleElement(
-        app,
-        bubbleTarget,
-        presentation.characterBubble,
-        getThunderComfortFrame ? () => getThunderComfortFrame().bubbleOpacity : undefined,
-      )
+    ? createCharacterBubbleElement(app, character, presentation.characterBubble)
     : undefined;
   host.replaceChildren(app.canvas, ...(characterBubble ? [characterBubble] : []));
   return {

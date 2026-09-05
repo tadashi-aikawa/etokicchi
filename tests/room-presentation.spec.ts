@@ -388,7 +388,8 @@ describe("room presentation", () => {
   });
 
   it("shows the reassuring embrace during the rainy thunder scene", () => {
-    expect(getRoomPresentation(visitFor("comfortingMaineCoon"))).toMatchObject({
+    const presentation = getRoomPresentation(visitFor("comfortingMaineCoon"));
+    expect(presentation).toMatchObject({
       tint: { color: 0x364963, alpha: 0.32 },
       hiddenDepthDecorationIds: ["maineCoon"],
       thunderstorm: true,
@@ -398,13 +399,8 @@ describe("room presentation", () => {
         x: 96,
         y: 326,
       },
-      characterBubble: {
-        kind: "speech",
-        text: "大丈夫だよー",
-        offset: { x: 0, y: -94 },
-        tailSide: "left",
-      },
     });
+    expect(presentation.characterBubble).toBeUndefined();
   });
 
   it("keeps Koon in a separate stationary layer during brushing", () => {

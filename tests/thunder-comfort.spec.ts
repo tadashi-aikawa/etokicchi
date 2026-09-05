@@ -8,11 +8,10 @@ import {
 } from "../src/rendering/thunder-comfort.ts";
 
 describe("thunder comfort animation", () => {
-  it("flashes, trembles, and then shows the reassurance", () => {
+  it("flashes, trembles, and then tightens the embrace", () => {
     expect(getThunderComfortFrame(900).flashAlpha).toBeCloseTo(0.42);
     expect(Math.abs(getThunderComfortFrame(1_000).trembleX)).toBeCloseTo(0.8);
     expect(getThunderComfortFrame(1_300).embraceScale).toBeGreaterThan(1);
-    expect(getThunderComfortFrame(1_400).bubbleOpacity).toBe(1);
   });
 
   it("returns seamlessly to the start of the loop", () => {

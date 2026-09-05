@@ -28,7 +28,6 @@ export interface ThunderComfortFrame {
   flashAlpha: number;
   trembleX: number;
   embraceScale: number;
-  bubbleOpacity: number;
 }
 
 const FLASH_PULSES: readonly FlashPulse[] = [
@@ -70,14 +69,6 @@ function pulseAlpha(phaseMs: number, pulse: FlashPulse): number {
   return ((pulse.endMs - phaseMs) / (pulse.endMs - pulse.peakMs)) * pulse.alpha;
 }
 
-function envelope(phaseMs: number, startMs: number, fadeInMs: number, holdMs: number, fadeOutMs: number): number {
-  const elapsed = phaseMs - startMs;
-  if (elapsed < 0 || elapsed >= fadeInMs + holdMs + fadeOutMs) return 0;
-  if (elapsed < fadeInMs) return elapsed / fadeInMs;
-  if (elapsed < fadeInMs + holdMs) return 1;
-  return 1 - (elapsed - fadeInMs - holdMs) / fadeOutMs;
-}
-
 function tremble(phaseMs: number, startMs: number, durationMs: number, amount: number): number {
   const elapsed = phaseMs - startMs;
   if (elapsed < 0 || elapsed >= durationMs) return 0;
@@ -96,7 +87,6 @@ export function getThunderComfortFrame(elapsedMs: number): ThunderComfortFrame {
     flashAlpha: Math.max(...FLASH_PULSES.map((pulse) => pulseAlpha(phaseMs, pulse))),
     trembleX: tremble(phaseMs, 900, 420, 0.8) + tremble(phaseMs, 4_580, 320, 0.55),
     embraceScale: Math.max(embrace(phaseMs, 1_220, 1_500, 0.025), embrace(phaseMs, 4_850, 1_200, 0.018)),
-    bubbleOpacity: Math.max(envelope(phaseMs, 1_080, 180, 1_500, 420), envelope(phaseMs, 4_720, 180, 1_350, 420)),
   };
 }
 
