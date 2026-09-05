@@ -99,16 +99,17 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     waypoints: [{ destination: furnitureAction("bed", "kickedBlanket"), pauseMs: 5000 }],
   },
   watchingStars: {
+    // 窓の下、ベッドと本棚のあいだの床に立って窓の外を見上げる。
+    // 照明台はこのシーンだけベッドの足元へどける(SCENE_FURNITURE_ANCHORS)。
+    // 望遠鏡の先がベッドへ隠れないよう、行動地点だけ深度を押し出す。
     movement: "walking",
     waypoints: [
-      { destination: point(42, 128), pauseMs: 4800, action: true, depthOffset: 40 },
-      { destination: point(44, 145), pauseMs: 0, depthOffset: 40 },
-      { destination: point(44, 174), pauseMs: 0, depthOffset: 40 },
+      { destination: point(70, 122), pauseMs: 4800, action: true, depthOffset: 45 },
+      { destination: point(79, 140), pauseMs: 0, depthOffset: 40 },
       { destination: point(83, 184), pauseMs: 700 },
       { destination: point(68, 211), pauseMs: 650 },
       { destination: point(103, 238), pauseMs: 750 },
-      { destination: point(44, 174), pauseMs: 0, depthOffset: 40 },
-      { destination: point(44, 145), pauseMs: 0, depthOffset: 40 },
+      { destination: point(79, 140), pauseMs: 0, depthOffset: 40 },
     ],
   },
   almostAwake: {
@@ -152,11 +153,16 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     ],
   },
   tooMuchBreakfast: {
+    // 添字2の食卓で朝食の皿(sceneProps)が現れる。順序を変えるときは
+    // room-presentation.ts の revealAtWaypoint も合わせること。
     movement: "walking",
     waypoints: [
-      { destination: point(103, 193), pauseMs: 1100 },
-      { destination: fixtureAction("kitchenUnit", "fridgeFront"), pauseMs: 3000, action: true },
-      { destination: point(98, 225), pauseMs: 1500 },
+      { destination: point(103, 193), pauseMs: 900 },
+      { destination: point(105, 252), pauseMs: 0 },
+      { destination: furnitureAction("diningSet", "morningTea"), pauseMs: 3200, action: true },
+      { destination: point(105, 252), pauseMs: 0 },
+      { destination: fixtureAction("kitchenUnit", "fridgeFront"), pauseMs: 2600, action: true },
+      { destination: point(98, 225), pauseMs: 1200 },
     ],
   },
   overslept: {
@@ -273,9 +279,16 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     waypoints: [{ destination: furnitureAction("sofa", "sit"), pauseMs: 5000, action: true, depthOffset: 30 }],
   },
   mimizouVisit: {
+    // お茶を飲むシーンなので、家具の無い床ではなく食卓の椅子へ座らせる。
     movement: "nonWalking",
-    waypoints: [{ destination: point(60, 140), pauseMs: 5000, action: true }],
+    waypoints: [{ destination: furnitureAction("diningSet", "morningTea"), pauseMs: 5000, action: true }],
   },
+};
+
+// シーンのあいだだけ家具を置き直す。行動地点の見え方を優先し、そのシーンの経路と描画だけへ効かせる。
+export const SCENE_FURNITURE_ANCHORS: Partial<Record<SceneId, Partial<FurnitureAnchors>>> = {
+  // 窓の下へ立つ星見では、ベッド脇の照明台が望遠鏡と重なるためベッドの足元へどける。
+  watchingStars: { bedsideTable: { x: 24, y: 180 } },
 };
 
 export const WALKABLE_BOUNDS = insetAabb(ROOM_BOUNDS, CHARACTER_FOOT_RADIUS);
@@ -363,14 +376,22 @@ export function segmentIntersectsAabb(from: Point, to: Point, aabb: Aabb): boole
   return clip(from.x, dx, aabb.x, aabb.x + aabb.width) && clip(from.y, dy, aabb.y, aabb.y + aabb.height);
 }
 
+export function resolveSceneLayout(sceneId: SceneId, layout: RoomLayout): RoomLayout {
+  const overrides = SCENE_FURNITURE_ANCHORS[sceneId];
+  if (!overrides) return layout;
+  const anchors = { ...layout.anchors, ...overrides };
+  return { anchors, furniture: resolveFurnitureLayout(anchors), fixtures: layout.fixtures };
+}
+
 export function resolveSceneRoute(sceneId: SceneId, layout: RoomLayout): readonly ResolvedWaypoint[] {
+  const sceneLayout = resolveSceneLayout(sceneId, layout);
   return SCENE_ROUTES[sceneId].waypoints.map(({ destination, ...waypoint }) => {
     const resolved =
       destination.type === "point"
         ? destination
         : destination.type === "furnitureAction"
-          ? resolveFurnitureActionPoint(layout.furniture, destination.furnitureId, destination.actionPointId)
-          : resolveFixtureActionPoint(layout.fixtures, destination.fixtureId, destination.actionPointId);
+          ? resolveFurnitureActionPoint(sceneLayout.furniture, destination.furnitureId, destination.actionPointId)
+          : resolveFixtureActionPoint(sceneLayout.fixtures, destination.fixtureId, destination.actionPointId);
     return { ...waypoint, x: resolved.x, y: resolved.y };
   });
 }
@@ -378,11 +399,13 @@ export function resolveSceneRoute(sceneId: SceneId, layout: RoomLayout): readonl
 export function resolveSceneInitialDepthY(sceneId: SceneId, layout: RoomLayout): number {
   const firstDestination = SCENE_ROUTES[sceneId].waypoints[0]?.destination;
   if (!firstDestination) return 154;
+  const sceneLayout = resolveSceneLayout(sceneId, layout);
   // 家具上で静止するキャラクターは、行動地点ではなく家具の足元を基準に重ねる。
   // これによりベッドなどのSprite内で、キャラクターが家具の背面へ隠れない。
-  if (firstDestination.type === "furnitureAction") return layout.furniture[firstDestination.furnitureId].footY;
+  if (firstDestination.type === "furnitureAction") return sceneLayout.furniture[firstDestination.furnitureId].footY;
   if (firstDestination.type === "fixtureAction") {
-    return resolveFixtureActionPoint(layout.fixtures, firstDestination.fixtureId, firstDestination.actionPointId).y;
+    return resolveFixtureActionPoint(sceneLayout.fixtures, firstDestination.fixtureId, firstDestination.actionPointId)
+      .y;
   }
   return firstDestination.y;
 }
@@ -403,13 +426,14 @@ export function isMovementSegmentValid(from: Point, to: Point, layout: RoomLayou
 export function validateSceneRoute(sceneId: SceneId, layout: RoomLayout): readonly LayoutValidationError[] {
   const routeDefinition = SCENE_ROUTES[sceneId];
   if (routeDefinition.movement === "nonWalking") return [];
-  const route = resolveSceneRoute(sceneId, layout);
+  const sceneLayout = resolveSceneLayout(sceneId, layout);
+  const route = resolveSceneRoute(sceneId, sceneLayout);
   const errors: LayoutValidationError[] = [];
 
   for (let index = 0; index < route.length; index += 1) {
     const from = route[index];
     const to = route[(index + 1) % route.length];
-    if (!from || !to || isMovementSegmentValid(from, to, layout)) continue;
+    if (!from || !to || isMovementSegmentValid(from, to, sceneLayout)) continue;
     errors.push({
       code: "invalidRoute",
       sceneId,
@@ -492,8 +516,57 @@ export function validateRoomLayout(layout: RoomLayout): readonly LayoutValidatio
     }
   }
 
+  errors.push(...validateSceneFurnitureAnchors(layout));
+
   for (const sceneId of Object.keys(SCENE_ROUTES) as SceneId[]) {
     errors.push(...validateSceneRoute(sceneId, layout));
+  }
+  return errors;
+}
+
+function isOutsideRoom(occupancy: Aabb): boolean {
+  return (
+    occupancy.x < ROOM_BOUNDS.x ||
+    occupancy.y < ROOM_BOUNDS.y ||
+    occupancy.x + occupancy.width > ROOM_BOUNDS.x + ROOM_BOUNDS.width ||
+    occupancy.y + occupancy.height > ROOM_BOUNDS.y + ROOM_BOUNDS.height
+  );
+}
+
+export function validateSceneFurnitureAnchors(layout: RoomLayout): readonly LayoutValidationError[] {
+  const errors: LayoutValidationError[] = [];
+  for (const sceneId of Object.keys(SCENE_FURNITURE_ANCHORS) as SceneId[]) {
+    const sceneLayout = resolveSceneLayout(sceneId, layout);
+    for (const movedId of Object.keys(SCENE_FURNITURE_ANCHORS[sceneId] ?? {}) as FurnitureId[]) {
+      const moved = sceneLayout.furniture[movedId];
+      if (isOutsideRoom(moved.occupancy)) {
+        errors.push({
+          code: "outsideRoom",
+          sceneId,
+          furnitureId: movedId,
+          message: `${sceneId}で置き直した${movedId}の占有領域が部屋の外へ出ています`,
+        });
+      }
+      for (const { id } of FURNITURE_DEFINITIONS) {
+        if (id === movedId || !aabbsCollide(moved.occupancy, sceneLayout.furniture[id].occupancy)) continue;
+        errors.push({
+          code: "furnitureOverlap",
+          sceneId,
+          furnitureId: movedId,
+          message: `${sceneId}で置き直した${movedId}と${id}の占有領域が重なっています`,
+        });
+      }
+      for (const { id } of FIXTURE_DEFINITIONS) {
+        if (!aabbsCollide(moved.occupancy, sceneLayout.fixtures[id].occupancy)) continue;
+        errors.push({
+          code: "fixtureOverlap",
+          sceneId,
+          furnitureId: movedId,
+          fixtureId: id,
+          message: `${sceneId}で置き直した${movedId}と${id}の占有領域が重なっています`,
+        });
+      }
+    }
   }
   return errors;
 }

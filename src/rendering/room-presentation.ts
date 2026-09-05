@@ -54,11 +54,18 @@ export interface FurnitureAttachedGuestPresentation extends GuestPresentationCom
 
 export type GuestPresentation = PositionedGuestPresentation | FurnitureAttachedGuestPresentation;
 
-interface AttachedScenePropCommon {
+interface ScenePropCommon {
   assetName: string;
   height: number;
-  offset: Point;
   depthOffset?: number;
+  // 描画深度だけを配置位置から切り離す。家具の天板へ置いた小物を家具より手前に描くために使う。
+  depthY?: number;
+  // 経路のこのwaypoint(0始まり)へキャラクターが到着するまで隠す。歩行しないシーンでは無視される。
+  revealAtWaypoint?: number;
+}
+
+interface AttachedScenePropCommon extends ScenePropCommon {
+  offset: Point;
 }
 
 export interface FurnitureAttachedSceneProp extends AttachedScenePropCommon {
@@ -71,7 +78,33 @@ export interface FixtureAttachedSceneProp extends AttachedScenePropCommon {
   fixtureId: FixtureId;
 }
 
-export type AttachedSceneProp = FurnitureAttachedSceneProp | FixtureAttachedSceneProp;
+export interface AbsoluteSceneProp extends ScenePropCommon {
+  type: "absolute";
+  x: number;
+  y: number;
+}
+
+export type AttachedSceneProp = FurnitureAttachedSceneProp | FixtureAttachedSceneProp | AbsoluteSceneProp;
+
+export interface ScenePropAnchorLayout {
+  furniture: Readonly<Record<FurnitureId, { anchor: Point }>>;
+  fixtures: Readonly<Record<FixtureId, { anchor: Point }>>;
+}
+
+export function resolveScenePropPosition(prop: AttachedSceneProp, layout: ScenePropAnchorLayout): Point {
+  if (prop.type === "absolute") return { x: prop.x, y: prop.y };
+  const anchor =
+    prop.type === "furniture" ? layout.furniture[prop.furnitureId].anchor : layout.fixtures[prop.fixtureId].anchor;
+  return { x: anchor.x + prop.offset.x, y: anchor.y + prop.offset.y };
+}
+
+export function resolveScenePropDepthY(prop: AttachedSceneProp, position: Point): number {
+  return prop.depthY ?? position.y;
+}
+
+export function isScenePropInitiallyVisible(prop: AttachedSceneProp): boolean {
+  return prop.revealAtWaypoint === undefined;
+}
 
 export interface CharacterBubblePresentation {
   kind: "speech" | "thought";
@@ -194,7 +227,7 @@ const AWAKE_NIGHT_TINTS: Partial<Record<TimeBand, RoomTint>> = {
   deepNight: { color: 0x101a3b, alpha: 0.52 },
 };
 
-const BED_SIDE_ACTION_SCENES = new Set<SceneId>(["watchingStars", "morningStretch", "mimizouFarewell"]);
+const BED_SIDE_ACTION_SCENES = new Set<SceneId>(["morningStretch", "mimizouFarewell"]);
 
 // シーンごとの観察文。ここに無い対象は家具・設備・時間帯別の既定文をそのまま使う。
 const SCENE_OBSERVATION_OVERRIDES: Partial<Record<SceneId, ObservationOverrides>> = {
@@ -522,8 +555,8 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
       companion: {
         assetName: "mimizou-pixel.png",
         height: 34,
-        x: 84,
-        y: 128,
+        x: 100,
+        y: 126,
       },
     });
   }
@@ -546,10 +579,77 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
     });
   }
 
+  if (visit.scene.id === "tooMuchBreakfast") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      sceneProps: [
+        {
+          type: "furniture",
+          assetName: "scene-breakfast-dishes-pixel.webp",
+          height: 15,
+          furnitureId: "diningSet",
+          // 天板の手前寄り。奥へ置くと鉢とカップの背後で浮いて見える。
+          offset: { x: -4, y: -42 },
+          // 食卓の足元より1px手前に置き、天板の上へ載って見えるようにする。
+          depthY: 265,
+          revealAtWaypoint: 2,
+        },
+      ],
+    });
+  }
+
+  if (visit.scene.id === "muddyReturn") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      sceneProps: [
+        {
+          type: "absolute",
+          assetName: "scene-mud-footprints-pixel.webp",
+          height: 38,
+          // 玄関マットの下端から室内へ斜めに続かせる。エトキチの立ち位置より右へ寄せて隠れないようにする。
+          x: 152,
+          y: 166,
+          // 玄関の床装飾の直上、家具より奥へ描く。
+          depthY: 81,
+        },
+      ],
+    });
+  }
+
+  if (visit.scene.id === "foundOldToy") {
+    return layeredPresentation(visit, {
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
+      sceneProps: [
+        {
+          type: "absolute",
+          assetName: "scene-toy-box-pixel.webp",
+          height: 22,
+          // 行動地点の左脇。手前の丸椅子と重ならない高さへ置く。
+          x: 85,
+          y: 218,
+          depthY: 214,
+        },
+      ],
+    });
+  }
+
   if (visit.scene.id === "foldingLaundry") {
     return layeredPresentation(visit, {
       sleeperAssetName: "etokichi-sleep-pixel.webp",
       sleeperHeight: 42,
+      sceneProps: [
+        {
+          type: "absolute",
+          assetName: "scene-laundry-basket-pixel.webp",
+          height: 24,
+          x: 124,
+          y: 181,
+          depthY: 172,
+        },
+      ],
       depthDecorationOverrides: {
         maineCoon: {
           type: "furniture",

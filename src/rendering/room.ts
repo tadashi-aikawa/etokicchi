@@ -34,6 +34,7 @@ import {
   getDepthZIndex,
   isMovementSegmentValid,
   resolveSceneInitialDepthY,
+  resolveSceneLayout,
   resolveSceneRoute,
   type ResolvedWaypoint,
   type RoomLayout,
@@ -45,6 +46,8 @@ import {
   getRoomPresentation,
   resolveGuestDepthY,
   resolveGuestPosition,
+  resolveScenePropDepthY,
+  resolveScenePropPosition,
   type AttachedSceneProp,
   type CharacterBubblePresentation,
   type ComfortingMaineCoonPresentation,
@@ -496,27 +499,38 @@ function createFixtureLayer(
   return layer;
 }
 
+// 経路の到着通知は歩行キャラクターの生成時にしか用意できないため、購読の登録口だけを小物生成へ渡す。
+interface ScenePropRevealBinding {
+  enabled: boolean;
+  onWaypointArrival: (listener: (waypointIndex: number) => void) => void;
+}
+
 function createSceneProps(
   textures: readonly Texture[],
   presentations: readonly AttachedSceneProp[],
   layout: RoomLayout,
   tint: RoomTint,
+  reveal: ScenePropRevealBinding,
 ): readonly Sprite[] {
   return presentations.map((presentation, index) => {
     const texture = textures[index];
     if (!texture) throw new Error(`${presentation.assetName}のシーン小物素材がありません`);
     texture.source.scaleMode = "nearest";
-    const attachment =
-      presentation.type === "furniture"
-        ? layout.furniture[presentation.furnitureId]
-        : layout.fixtures[presentation.fixtureId];
+    const position = resolveScenePropPosition(presentation, layout);
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5, 1);
     sprite.scale.set(presentation.height / texture.height);
-    sprite.position.set(attachment.anchor.x + presentation.offset.x, attachment.anchor.y + presentation.offset.y);
+    sprite.position.set(position.x, position.y);
     sprite.roundPixels = true;
-    sprite.zIndex = getDepthZIndex(sprite.y, presentation.depthOffset ?? 20);
+    sprite.zIndex = getDepthZIndex(resolveScenePropDepthY(presentation, position), presentation.depthOffset ?? 20);
     applyLighting(sprite, tint);
+    const { revealAtWaypoint } = presentation;
+    if (revealAtWaypoint !== undefined && reveal.enabled) {
+      sprite.visible = false;
+      reveal.onWaypointArrival((arrivedIndex) => {
+        if (arrivedIndex === revealAtWaypoint) sprite.visible = true;
+      });
+    }
     return sprite;
   });
 }
@@ -623,6 +637,7 @@ function createWalker(
   layout: RoomLayout,
   callbacks: RoomCallbacks,
   hideShadow: boolean,
+  onWaypointArrival: (waypointIndex: number) => void,
 ): Container {
   const frames = createDirectionFrames(sheet);
   const character = new AnimatedSprite(frames.down);
@@ -750,6 +765,7 @@ function createWalker(
       actor.position.set(target.x, target.y);
       actor.zIndex = getDepthZIndex(actor.y + (target.depthOffset ?? 0), 50);
       pauseRemaining = target.pauseMs;
+      onWaypointArrival(targetIndex);
       targetIndex = (targetIndex + 1) % route.length;
       character.stop();
       character.gotoAndStop(1);
@@ -933,7 +949,7 @@ export async function renderRoom(
   const getThunderComfortFrame =
     presentation.thunderstorm && !presentation.tatsuoWindow ? createThunderComfortFrameProvider(app) : undefined;
   const getThunderFlashFrame = getThunderWindowFrame ?? getThunderComfortFrame;
-  const sceneLayout = layout;
+  const sceneLayout = resolveSceneLayout(visit.scene.id, layout);
   const route = resolveSceneRoute(visit.scene.id, sceneLayout);
   const initialPosition = route[0] ?? { x: 30, y: 154, pauseMs: 5000 };
   const initialDepthY = resolveSceneInitialDepthY(visit.scene.id, sceneLayout);
@@ -977,6 +993,11 @@ export async function renderRoom(
     sleeperBaseTexture && presentation.sleeperBase
       ? createSleeperBase(sleeperBaseTexture, initialPosition, initialDepthY, presentation.sleeperBase)
       : undefined;
+  const waypointArrivalListeners: ((waypointIndex: number) => void)[] = [];
+  const scenePropReveal: ScenePropRevealBinding = {
+    enabled: visit.scene.characterPose !== "sleep" && route.length > 1,
+    onWaypointArrival: (listener) => waypointArrivalListeners.push(listener),
+  };
   const character =
     visit.scene.characterPose === "sleep"
       ? createSleeper(
@@ -997,6 +1018,9 @@ export async function renderRoom(
           sceneLayout,
           callbacks,
           presentation.hideCharacterShadow ?? false,
+          (waypointIndex) => {
+            for (const listener of waypointArrivalListeners) listener(waypointIndex);
+          },
         );
   const comfortingMaineCoon =
     comfortingMaineCoonTexture && presentation.comfortingMaineCoon && getThunderComfortFrame
@@ -1103,7 +1127,7 @@ export async function renderRoom(
       sceneLayout.furniture,
       presentation.hiddenDepthDecorationIds,
     ),
-    ...createSceneProps(scenePropTextures, sceneProps, sceneLayout, presentation.tint),
+    ...createSceneProps(scenePropTextures, sceneProps, sceneLayout, presentation.tint, scenePropReveal),
   );
   if (sleeperBase) depthContainer.addChild(sleeperBase);
   if (companion) depthContainer.addChild(companion);

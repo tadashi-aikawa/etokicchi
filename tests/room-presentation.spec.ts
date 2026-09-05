@@ -6,15 +6,19 @@ import { FIXTURE_DEFINITIONS } from "../src/rendering/room-fixtures.ts";
 import {
   createFurnitureAnchors,
   FURNITURE_DEFINITIONS,
+  resolveFurnitureActionPoint,
   resolveFurnitureLayout,
 } from "../src/rendering/room-furniture.ts";
-import { DEFAULT_ROOM_LAYOUT, getDepthZIndex } from "../src/rendering/room-layout.ts";
+import { DEFAULT_ROOM_LAYOUT, getDepthZIndex, resolveSceneRoute } from "../src/rendering/room-layout.ts";
 import {
   getLightingColorMatrix,
   getRoomPresentation,
   getRoomTint,
+  isScenePropInitiallyVisible,
   resolveGuestDepthY,
   resolveGuestPosition,
+  resolveScenePropDepthY,
+  resolveScenePropPosition,
   WINDOW_OBSERVATIONS,
 } from "../src/rendering/room-presentation.ts";
 
@@ -321,11 +325,28 @@ describe("room presentation", () => {
       companion: {
         assetName: "mimizou-pixel.png",
         height: 34,
-        x: 84,
-        y: 128,
+        x: 100,
+        y: 126,
       },
     });
     expect(getRoomPresentation(visitFor("watchingStars", false)).companion).toBeUndefined();
+  });
+
+  it("keeps Mimizou clear of Etokichi's new spot under the window", () => {
+    const presentation = getRoomPresentation(visitFor("watchingStars", true));
+    if (!presentation.companion) throw new Error("stargazing Mimizou is missing");
+    const stargazingSpot = resolveSceneRoute("watchingStars", DEFAULT_ROOM_LAYOUT)[0];
+    if (!stargazingSpot) throw new Error("stargazing waypoint is missing");
+    const position = resolveGuestPosition(presentation.companion, DEFAULT_ROOM_LAYOUT.furniture);
+    expect(position.x - stargazingSpot.x).toBeGreaterThanOrEqual(26);
+    // 本棚の足元より手前へ置き、棚のスプライトへ隠れないようにする。
+    expect(getDepthZIndex(resolveGuestDepthY(presentation.companion, stargazingSpot.y), 45)).toBeGreaterThan(
+      getDepthZIndex(DEFAULT_ROOM_LAYOUT.furniture.bookshelf.footY, 6),
+    );
+  });
+
+  it("restores the duvet on the bed now that stargazing happens under the window", () => {
+    expect(getRoomPresentation(visitFor("watchingStars")).furnitureAssetNames?.bed).toBeUndefined();
   });
 
   it("moves the Maine Coon onto the bed while Etokichi reads on the sofa", () => {
@@ -448,7 +469,7 @@ describe("room presentation", () => {
     }
   });
 
-  it.each(["watchingStars", "morningStretch", "mimizouFarewell"] as const)(
+  it.each(["morningStretch", "mimizouFarewell"] as const)(
     "removes the front duvet while %s is active beside the bed",
     (sceneId) => {
       expect(getRoomPresentation(visitFor(sceneId)).furnitureAssetNames).toMatchObject({
@@ -469,6 +490,126 @@ describe("room presentation", () => {
     const presentation = getRoomPresentation(visitFor(sceneId));
     expect(presentation.kind).toBe("layered");
     expect(presentation.tint).toEqual(tint);
+  });
+});
+
+describe("scene props", () => {
+  const propsFor = (sceneId: SceneId) => getRoomPresentation(visitFor(sceneId)).sceneProps ?? [];
+  const bundledAssetNames = new Set(
+    Object.keys(import.meta.glob("../public/assets/*")).map((path) => path.slice(path.lastIndexOf("/") + 1)),
+  );
+
+  it("uses asset files that exist under public/assets", () => {
+    const assetNames = SCENES.flatMap((scene) => propsFor(scene.id).map(({ assetName }) => assetName));
+    expect(assetNames).toEqual(
+      expect.arrayContaining([
+        "scene-breakfast-dishes-pixel.webp",
+        "scene-mud-footprints-pixel.webp",
+        "scene-laundry-basket-pixel.webp",
+        "scene-toy-box-pixel.webp",
+      ]),
+    );
+    for (const assetName of assetNames) {
+      expect(bundledAssetNames, assetName).toContain(assetName);
+    }
+  });
+
+  it("lays the breakfast dishes on the dining table in front of the table itself", () => {
+    const [dishes] = propsFor("tooMuchBreakfast");
+    if (!dishes) throw new Error("breakfast dishes are missing");
+    expect(dishes).toMatchObject({
+      type: "furniture",
+      assetName: "scene-breakfast-dishes-pixel.webp",
+      furnitureId: "diningSet",
+      height: 15,
+    });
+
+    const position = resolveScenePropPosition(dishes, DEFAULT_ROOM_LAYOUT);
+    expect(position).toEqual({ x: 48, y: 222 });
+    // 天板の高さに置きつつ、深度だけ食卓の足元より手前へずらす。
+    expect(resolveScenePropDepthY(dishes, position)).toBeGreaterThan(DEFAULT_ROOM_LAYOUT.furniture.diningSet.footY);
+    expect(getDepthZIndex(resolveScenePropDepthY(dishes, position), 20)).toBeGreaterThan(
+      getDepthZIndex(DEFAULT_ROOM_LAYOUT.furniture.diningSet.footY, 6),
+    );
+  });
+
+  it("reveals the breakfast dishes only once Etokichi reaches the dining chair", () => {
+    const [dishes] = propsFor("tooMuchBreakfast");
+    if (!dishes) throw new Error("breakfast dishes are missing");
+    expect(isScenePropInitiallyVisible(dishes)).toBe(false);
+
+    const route = resolveSceneRoute("tooMuchBreakfast", DEFAULT_ROOM_LAYOUT);
+    const chair = route[dishes.revealAtWaypoint ?? -1];
+    expect(chair).toMatchObject(resolveFurnitureActionPoint(DEFAULT_ROOM_LAYOUT.furniture, "diningSet", "morningTea"));
+  });
+
+  it("follows the dining table when its anchor moves", () => {
+    const [dishes] = propsFor("tooMuchBreakfast");
+    if (!dishes) throw new Error("breakfast dishes are missing");
+    const moved = {
+      ...DEFAULT_ROOM_LAYOUT,
+      furniture: resolveFurnitureLayout(createFurnitureAnchors({ diningSet: { x: 47, y: 264 } })),
+    };
+    expect(resolveScenePropPosition(dishes, moved)).toEqual({ x: 43, y: 222 });
+  });
+
+  it("keeps every other prop visible from the first frame", () => {
+    for (const sceneId of ["muddyReturn", "foldingLaundry", "foundOldToy", "simmeringDinner"] as const) {
+      for (const prop of propsFor(sceneId)) {
+        expect(isScenePropInitiallyVisible(prop), sceneId).toBe(true);
+      }
+    }
+  });
+
+  it("places absolute props at their room coordinates regardless of the furniture layout", () => {
+    const moved = {
+      ...DEFAULT_ROOM_LAYOUT,
+      furniture: resolveFurnitureLayout(createFurnitureAnchors({ diningSet: { x: 47, y: 264 } })),
+    };
+    for (const sceneId of ["muddyReturn", "foldingLaundry", "foundOldToy"] as const) {
+      const [prop] = propsFor(sceneId);
+      if (!prop || prop.type !== "absolute") throw new Error(`${sceneId} has no absolute prop`);
+      expect(resolveScenePropPosition(prop, DEFAULT_ROOM_LAYOUT), sceneId).toEqual({ x: prop.x, y: prop.y });
+      expect(resolveScenePropPosition(prop, moved), sceneId).toEqual({ x: prop.x, y: prop.y });
+    }
+  });
+
+  it("draws the muddy footprints above the entrance mat but behind every furniture piece", () => {
+    const [footprints] = propsFor("muddyReturn");
+    if (!footprints || footprints.type !== "absolute") throw new Error("muddy footprints are missing");
+    expect(footprints).toMatchObject({ assetName: "scene-mud-footprints-pixel.webp", height: 38, x: 152, y: 166 });
+
+    const depth = getDepthZIndex(resolveScenePropDepthY(footprints, footprints), 20);
+    for (const { id } of FURNITURE_DEFINITIONS) {
+      expect(depth, id).toBeLessThan(getDepthZIndex(DEFAULT_ROOM_LAYOUT.furniture[id].footY, 0));
+    }
+  });
+
+  it("stands the laundry basket and the toy box just behind their action spots", () => {
+    const [basket] = propsFor("foldingLaundry");
+    const [toyBox] = propsFor("foundOldToy");
+    if (!basket || !toyBox) throw new Error("folding or toy props are missing");
+    expect(basket).toMatchObject({ assetName: "scene-laundry-basket-pixel.webp", height: 24 });
+    expect(toyBox).toMatchObject({ assetName: "scene-toy-box-pixel.webp", height: 22 });
+
+    const foldingSpot = resolveSceneRoute("foldingLaundry", DEFAULT_ROOM_LAYOUT)[0];
+    const toySpot = resolveSceneRoute("foundOldToy", DEFAULT_ROOM_LAYOUT)[0];
+    if (!foldingSpot || !toySpot) throw new Error("action spots are missing");
+    expect(resolveScenePropPosition(basket, DEFAULT_ROOM_LAYOUT).x).toBeGreaterThan(foldingSpot.x);
+    expect(resolveScenePropDepthY(basket, resolveScenePropPosition(basket, DEFAULT_ROOM_LAYOUT))).toBeLessThan(
+      foldingSpot.y,
+    );
+    expect(resolveScenePropPosition(toyBox, DEFAULT_ROOM_LAYOUT).x).toBeLessThan(toySpot.x);
+    expect(resolveScenePropDepthY(toyBox, resolveScenePropPosition(toyBox, DEFAULT_ROOM_LAYOUT))).toBeLessThan(
+      toySpot.y,
+    );
+  });
+
+  it("keeps the simmering props attached to the kitchen unit", () => {
+    const [pot] = propsFor("simmeringDinner");
+    if (!pot || pot.type !== "fixture") throw new Error("simmering pot is missing");
+    expect(resolveScenePropPosition(pot, DEFAULT_ROOM_LAYOUT)).toEqual({ x: 184, y: 231 });
+    expect(resolveScenePropDepthY(pot, { x: 184, y: 231 })).toBe(231);
   });
 });
 

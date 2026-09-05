@@ -6,6 +6,7 @@ import {
   getFurnitureDefinition,
   placeFurniture,
   resolveFurnitureActionPoint,
+  resolveFurnitureLayout,
   resolveFurnitureSpriteHitArea,
 } from "../src/rendering/room-furniture.ts";
 import {
@@ -15,12 +16,15 @@ import {
   getDepthZIndex,
   isMovementSegmentValid,
   resolveSceneInitialDepthY,
+  resolveSceneLayout,
   resolveSceneRoute,
+  SCENE_FURNITURE_ANCHORS,
   SCENE_ROUTES,
   segmentIntersectsAabb,
   tryAdoptFurnitureAnchors,
   tryCreateRoomLayout,
   validateRoomLayout,
+  validateSceneFurnitureAnchors,
   validateSceneRoute,
   WALKABLE_BOUNDS,
 } from "../src/rendering/room-layout.ts";
@@ -245,12 +249,75 @@ describe("room layout adoption and scene routes", () => {
     expect(getDepthZIndex(200, 3)).toBeLessThan(getDepthZIndex(200, 4));
   });
 
-  it.each(["watchingStars", "morningStretch", "mimizouFarewell"] as const)(
+  it.each(["morningStretch", "mimizouFarewell"] as const)(
     "places the %s action pose in front of the bed and window",
     (sceneId) => {
       expect(resolveSceneRoute(sceneId, DEFAULT_ROOM_LAYOUT)[0]).toMatchObject({ depthOffset: 40 });
     },
   );
+
+  it("moves the stargazing pose onto the floor under the window between the bed and bookshelf", () => {
+    const route = resolveSceneRoute("watchingStars", DEFAULT_ROOM_LAYOUT);
+    expect(route[0]).toMatchObject({ x: 70, y: 122, action: true });
+    const bed = DEFAULT_ROOM_LAYOUT.furniture.bed;
+    expect(route[0]?.x).toBeGreaterThan(bed.occupancy.x + bed.occupancy.width);
+    // ベッドと本棚のどちらよりも手前へ描く。
+    const poseDepth = getDepthZIndex((route[0]?.y ?? 0) + (route[0]?.depthOffset ?? 0), 50);
+    for (const furnitureId of ["bed", "bookshelf"] as const) {
+      expect(poseDepth, furnitureId).toBeGreaterThan(
+        getDepthZIndex(DEFAULT_ROOM_LAYOUT.furniture[furnitureId].footY, 6),
+      );
+    }
+  });
+
+  it("clears the bedside table out of the stargazing pose and keeps every other scene untouched", () => {
+    expect(Object.keys(SCENE_FURNITURE_ANCHORS)).toEqual(["watchingStars"]);
+    const stargazing = resolveSceneLayout("watchingStars", DEFAULT_ROOM_LAYOUT);
+    expect(stargazing.furniture.bedsideTable.anchor).toEqual({ x: 24, y: 180 });
+    expect(stargazing.furniture.bed.anchor).toEqual(DEFAULT_ROOM_LAYOUT.furniture.bed.anchor);
+    expect(resolveSceneLayout("morningStretch", DEFAULT_ROOM_LAYOUT)).toBe(DEFAULT_ROOM_LAYOUT);
+
+    const pose = resolveSceneRoute("watchingStars", DEFAULT_ROOM_LAYOUT)[0];
+    if (!pose) throw new Error("stargazing waypoint is missing");
+    // どけた照明台は、望遠鏡を構えるエトキチの立ち位置と重ならない。
+    expect(isMovementSegmentValid({ x: pose.x, y: pose.y }, { x: pose.x, y: pose.y }, stargazing)).toBe(true);
+    expect(isMovementSegmentValid({ x: pose.x, y: pose.y }, { x: pose.x, y: pose.y }, DEFAULT_ROOM_LAYOUT)).toBe(false);
+  });
+
+  it("reports a scene-moved furniture piece that collides with the rest of the room", () => {
+    expect(validateSceneFurnitureAnchors(DEFAULT_ROOM_LAYOUT)).toEqual([]);
+
+    const anchors = createFurnitureAnchors({ sofa: { x: 24, y: 186 } });
+    const collidingLayout = {
+      anchors,
+      furniture: resolveFurnitureLayout(anchors),
+      fixtures: DEFAULT_ROOM_LAYOUT.fixtures,
+    };
+    expect(
+      validateSceneFurnitureAnchors(collidingLayout).map(({ code, sceneId, furnitureId }) => ({
+        code,
+        sceneId,
+        furnitureId,
+      })),
+    ).toEqual([{ code: "furnitureOverlap", sceneId: "watchingStars", furnitureId: "bedsideTable" }]);
+  });
+
+  it("stops at the dining chair before the fridge so the breakfast dishes appear there", () => {
+    const route = resolveSceneRoute("tooMuchBreakfast", DEFAULT_ROOM_LAYOUT);
+    expect(route[2]).toMatchObject(
+      resolveFurnitureActionPoint(DEFAULT_ROOM_LAYOUT.furniture, "diningSet", "morningTea"),
+    );
+    expect(route[2]).toMatchObject({ action: true });
+  });
+
+  it("seats Mimizou's visitor scene on the dining chair instead of the bare floor", () => {
+    expect(resolveSceneRoute("mimizouVisit", DEFAULT_ROOM_LAYOUT)).toEqual([
+      expect.objectContaining(resolveFurnitureActionPoint(DEFAULT_ROOM_LAYOUT.furniture, "diningSet", "morningTea")),
+    ]);
+    expect(resolveSceneInitialDepthY("mimizouVisit", DEFAULT_ROOM_LAYOUT)).toBe(
+      DEFAULT_ROOM_LAYOUT.furniture.diningSet.footY,
+    );
+  });
 
   it("folds laundry without walking in the open space near the bed", () => {
     expect(resolveSceneRoute("foldingLaundry", DEFAULT_ROOM_LAYOUT)).toEqual([
