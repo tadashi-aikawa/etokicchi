@@ -17,6 +17,7 @@ export interface CollectionEntry {
   discovery?: DiscoveryRecord;
   imagePath: string;
   status: CollectionEntryStatus;
+  remainingUnlockSteps: number;
   achievement: SceneAchievement;
 }
 
@@ -51,6 +52,7 @@ const COLLECTION_IMAGE_PATHS: Record<SceneId, string> = {
 };
 
 export const SCENE_COUNT = SCENES.length;
+const SCENE_BY_ID = new Map(SCENES.map((scene) => [scene.id, scene]));
 
 export function getCollectionImagePath(sceneId: SceneId): string {
   return COLLECTION_IMAGE_PATHS[sceneId];
@@ -65,14 +67,37 @@ export function getSceneAchievement(seenCount: number): SceneAchievement {
   };
 }
 
+export function getRemainingUnlockSteps(
+  scene: SceneDefinition,
+  discoveries: Partial<Record<SceneId, DiscoveryRecord>>,
+): number {
+  let current = scene;
+  let steps = 0;
+  const visited = new Set<SceneId>();
+
+  while (current.unlockRequirement?.kind === "sceneDiscovery") {
+    const requiredSceneId = current.unlockRequirement.sceneId;
+    if (discoveries[requiredSceneId] || visited.has(requiredSceneId)) break;
+    visited.add(requiredSceneId);
+    steps += 1;
+    const requiredScene = SCENE_BY_ID.get(requiredSceneId);
+    if (!requiredScene) break;
+    current = requiredScene;
+  }
+
+  return steps;
+}
+
 export function getCollectionEntries(discoveries: Partial<Record<SceneId, DiscoveryRecord>>): CollectionEntry[] {
   return SCENES.map((scene) => {
     const discovery = discoveries[scene.id];
+    const status = discovery ? "discovered" : isSceneUnlocked(scene, discoveries) ? "available" : "locked";
     return {
       scene,
       discovery,
       imagePath: getCollectionImagePath(scene.id),
-      status: discovery ? "discovered" : isSceneUnlocked(scene, discoveries) ? "available" : "locked",
+      status,
+      remainingUnlockSteps: status === "locked" ? getRemainingUnlockSteps(scene, discoveries) : 0,
       achievement: getSceneAchievement(discovery?.seenCount ?? 0),
     };
   });

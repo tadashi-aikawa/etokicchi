@@ -675,6 +675,14 @@ button {
   filter: grayscale(1) brightness(0.3) blur(7px);
 }
 
+.is-locked.is-lock-depth-2 .collection-illustration {
+  filter: grayscale(1) brightness(0.24) blur(8px);
+}
+
+.is-locked.is-lock-depth-3 .collection-illustration {
+  filter: grayscale(1) brightness(0.18) blur(9px);
+}
+
 .collection-band {
   position: absolute;
   top: 9px;
@@ -724,6 +732,23 @@ button {
     0 3px #4f4b48;
   color: white;
   font-size: 15px;
+}
+
+.is-locked .collection-emblem::after {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  display: grid;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  border: 1px solid #4f4b48;
+  border-radius: 50%;
+  background: #f4c989;
+  color: #34261f;
+  content: attr(data-lock-steps);
+  font-size: 8px;
+  font-weight: 950;
 }
 
 .collection-state-label {

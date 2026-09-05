@@ -19,8 +19,8 @@ describe("scene collection", () => {
     expect(entries.filter((entry) => entry.status === "available")).toHaveLength(20);
     expect(entries.filter((entry) => entry.status === "locked").map((entry) => entry.scene.id)).toEqual([
       "sleepingWithTatsuo",
-      "tatsuoAtWindow",
       "morningStretch",
+      "tatsuoWakeUp",
       "mimizouFarewell",
       "nappingOnMaineCoon",
       "tatsuoTooComfortable",
@@ -54,17 +54,77 @@ describe("scene collection", () => {
     const entries = getCollectionEntries({
       almostAwake: { firstSeenAt: "2026-09-01T21:00:00.000Z", seenCount: 1 },
       brushingMaineCoon: { firstSeenAt: "2026-09-04T00:00:00.000Z", seenCount: 1 },
+      tatsuoAtWindow: { firstSeenAt: "2026-09-02T01:00:00.000Z", seenCount: 1 },
       tatsuoWakeUp: { firstSeenAt: "2026-09-02T21:00:00.000Z", seenCount: 1 },
-      sleepingWithTatsuo: { firstSeenAt: "2026-09-03T01:00:00.000Z", seenCount: 1 },
+      tatsuoTooComfortable: { firstSeenAt: "2026-09-03T09:00:00.000Z", seenCount: 1 },
       watchingStars: { firstSeenAt: "2026-09-02T16:00:00.000Z", seenCount: 1 },
     });
 
     expect(entries.find((entry) => entry.scene.id === "morningStretch")?.status).toBe("available");
     expect(entries.find((entry) => entry.scene.id === "nappingOnMaineCoon")?.status).toBe("available");
-    expect(entries.find((entry) => entry.scene.id === "sleepingWithTatsuo")?.status).toBe("discovered");
-    expect(entries.find((entry) => entry.scene.id === "tatsuoAtWindow")?.status).toBe("available");
-    expect(entries.find((entry) => entry.scene.id === "tatsuoTooComfortable")?.status).toBe("available");
+    expect(entries.find((entry) => entry.scene.id === "sleepingWithTatsuo")?.status).toBe("available");
+    expect(entries.find((entry) => entry.scene.id === "tatsuoAtWindow")?.status).toBe("discovered");
+    expect(entries.find((entry) => entry.scene.id === "tatsuoTooComfortable")?.status).toBe("discovered");
     expect(entries.find((entry) => entry.scene.id === "mimizouVisit")?.status).toBe("available");
+  });
+
+  it("shows the remaining Tatsuo unlock chain and decreases it after each discovery", () => {
+    const initial = getCollectionEntries({});
+    expect(initial.find((entry) => entry.scene.id === "tatsuoAtWindow")).toMatchObject({
+      status: "available",
+      remainingUnlockSteps: 0,
+    });
+    expect(initial.find((entry) => entry.scene.id === "tatsuoWakeUp")).toMatchObject({
+      status: "locked",
+      remainingUnlockSteps: 1,
+    });
+    expect(initial.find((entry) => entry.scene.id === "tatsuoTooComfortable")).toMatchObject({
+      status: "locked",
+      remainingUnlockSteps: 2,
+    });
+    expect(initial.find((entry) => entry.scene.id === "sleepingWithTatsuo")).toMatchObject({
+      status: "locked",
+      remainingUnlockSteps: 3,
+    });
+
+    const afterWindow = getCollectionEntries({
+      tatsuoAtWindow: { firstSeenAt: "2026-09-05T01:00:00.000Z", seenCount: 1 },
+    });
+    expect(afterWindow.find((entry) => entry.scene.id === "tatsuoWakeUp")).toMatchObject({
+      status: "available",
+      remainingUnlockSteps: 0,
+    });
+    expect(afterWindow.find((entry) => entry.scene.id === "tatsuoTooComfortable")).toMatchObject({
+      status: "locked",
+      remainingUnlockSteps: 1,
+    });
+    expect(afterWindow.find((entry) => entry.scene.id === "sleepingWithTatsuo")).toMatchObject({
+      status: "locked",
+      remainingUnlockSteps: 2,
+    });
+
+    const afterWakeUp = getCollectionEntries({
+      tatsuoAtWindow: { firstSeenAt: "2026-09-05T01:00:00.000Z", seenCount: 1 },
+      tatsuoWakeUp: { firstSeenAt: "2026-09-05T06:00:00.000Z", seenCount: 1 },
+    });
+    expect(afterWakeUp.find((entry) => entry.scene.id === "tatsuoTooComfortable")).toMatchObject({
+      status: "available",
+      remainingUnlockSteps: 0,
+    });
+    expect(afterWakeUp.find((entry) => entry.scene.id === "sleepingWithTatsuo")).toMatchObject({
+      status: "locked",
+      remainingUnlockSteps: 1,
+    });
+
+    const afterSofa = getCollectionEntries({
+      tatsuoAtWindow: { firstSeenAt: "2026-09-05T01:00:00.000Z", seenCount: 1 },
+      tatsuoWakeUp: { firstSeenAt: "2026-09-05T06:00:00.000Z", seenCount: 1 },
+      tatsuoTooComfortable: { firstSeenAt: "2026-09-05T18:00:00.000Z", seenCount: 1 },
+    });
+    expect(afterSofa.find((entry) => entry.scene.id === "sleepingWithTatsuo")).toMatchObject({
+      status: "available",
+      remainingUnlockSteps: 0,
+    });
   });
 
   it("advances achievement levels at the configured encounter milestones", () => {

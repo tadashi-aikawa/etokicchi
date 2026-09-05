@@ -81,7 +81,8 @@ function createCollectionCard(
   openViewer: (entry: CollectionEntry, trigger: HTMLButtonElement, imageSource: string) => void,
 ): HTMLElement {
   const card = document.createElement("article");
-  card.className = `collection-card is-${entry.status}`;
+  const lockDepthClass = entry.status === "locked" ? ` is-lock-depth-${Math.min(entry.remainingUnlockSteps, 3)}` : "";
+  card.className = `collection-card is-${entry.status}${lockDepthClass}`;
   card.style.setProperty("--card-accent", entry.scene.accent);
 
   const illustration = document.createElement("img");
@@ -96,10 +97,15 @@ function createCollectionCard(
   emblem.className = "collection-emblem";
   emblem.setAttribute("aria-hidden", "true");
   emblem.textContent = entry.status === "discovered" ? "★" : entry.status === "locked" ? "🔒" : "？";
+  if (entry.status === "locked") emblem.dataset.lockSteps = String(entry.remainingUnlockSteps);
 
   const stateLabel = createParagraph(
     "collection-state-label",
-    entry.status === "discovered" ? "発見済み" : entry.status === "locked" ? "ロック中" : "未遭遇",
+    entry.status === "discovered"
+      ? "発見済み"
+      : entry.status === "locked"
+        ? `あと${entry.remainingUnlockSteps}段階`
+        : "未遭遇",
   );
   const cardTitle = document.createElement("h4");
   cardTitle.textContent = entry.status === "discovered" ? entry.scene.title : "？？？";
