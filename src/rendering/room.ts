@@ -83,7 +83,8 @@ import {
 import { getThunderWindowFrame, type ThunderWindowFrame } from "./thunder-window.ts";
 
 // ドット絵はどの素材も等倍で出したいので、補間の既定をここで一度だけ切り替える。
-// このモジュールはAssets.loadを呼ぶより前に評価されるため、読み込んだテクスチャにも効く。
+// このモジュールはAssets.loadを呼ぶより前に評価されるため、読み込んだテクスチャにも、
+// generateTextureで焼いたテクスチャにも効く。
 TextureSource.defaultOptions.scaleMode = "nearest";
 
 const WIDTH = ROOM_WIDTH;
@@ -113,20 +114,20 @@ function createLitTexture(app: Application, texture: Texture, tint: RoomTint): T
   if (tint.alpha === 0) return texture;
   const filter = new ColorMatrixFilter();
   filter.matrix = getLightingColorMatrix(tint);
-  // フィルターの既定解像度は1で、昼以外は中間テクスチャが論理座標のまま作られて2倍化が打ち消される。
-  filter.resolution = ASSET_PIXEL_RATIO;
+  // 焼き込み先は素材と等倍なので、色変換も焼き上がりも解像度1で足りる。
+  // 画面の描画解像度2はここには関係せず、上げても画素数が増えるだけで情報は増えない。
+  filter.resolution = 1;
   const target = new Sprite(texture);
   target.filters = [filter];
   // フィルターの余白まで焼くと素材より大きくなるので、範囲は素材そのものに固定する。
   const lit = app.renderer.generateTexture({
     target,
     frame: new Rectangle(0, 0, texture.width, texture.height),
-    resolution: ASSET_PIXEL_RATIO,
+    resolution: 1,
     antialias: false,
   });
-  // generateTextureで作るテクスチャはTextureSource.defaultOptionsを引き継がないので、ここだけ個別に指定する。
-  lit.source.scaleMode = "nearest";
   target.destroy();
+  filter.destroy();
   return lit;
 }
 
