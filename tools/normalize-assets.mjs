@@ -81,7 +81,7 @@ const TARGETS = [
   // シーン小物。sceneProps の height と、素材の縦横比から決まる表示幅。
   { name: "scene-blanket-floor-pixel.webp", width: 93, height: 60, kernel: "lanczos", note: "床の布団 46.5×30" },
   { name: "scene-breakfast-dishes-pixel.webp", width: 110, height: 44, kernel: "lanczos", note: "朝食の皿 55×22" },
-  { name: "scene-mud-footprints-pixel.webp", width: 73, height: 60, kernel: "lanczos", note: "泥の足跡 36.5×30" },
+  { name: "scene-mud-footprints-pixel.webp", width: 42, height: 34, kernel: "lanczos", note: "泥の足跡 21×17" },
   { name: "scene-laundry-basket-pixel.webp", width: 88, height: 66, kernel: "lanczos", note: "洗濯かご 44×33" },
   { name: "scene-simmering-pot-pixel.webp", width: 54, height: 48, kernel: "lanczos", note: "煮込み鍋 27×24" },
   { name: "scene-toy-box-pixel.webp", width: 57, height: 44, kernel: "lanczos", note: "おもちゃ箱 28.5×22" },
