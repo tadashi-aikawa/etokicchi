@@ -215,6 +215,19 @@ export function getLightingColorMatrix({ color, alpha }: RoomTint): ColorMatrix 
   ];
 }
 
+// フィルタを掛けられない図形の色を、getLightingColorMatrixと同じ式で時間帯の照明へ寄せる。
+export function applyTintToColor(color: number, { color: tintColor, alpha }: RoomTint): number {
+  if (alpha === 0) return color;
+  const retained = 1 - alpha;
+  const blend = (shift: number): number => {
+    const source = (color >> shift) & 0xff;
+    const target = (tintColor >> shift) & 0xff;
+    const mixed = Math.round(retained * source + alpha * target);
+    return Math.min(255, Math.max(0, mixed));
+  };
+  return (blend(16) << 16) | (blend(8) << 8) | blend(0);
+}
+
 const TIME_TINTS: Record<TimeBand, RoomTint> = {
   // The layered room starts from a time-neutral base, so these values carry the
   // room lighting that used to be baked into each full-background asset.

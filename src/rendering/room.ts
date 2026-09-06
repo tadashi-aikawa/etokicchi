@@ -43,6 +43,7 @@ import {
 import { getRoomLights } from "./room-lighting.ts";
 import { resolveSpeechBubblePlacement } from "./room-speech.ts";
 import {
+  applyTintToColor,
   getLightingColorMatrix,
   getRoomPresentation,
   resolveGuestDepthY,
@@ -100,23 +101,68 @@ const directionRows: Record<Direction, number> = {
   up: 3,
 };
 
-function applyLighting(displayObject: Container | Graphics | Sprite, tint: RoomTint): void {
-  if (tint.alpha === 0) return;
+/**
+ * 時間帯の照明を素材へ焼き込んだテクスチャを作る。
+ * 照明は時間帯とシーンで決まる静的な色変換なので、毎フレームのフィルタ描画にはしない。
+ */
+function createLitTexture(app: Application, texture: Texture, tint: RoomTint): Texture {
+  if (tint.alpha === 0) return texture;
   const filter = new ColorMatrixFilter();
   filter.matrix = getLightingColorMatrix(tint);
   // フィルターの既定解像度は1で、昼以外は中間テクスチャが論理座標のまま作られて2倍化が打ち消される。
   filter.resolution = ASSET_PIXEL_RATIO;
-  displayObject.filters = [filter];
+  const target = new Sprite(texture);
+  target.filters = [filter];
+  // フィルターの余白まで焼くと素材より大きくなるので、範囲は素材そのものに固定する。
+  const lit = app.renderer.generateTexture({
+    target,
+    frame: new Rectangle(0, 0, texture.width, texture.height),
+    resolution: ASSET_PIXEL_RATIO,
+    antialias: false,
+  });
+  // 生成直後のテクスチャは既定の補間で作られるので、ドットを保つ設定はここで明示する。
+  lit.source.scaleMode = "nearest";
+  target.destroy();
+  return lit;
+}
+
+type BakeLitTexture = (texture: Texture) => Texture;
+
+interface RoomLighting {
+  bake: BakeLitTexture;
+  destroy: () => void;
+}
+
+// 同じ素材を複数のスプライトが使うので、焼き込みは部屋ごとに一度だけにする。
+function createRoomLighting(app: Application, tint: RoomTint): RoomLighting {
+  const baked = new Map<Texture, Texture>();
+  return {
+    bake: (texture) => {
+      const cached = baked.get(texture);
+      if (cached) return cached;
+      const lit = createLitTexture(app, texture, tint);
+      baked.set(texture, lit);
+      return lit;
+    },
+    destroy: () => {
+      for (const [source, lit] of baked) {
+        if (lit !== source) lit.destroy(true);
+      }
+      baked.clear();
+    },
+  };
 }
 
 function createDecorationSprites(
   definitions: readonly RoomDecoration[],
   textures: ReadonlyMap<string, Texture>,
+  bake: BakeLitTexture,
 ): readonly Sprite[] {
   return definitions.map((definition) => {
-    const texture = textures.get(definition.assetName);
-    if (!texture) throw new Error(`${definition.assetName}の装飾素材がありません`);
-    texture.source.scaleMode = "nearest";
+    const source = textures.get(definition.assetName);
+    if (!source) throw new Error(`${definition.assetName}の装飾素材がありません`);
+    source.source.scaleMode = "nearest";
+    const texture = bake(source);
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5);
     sprite.width = definition.width;
@@ -132,22 +178,21 @@ function createDecorationLayer(
   definitions: readonly RoomDecoration[],
   textures: ReadonlyMap<string, Texture>,
   label: string,
-  tint: RoomTint,
+  bake: BakeLitTexture,
 ): Container {
   const layer = new Container();
   layer.label = label;
-  const sprites = createDecorationSprites(definitions, textures);
+  const sprites = createDecorationSprites(definitions, textures, bake);
   if (sprites.length > 0) {
     layer.addChild(...sprites);
   }
-  applyLighting(layer, tint);
   return layer;
 }
 
 function createDepthDecorationSprites(
   definitions: readonly RoomDepthDecoration[],
   textures: ReadonlyMap<string, Texture>,
-  tint: RoomTint,
+  bake: BakeLitTexture,
   callbacks: RoomCallbacks,
   overrides: ReturnType<typeof getRoomPresentation>["depthDecorationOverrides"],
   furniture: FurnitureLayout,
@@ -157,9 +202,10 @@ function createDepthDecorationSprites(
   return visibleDefinitions.map((definition, tieBreak) => {
     const override = overrides?.[definition.id];
     const assetName = override?.assetName ?? definition.assetName;
-    const texture = textures.get(assetName);
-    if (!texture) throw new Error(`${assetName}の床上装飾素材がありません`);
-    texture.source.scaleMode = "nearest";
+    const source = textures.get(assetName);
+    if (!source) throw new Error(`${assetName}の床上装飾素材がありません`);
+    source.source.scaleMode = "nearest";
+    const texture = bake(source);
     let x = definition.x;
     let y = definition.y;
     let depthY = y;
@@ -200,7 +246,6 @@ function createDepthDecorationSprites(
     sprite.on("pointertap", () =>
       callbacks.onObservation(override?.observation ?? definition.observation, definition.displayName),
     );
-    applyLighting(sprite, tint);
     return sprite;
   });
 }
@@ -210,38 +255,40 @@ interface RoomClockLayer {
   update: (now: Date) => void;
 }
 
-function drawClockHands(hands: Graphics, now: Date): void {
+const CLOCK_HAND_COLOR = 0x3b241b;
+
+function drawClockHands(hands: Graphics, now: Date, color: number): void {
   const angles = resolveClockHandAngles(now);
   hands
     .clear()
     .moveTo(ROOM_CLOCK.x, ROOM_CLOCK.y)
     .lineTo(ROOM_CLOCK.x + Math.sin(angles.hour) * 4.4, ROOM_CLOCK.y - Math.cos(angles.hour) * 4.4)
-    .stroke({ color: 0x3b241b, width: 1.4, pixelLine: true })
+    .stroke({ color, width: 1.4, pixelLine: true })
     .moveTo(ROOM_CLOCK.x, ROOM_CLOCK.y)
     .lineTo(ROOM_CLOCK.x + Math.sin(angles.minute) * 6.6, ROOM_CLOCK.y - Math.cos(angles.minute) * 6.6)
-    .stroke({ color: 0x3b241b, width: 1, pixelLine: true })
+    .stroke({ color, width: 1, pixelLine: true })
     .circle(ROOM_CLOCK.x, ROOM_CLOCK.y, 1)
-    .fill(0x3b241b);
+    .fill(color);
 }
 
-function createClockLayer(texture: Texture, now: Date, tint: RoomTint): RoomClockLayer {
-  texture.source.scaleMode = "nearest";
+function createClockLayer(source: Texture, now: Date, tint: RoomTint, bake: BakeLitTexture): RoomClockLayer {
+  source.source.scaleMode = "nearest";
   const layer = new Container();
   layer.label = "roomClock";
-  const face = new Sprite(texture);
+  const face = new Sprite(bake(source));
   face.anchor.set(0.5);
   face.width = ROOM_CLOCK.size;
   face.height = ROOM_CLOCK.size;
   face.position.set(ROOM_CLOCK.x, ROOM_CLOCK.y);
   face.roundPixels = true;
 
+  const handColor = applyTintToColor(CLOCK_HAND_COLOR, tint);
   const hands = new Graphics();
-  drawClockHands(hands, now);
+  drawClockHands(hands, now, handColor);
   layer.addChild(face, hands);
-  applyLighting(layer, tint);
   return {
     container: layer,
-    update: (nextNow) => drawClockHands(hands, nextNow),
+    update: (nextNow) => drawClockHands(hands, nextNow, handColor),
   };
 }
 
@@ -370,40 +417,40 @@ function createTatsuoWindowFaceLayer(
   return layer;
 }
 
-function createLayeredBackground(baseTexture: Texture, tint: RoomTint): Container {
+const FRONT_EDGE_TOP_COLOR = 0x8b5331;
+const FRONT_EDGE_BOTTOM_COLOR = 0x3a211b;
+
+function createLayeredBackground(baseTexture: Texture, tint: RoomTint, bake: BakeLitTexture): Container {
   baseTexture.source.scaleMode = "nearest";
   const background = new Container();
   background.label = "timeNeutralBase";
   const outsideRoom = new Graphics().rect(0, BACKGROUND_HEIGHT, WIDTH, HEIGHT - BACKGROUND_HEIGHT).fill(0x171b25);
   const interior = new Container();
-  const base = new Sprite(baseTexture);
+  const base = new Sprite(bake(baseTexture));
   base.width = WIDTH;
   base.height = BACKGROUND_HEIGHT;
   interior.addChild(base);
-  applyLighting(interior, tint);
   const frontEdge = new Graphics()
     .rect(0, BACKGROUND_HEIGHT - 3, WIDTH, 3)
-    .fill(0x8b5331)
+    .fill(applyTintToColor(FRONT_EDGE_TOP_COLOR, tint))
     .rect(0, BACKGROUND_HEIGHT, WIDTH, 5)
-    .fill(0x3a211b);
-  applyLighting(frontEdge, tint);
+    .fill(applyTintToColor(FRONT_EDGE_BOTTOM_COLOR, tint));
   background.addChild(outsideRoom, interior, frontEdge);
   return background;
 }
 
 function createWindowLayer(
   windowTexture: Texture,
-  tint: RoomTint,
+  bake: BakeLitTexture,
   callbacks: RoomCallbacks,
   observation: string,
 ): Container {
   windowTexture.source.scaleMode = "nearest";
   const windowLayer = new Container();
   windowLayer.label = "timeWindow";
-  const window = new Sprite(windowTexture);
+  const window = new Sprite(bake(windowTexture));
   window.width = WIDTH;
   window.height = BACKGROUND_HEIGHT;
-  applyLighting(window, tint);
   const windowMask = new Graphics().rect(22, 25, 56, 54).fill(0xffffff);
   window.mask = windowMask;
   window.eventMode = "static";
@@ -420,16 +467,17 @@ function createWindowLayer(
 function createFurnitureSprites(
   textures: ReadonlyMap<string, Texture>,
   furniture: FurnitureLayout,
-  tint: RoomTint,
+  bake: BakeLitTexture,
   callbacks: RoomCallbacks,
   observationOverrides: ObservationOverrides,
   hiddenFurnitureIds: readonly FurnitureId[] = [],
 ): readonly Sprite[] {
   const hiddenIds = new Set(hiddenFurnitureIds);
   return FURNITURE_DEFINITIONS.filter(({ id }) => !hiddenIds.has(id)).map((definition, tieBreak) => {
-    const texture = textures.get(definition.id);
-    if (!texture) throw new Error(`${definition.id}の家具素材がありません`);
-    texture.source.scaleMode = "nearest";
+    const source = textures.get(definition.id);
+    if (!source) throw new Error(`${definition.id}の家具素材がありません`);
+    source.source.scaleMode = "nearest";
+    const texture = bake(source);
     const placed = furniture[definition.id];
     const sprite = new Sprite(texture);
     const scale = definition.displayHeight / texture.height;
@@ -438,7 +486,6 @@ function createFurnitureSprites(
     sprite.width = definition.displayWidth;
     sprite.position.set(placed.anchor.x, placed.anchor.y);
     sprite.roundPixels = true;
-    applyLighting(sprite, tint);
     sprite.zIndex = getDepthZIndex(placed.footY, tieBreak);
     sprite.label = definition.displayName;
     sprite.eventMode = "static";
@@ -454,18 +501,18 @@ function createFurnitureSprites(
 function createFixtureLayer(
   textures: ReadonlyMap<string, Texture>,
   fixtures: FixtureLayout,
-  tint: RoomTint,
+  bake: BakeLitTexture,
   callbacks: RoomCallbacks,
   observationOverrides: ObservationOverrides,
 ): Container {
   const layer = new Container();
   layer.label = "fixedFixtures";
   for (const definition of FIXTURE_DEFINITIONS) {
-    const texture = textures.get(definition.id);
-    if (!texture) throw new Error(`${definition.id}の固定設備素材がありません`);
-    texture.source.scaleMode = "nearest";
+    const source = textures.get(definition.id);
+    if (!source) throw new Error(`${definition.id}の固定設備素材がありません`);
+    source.source.scaleMode = "nearest";
     const placed = fixtures[definition.id];
-    const sprite = new Sprite(texture);
+    const sprite = new Sprite(bake(source));
     sprite.anchor.set(1, 1);
     sprite.width = definition.displayWidth;
     sprite.height = definition.displayHeight;
@@ -490,7 +537,6 @@ function createFixtureLayer(
       layer.addChild(target);
     }
   }
-  applyLighting(layer, tint);
   return layer;
 }
 
@@ -504,13 +550,14 @@ function createSceneProps(
   textures: readonly Texture[],
   presentations: readonly AttachedSceneProp[],
   layout: RoomLayout,
-  tint: RoomTint,
+  bake: BakeLitTexture,
   reveal: ScenePropRevealBinding,
 ): readonly Sprite[] {
   return presentations.map((presentation, index) => {
-    const texture = textures[index];
-    if (!texture) throw new Error(`${presentation.assetName}のシーン小物素材がありません`);
-    texture.source.scaleMode = "nearest";
+    const source = textures[index];
+    if (!source) throw new Error(`${presentation.assetName}のシーン小物素材がありません`);
+    source.source.scaleMode = "nearest";
+    const texture = bake(source);
     const position = resolveScenePropPosition(presentation, layout);
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5, 1);
@@ -518,7 +565,6 @@ function createSceneProps(
     sprite.position.set(position.x, position.y);
     sprite.roundPixels = true;
     sprite.zIndex = getDepthZIndex(resolveScenePropDepthY(presentation, position), presentation.depthOffset ?? 20);
-    applyLighting(sprite, tint);
     const { revealAtWaypoint } = presentation;
     if (revealAtWaypoint !== undefined && reveal.enabled) {
       sprite.visible = false;
@@ -532,13 +578,14 @@ function createSceneProps(
 
 function createComfortingMaineCoon(
   app: Application,
-  texture: Texture,
+  source: Texture,
   presentation: ComfortingMaineCoonPresentation,
-  tint: RoomTint,
+  bake: BakeLitTexture,
   callbacks: RoomCallbacks,
   getFrame: ThunderComfortFrameProvider,
 ): Sprite {
-  texture.source.scaleMode = "nearest";
+  source.source.scaleMode = "nearest";
+  const texture = bake(source);
   const pair = new Sprite(texture);
   const baseScale = presentation.height / texture.height;
   pair.anchor.set(0.5, 1);
@@ -554,7 +601,6 @@ function createComfortingMaineCoon(
     callbacks.onObservation(presentation.observation, "クーン");
     callbacks.onCharacterTap();
   });
-  applyLighting(pair, tint);
 
   app.ticker.add(() => {
     const frame = getFrame();
@@ -1033,6 +1079,7 @@ export async function renderRoom(
 
   const actionAssetName = ACTION_ASSET_NAMES[visit.scene.id];
   const presentation = getRoomPresentation(visit);
+  const lighting = createRoomLighting(app, presentation.tint);
   const getThunderWindowFrame = presentation.tatsuoWindow ? createThunderWindowFrameProvider(app) : undefined;
   const getThunderComfortFrame =
     presentation.thunderstorm && !presentation.tatsuoWindow ? createThunderComfortFrameProvider(app) : undefined;
@@ -1116,7 +1163,7 @@ export async function renderRoom(
           app,
           comfortingMaineCoonTexture,
           presentation.comfortingMaineCoon,
-          presentation.tint,
+          lighting.bake,
           callbacks,
           getThunderComfortFrame,
         )
@@ -1176,24 +1223,19 @@ export async function renderRoom(
   const textureByDecorationAsset = new Map(
     decorationAssetNames.map((assetName, index) => [assetName, decorationTextures[index] as Texture]),
   );
-  const base = createLayeredBackground(baseTexture, presentation.tint);
-  const windowLayer = createWindowLayer(windowTexture, presentation.tint, callbacks, presentation.windowObservation);
+  const base = createLayeredBackground(baseTexture, presentation.tint, lighting.bake);
+  const windowLayer = createWindowLayer(windowTexture, lighting.bake, callbacks, presentation.windowObservation);
   const rainWindowLayer = presentation.thunderstorm ? createRainWindowLayer(app) : undefined;
   const fixtureLayer = createFixtureLayer(
     textureByFixtureId,
     sceneLayout.fixtures,
-    presentation.tint,
+    lighting.bake,
     callbacks,
     presentation.observationOverrides,
   );
-  const floorDecor = createDecorationLayer(
-    FLOOR_DECORATIONS,
-    textureByDecorationAsset,
-    "floorDecor",
-    presentation.tint,
-  );
-  const wallDecor = createDecorationLayer(WALL_DECORATIONS, textureByDecorationAsset, "wallDecor", presentation.tint);
-  const clockLayer = createClockLayer(clockTexture, now, presentation.tint);
+  const floorDecor = createDecorationLayer(FLOOR_DECORATIONS, textureByDecorationAsset, "floorDecor", lighting.bake);
+  const wallDecor = createDecorationLayer(WALL_DECORATIONS, textureByDecorationAsset, "wallDecor", lighting.bake);
+  const clockLayer = createClockLayer(clockTexture, now, presentation.tint, lighting.bake);
   const depthContainer = new Container();
   depthContainer.label = "floorDepth";
   depthContainer.sortableChildren = true;
@@ -1201,7 +1243,7 @@ export async function renderRoom(
     ...createFurnitureSprites(
       textureByFurnitureId,
       sceneLayout.furniture,
-      presentation.tint,
+      lighting.bake,
       callbacks,
       presentation.observationOverrides,
       presentation.hiddenFurnitureIds,
@@ -1209,13 +1251,13 @@ export async function renderRoom(
     ...createDepthDecorationSprites(
       DEPTH_DECORATIONS,
       textureByDecorationAsset,
-      presentation.tint,
+      lighting.bake,
       callbacks,
       presentation.depthDecorationOverrides,
       sceneLayout.furniture,
       presentation.hiddenDepthDecorationIds,
     ),
-    ...createSceneProps(scenePropTextures, sceneProps, sceneLayout, presentation.tint, scenePropReveal),
+    ...createSceneProps(scenePropTextures, sceneProps, sceneLayout, lighting.bake, scenePropReveal),
   );
   if (sleeperBase) depthContainer.addChild(sleeperBase);
   if (companion) depthContainer.addChild(companion);
@@ -1246,6 +1288,7 @@ export async function renderRoom(
     showSpeech: speechBubble.show,
     destroy: () => {
       speechBubble.destroy();
+      lighting.destroy();
       app.destroy({ removeView: true }, { children: true });
     },
   };

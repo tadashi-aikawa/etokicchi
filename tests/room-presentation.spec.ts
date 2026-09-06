@@ -11,6 +11,7 @@ import {
 } from "../src/rendering/room-furniture.ts";
 import { DEFAULT_ROOM_LAYOUT, getDepthZIndex, resolveSceneRoute } from "../src/rendering/room-layout.ts";
 import {
+  applyTintToColor,
   getLightingColorMatrix,
   getRoomPresentation,
   getRoomTint,
@@ -269,6 +270,23 @@ describe("room presentation", () => {
     expect(matrix[12]).toBeCloseTo(0.48);
     expect(matrix[14]).toBeCloseTo((0x50 / 255) * 0.52);
     expect(matrix.slice(15)).toEqual([0, 0, 0, 1, 0]);
+  });
+
+  it("blends a plain color with the same formula the lighting matrix uses", () => {
+    const tint = { color: 0x1d2a50, alpha: 0.52 };
+    const blended = applyTintToColor(0x8b5331, tint);
+    const expectChannel = (source: number, target: number): number => Math.round(0.48 * source + 0.52 * target);
+    expect((blended >> 16) & 0xff).toBe(expectChannel(0x8b, 0x1d));
+    expect((blended >> 8) & 0xff).toBe(expectChannel(0x53, 0x2a));
+    expect(blended & 0xff).toBe(expectChannel(0x31, 0x50));
+  });
+
+  it("keeps a color untouched when the time band has no lighting", () => {
+    expect(applyTintToColor(0x8b5331, { color: 0xffffff, alpha: 0 })).toBe(0x8b5331);
+  });
+
+  it("reaches the tint color when the lighting fully covers the source", () => {
+    expect(applyTintToColor(0x8b5331, { color: 0x1d2a50, alpha: 1 })).toBe(0x1d2a50);
   });
 
   it("shows Etokichi sprawled on a cushion during the window nap", () => {
