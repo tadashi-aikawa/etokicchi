@@ -215,17 +215,6 @@ IndexedDBの単一stateレコードへ次を保存する。
 
 DBのschema versionとstateのdata versionを別に持つ。DB構造の変更は`onupgradeneeded`、state形式の変更は読み込み後のmigrationで扱う。
 
-- 5時間帯のstate version 1は6時間帯のstate version 2へ読み込み時に移行する
-- 旧`earlyMorning`の割当・履歴・選択は新`morning`へ移し、新`earlyMorning`の履歴は空で始める
-- 旧`deepNight`の割当・選択は、slot日付を1日前へ移して23:00側の日付基準に揃える
-- 旧の後続反応は発生元の時間帯と`kind`に応じて次のように移す
-    - 旧`deepNight`から次の時間帯へ送った`later`は、対象の`earlyMorning`と日付を維持する
-    - 旧`night`から次の時間帯へ送った`later`は、対象の`deepNight`を1日前へ移す
-    - 旧`earlyMorning`から翌日の同じ時間帯へ送った`nextDay`は、対象を新`morning`へ移す
-    - 旧`deepNight`から翌日の同じ時間帯へ送った`nextDay`は、対象日付を1日前へ移す
-    - 後続反応の`sourceSlotKey`と`id`内の発生元slotも、移行後の割当キーに揃える
-- 発見履歴とその他の時間帯の履歴は維持する
-
 ## 初期プロトに含めないもの
 
 - サーバーと複数端末同期

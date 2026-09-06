@@ -237,105 +237,6 @@ export function isGameState(value: unknown): value is GameState {
   );
 }
 
-type LegacyTimeBand = Exclude<TimeBand, "morning">;
-
-interface LegacyGameState {
-  dataVersion: 1;
-  assignments: Record<string, SlotAssignment>;
-  histories: Record<LegacyTimeBand, SceneId[]>;
-  interactions: Record<string, InteractionRecord>;
-  echoes: EchoRecord[];
-  discoveries: Partial<Record<SceneId, { firstSeenAt: string; seenCount: number }>>;
-}
-
-function isLegacyGameState(value: unknown): value is LegacyGameState {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<LegacyGameState>;
-  const legacyBands: readonly LegacyTimeBand[] = ["deepNight", "earlyMorning", "daytime", "evening", "night"];
-  return (
-    candidate.dataVersion === 1 &&
-    typeof candidate.assignments === "object" &&
-    typeof candidate.histories === "object" &&
-    typeof candidate.interactions === "object" &&
-    Array.isArray(candidate.echoes) &&
-    typeof candidate.discoveries === "object" &&
-    legacyBands.every((band) => Array.isArray(candidate.histories?.[band]))
-  );
-}
-
-function parseLegacySlotKey(slotKey: string): { localDate: string; band: LegacyTimeBand } | undefined {
-  const match = /^(\d{4}-\d{2}-\d{2}):(deepNight|earlyMorning|daytime|evening|night)$/.exec(slotKey);
-  if (!match) return undefined;
-  const localDate = match[1];
-  const band = match[2] as LegacyTimeBand | undefined;
-  return localDate && band ? { localDate, band } : undefined;
-}
-
-function migrateLegacySlotKey(slotKey: string): string {
-  const parsed = parseLegacySlotKey(slotKey);
-  if (!parsed) return slotKey;
-  if (parsed.band === "earlyMorning") return makeSlotKey(parsed.localDate, "morning");
-  if (parsed.band === "deepNight") return makeSlotKey(addDays(parsed.localDate, -1), "deepNight");
-  return slotKey;
-}
-
-function migrateLegacyEcho(echo: EchoRecord): EchoRecord {
-  const source = parseLegacySlotKey(echo.sourceSlotKey);
-  const sourceSlotKey = migrateLegacySlotKey(echo.sourceSlotKey);
-  let targetSlotKey = echo.targetSlotKey;
-
-  if (source && echo.kind === "later" && source.band === "night") {
-    const target = parseLegacySlotKey(echo.targetSlotKey);
-    if (target?.band === "deepNight") {
-      targetSlotKey = makeSlotKey(addDays(target.localDate, -1), "deepNight");
-    }
-  } else if (source && echo.kind === "nextDay") {
-    targetSlotKey = migrateLegacySlotKey(echo.targetSlotKey);
-  }
-
-  return {
-    ...echo,
-    id: echo.id.startsWith(`${echo.sourceSlotKey}:`)
-      ? `${sourceSlotKey}${echo.id.slice(echo.sourceSlotKey.length)}`
-      : echo.id,
-    sourceSlotKey,
-    targetSlotKey,
-  };
-}
-
-function migrateLegacyState(state: LegacyGameState): GameState {
-  const assignments: Record<string, SlotAssignment> = {};
-  for (const assignment of Object.values(state.assignments)) {
-    const slotKey = migrateLegacySlotKey(assignment.slotKey);
-    const parsed = slotKey.split(":");
-    const localDate = parsed[0] ?? assignment.localDate;
-    const band = (parsed[1] ?? assignment.band) as TimeBand;
-    assignments[slotKey] = { ...assignment, slotKey, localDate, band };
-  }
-
-  const interactions: Record<string, InteractionRecord> = {};
-  for (const interaction of Object.values(state.interactions)) {
-    const slotKey = migrateLegacySlotKey(interaction.slotKey);
-    interactions[slotKey] = { ...interaction, slotKey };
-  }
-
-  return {
-    dataVersion: 2,
-    assignments,
-    histories: {
-      earlyMorning: [],
-      morning: [...state.histories.earlyMorning],
-      daytime: [...state.histories.daytime],
-      evening: [...state.histories.evening],
-      night: [...state.histories.night],
-      deepNight: [...state.histories.deepNight],
-    },
-    interactions,
-    echoes: state.echoes.map(migrateLegacyEcho),
-    discoveries: structuredClone(state.discoveries),
-  };
-}
-
 function wrapVariantIndex(index: number, length: number): number {
   if (length <= 0 || !Number.isFinite(index)) return 0;
   const whole = Math.trunc(index);
@@ -381,6 +282,5 @@ export function sanitizeGameState(state: GameState): GameState {
 
 export function migrateGameState(value: unknown): GameState {
   if (isGameState(value)) return sanitizeGameState(value);
-  if (isLegacyGameState(value)) return sanitizeGameState(migrateLegacyState(value));
   return createInitialState();
 }

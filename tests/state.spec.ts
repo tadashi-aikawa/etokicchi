@@ -200,37 +200,6 @@ describe("visit resolution", () => {
     );
     expect(unlockedScenes).toContain("mimizouFarewell");
   });
-
-  it("accepts and extends a state saved before the Mimizou scene existed", () => {
-    const legacyState: unknown = {
-      dataVersion: 1,
-      assignments: {},
-      histories: {
-        deepNight: ["watchingStars"],
-        earlyMorning: ["morningTea"],
-        daytime: ["wateringPlants"],
-        evening: ["foldingLaundry"],
-        night: ["readingComics"],
-      },
-      interactions: {},
-      echoes: [],
-      discoveries: {
-        readingComics: { firstSeenAt: "2026-08-30T12:00:00.000Z", seenCount: 2 },
-        watchingStars: { firstSeenAt: "2026-08-31T16:00:00.000Z", seenCount: 1 },
-      },
-    };
-
-    const migrated = migrateGameState(legacyState);
-    expect(migrated.dataVersion).toBe(2);
-    expect(migrated.histories.morning).toEqual(["morningTea"]);
-    expect(migrated.histories.earlyMorning).toEqual([]);
-    const resolved = Array.from({ length: 90 }, (_, index) =>
-      resolveVisit(new Date(2026, 8, index + 1, 21), migrated),
-    ).find((candidate) => candidate.visit.scene.id === "mimizouVisit");
-    expect(resolved).toBeDefined();
-    if (!resolved) throw new Error("mimizouVisit was not selected");
-    expect(resolved.state.discoveries.readingComics?.seenCount).toBe(2);
-  });
 });
 
 describe("meaningful interactions", () => {
@@ -268,116 +237,9 @@ describe("meaningful interactions", () => {
 });
 
 describe("state migration", () => {
-  it("moves legacy morning and deep-night slots without breaking echo chronology", () => {
-    const legacyState: unknown = {
-      dataVersion: 1,
-      assignments: {
-        "2026-09-02:deepNight": {
-          slotKey: "2026-09-02:deepNight",
-          localDate: "2026-09-02",
-          band: "deepNight",
-          sceneId: "sleeping",
-          lineIndex: 0,
-          detailIndex: 0,
-          createdAt: "2026-09-01T16:00:00.000Z",
-        },
-        "2026-09-02:earlyMorning": {
-          slotKey: "2026-09-02:earlyMorning",
-          localDate: "2026-09-02",
-          band: "earlyMorning",
-          sceneId: "tooMuchBreakfast",
-          lineIndex: 0,
-          detailIndex: 0,
-          createdAt: "2026-09-01T21:00:00.000Z",
-        },
-      },
-      histories: {
-        deepNight: ["sleeping"],
-        earlyMorning: ["tooMuchBreakfast"],
-        daytime: [],
-        evening: [],
-        night: ["packingTomorrow"],
-      },
-      interactions: {
-        "2026-09-02:earlyMorning": {
-          slotKey: "2026-09-02:earlyMorning",
-          choiceId: "eatTogether",
-          immediate: "朝食を食べた",
-          selectedAt: "2026-09-01T21:10:00.000Z",
-        },
-      },
-      echoes: [
-        {
-          id: "2026-09-02:deepNight:cover:later",
-          sourceSlotKey: "2026-09-02:deepNight",
-          targetSlotKey: "2026-09-02:earlyMorning",
-          text: "deep later",
-          kind: "later",
-        },
-        {
-          id: "2026-09-02:deepNight:cover:nextDay",
-          sourceSlotKey: "2026-09-02:deepNight",
-          targetSlotKey: "2026-09-03:deepNight",
-          text: "deep next",
-          kind: "nextDay",
-        },
-        {
-          id: "2026-09-01:night:checkTogether:later",
-          sourceSlotKey: "2026-09-01:night",
-          targetSlotKey: "2026-09-02:deepNight",
-          text: "night later",
-          kind: "later",
-        },
-        {
-          id: "2026-09-02:earlyMorning:eatTogether:nextDay",
-          sourceSlotKey: "2026-09-02:earlyMorning",
-          targetSlotKey: "2026-09-03:earlyMorning",
-          text: "morning next",
-          kind: "nextDay",
-        },
-      ],
-      discoveries: {
-        sleeping: { firstSeenAt: "2026-09-01T16:00:00.000Z", seenCount: 1 },
-      },
-    };
-
-    const migrated = migrateGameState(legacyState);
-
-    expect(migrated.assignments["2026-09-01:deepNight"]).toMatchObject({
-      slotKey: "2026-09-01:deepNight",
-      localDate: "2026-09-01",
-      band: "deepNight",
-    });
-    expect(migrated.assignments["2026-09-02:morning"]).toMatchObject({
-      slotKey: "2026-09-02:morning",
-      band: "morning",
-    });
-    expect(migrated.interactions["2026-09-02:morning"]?.slotKey).toBe("2026-09-02:morning");
-    expect(migrated.echoes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: "2026-09-01:deepNight:cover:later",
-          sourceSlotKey: "2026-09-01:deepNight",
-          targetSlotKey: "2026-09-02:earlyMorning",
-        }),
-        expect.objectContaining({
-          sourceSlotKey: "2026-09-01:deepNight",
-          targetSlotKey: "2026-09-02:deepNight",
-          kind: "nextDay",
-        }),
-        expect.objectContaining({
-          sourceSlotKey: "2026-09-01:night",
-          targetSlotKey: "2026-09-01:deepNight",
-          kind: "later",
-        }),
-        expect.objectContaining({
-          sourceSlotKey: "2026-09-02:morning",
-          targetSlotKey: "2026-09-03:morning",
-          kind: "nextDay",
-        }),
-      ]),
-    );
-    expect(migrated.discoveries.sleeping?.seenCount).toBe(1);
+  it("starts over when the saved value is not a current state", () => {
+    expect(migrateGameState({ dataVersion: 1, assignments: {} })).toEqual(createInitialState());
+    expect(migrateGameState(undefined)).toEqual(createInitialState());
   });
 });
 
