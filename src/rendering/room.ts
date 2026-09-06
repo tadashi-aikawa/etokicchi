@@ -8,6 +8,7 @@ import {
   Rectangle,
   Sprite,
   Texture,
+  TextureSource,
   type Ticker,
 } from "pixi.js";
 import "pixi.js/browser";
@@ -82,6 +83,10 @@ import {
 } from "./scene-assets.ts";
 import { getThunderWindowFrame, type ThunderWindowFrame } from "./thunder-window.ts";
 
+// ドット絵はどの素材も等倍で出したいので、補間の既定をここで一度だけ切り替える。
+// このモジュールはAssets.loadを呼ぶより前に評価されるため、読み込んだテクスチャにも効く。
+TextureSource.defaultOptions.scaleMode = "nearest";
+
 const WIDTH = ROOM_WIDTH;
 const HEIGHT = ROOM_HEIGHT;
 const BACKGROUND_HEIGHT = ROOM_BACKGROUND_HEIGHT;
@@ -120,7 +125,7 @@ function createLitTexture(app: Application, texture: Texture, tint: RoomTint): T
     resolution: ASSET_PIXEL_RATIO,
     antialias: false,
   });
-  // 生成直後のテクスチャは既定の補間で作られるので、ドットを保つ設定はここで明示する。
+  // generateTextureで作るテクスチャはTextureSource.defaultOptionsを引き継がないので、ここだけ個別に指定する。
   lit.source.scaleMode = "nearest";
   target.destroy();
   return lit;
@@ -161,7 +166,6 @@ function createDecorationSprites(
   return definitions.map((definition) => {
     const source = textures.get(definition.assetName);
     if (!source) throw new Error(`${definition.assetName}の装飾素材がありません`);
-    source.source.scaleMode = "nearest";
     const texture = bake(source);
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5);
@@ -169,7 +173,6 @@ function createDecorationSprites(
     sprite.height = definition.height;
     sprite.rotation = definition.rotation ?? 0;
     sprite.position.set(definition.x, definition.y);
-    sprite.roundPixels = true;
     return sprite;
   });
 }
@@ -204,7 +207,6 @@ function createDepthDecorationSprites(
     const assetName = override?.assetName ?? definition.assetName;
     const source = textures.get(assetName);
     if (!source) throw new Error(`${assetName}の床上装飾素材がありません`);
-    source.source.scaleMode = "nearest";
     const texture = bake(source);
     let x = definition.x;
     let y = definition.y;
@@ -238,7 +240,6 @@ function createDepthDecorationSprites(
     sprite.width = override?.width ?? definition.width;
     sprite.height = override?.height ?? definition.height;
     sprite.position.set(x, y);
-    sprite.roundPixels = true;
     sprite.zIndex = getDepthZIndex(depthY, 20 + tieBreak);
     sprite.label = definition.displayName;
     sprite.eventMode = "static";
@@ -272,7 +273,6 @@ function drawClockHands(hands: Graphics, now: Date, color: number): void {
 }
 
 function createClockLayer(source: Texture, now: Date, tint: RoomTint, bake: BakeLitTexture): RoomClockLayer {
-  source.source.scaleMode = "nearest";
   const layer = new Container();
   layer.label = "roomClock";
   const face = new Sprite(bake(source));
@@ -280,7 +280,6 @@ function createClockLayer(source: Texture, now: Date, tint: RoomTint, bake: Bake
   face.width = ROOM_CLOCK.size;
   face.height = ROOM_CLOCK.size;
   face.position.set(ROOM_CLOCK.x, ROOM_CLOCK.y);
-  face.roundPixels = true;
 
   const handColor = applyTintToColor(CLOCK_HAND_COLOR, tint);
   const hands = new Graphics();
@@ -388,7 +387,6 @@ function createTatsuoWindowFaceLayer(
   presentation: TatsuoWindowPresentation,
   getFrame: ThunderWindowFrameProvider,
 ): Container {
-  texture.source.scaleMode = "nearest";
   const layer = new Container();
   layer.label = "tatsuoWindowFace";
   const faceHeight = Math.floor(texture.frame.height * TATSUO_WINDOW_FACE_RATIO);
@@ -401,7 +399,6 @@ function createTatsuoWindowFaceLayer(
   face.scale.set(presentation.height / faceTexture.height);
   face.position.set(presentation.x, presentation.y);
   face.tint = 0xd8b470;
-  face.roundPixels = true;
 
   const { x, y, height } = RAIN_WINDOW_BOUNDS;
   const mask = new Graphics()
@@ -421,7 +418,6 @@ const FRONT_EDGE_TOP_COLOR = 0x8b5331;
 const FRONT_EDGE_BOTTOM_COLOR = 0x3a211b;
 
 function createLayeredBackground(baseTexture: Texture, tint: RoomTint, bake: BakeLitTexture): Container {
-  baseTexture.source.scaleMode = "nearest";
   const background = new Container();
   background.label = "timeNeutralBase";
   const outsideRoom = new Graphics().rect(0, BACKGROUND_HEIGHT, WIDTH, HEIGHT - BACKGROUND_HEIGHT).fill(0x171b25);
@@ -445,7 +441,6 @@ function createWindowLayer(
   callbacks: RoomCallbacks,
   observation: string,
 ): Container {
-  windowTexture.source.scaleMode = "nearest";
   const windowLayer = new Container();
   windowLayer.label = "timeWindow";
   const window = new Sprite(bake(windowTexture));
@@ -476,7 +471,6 @@ function createFurnitureSprites(
   return FURNITURE_DEFINITIONS.filter(({ id }) => !hiddenIds.has(id)).map((definition, tieBreak) => {
     const source = textures.get(definition.id);
     if (!source) throw new Error(`${definition.id}の家具素材がありません`);
-    source.source.scaleMode = "nearest";
     const texture = bake(source);
     const placed = furniture[definition.id];
     const sprite = new Sprite(texture);
@@ -485,7 +479,6 @@ function createFurnitureSprites(
     sprite.scale.set(scale);
     sprite.width = definition.displayWidth;
     sprite.position.set(placed.anchor.x, placed.anchor.y);
-    sprite.roundPixels = true;
     sprite.zIndex = getDepthZIndex(placed.footY, tieBreak);
     sprite.label = definition.displayName;
     sprite.eventMode = "static";
@@ -510,14 +503,12 @@ function createFixtureLayer(
   for (const definition of FIXTURE_DEFINITIONS) {
     const source = textures.get(definition.id);
     if (!source) throw new Error(`${definition.id}の固定設備素材がありません`);
-    source.source.scaleMode = "nearest";
     const placed = fixtures[definition.id];
     const sprite = new Sprite(bake(source));
     sprite.anchor.set(1, 1);
     sprite.width = definition.displayWidth;
     sprite.height = definition.displayHeight;
     sprite.position.set(placed.anchor.x, placed.anchor.y);
-    sprite.roundPixels = true;
     sprite.label = definition.displayName;
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
@@ -556,14 +547,12 @@ function createSceneProps(
   return presentations.map((presentation, index) => {
     const source = textures[index];
     if (!source) throw new Error(`${presentation.assetName}のシーン小物素材がありません`);
-    source.source.scaleMode = "nearest";
     const texture = bake(source);
     const position = resolveScenePropPosition(presentation, layout);
     const sprite = new Sprite(texture);
     sprite.anchor.set(0.5, 1);
     sprite.scale.set(presentation.height / texture.height);
     sprite.position.set(position.x, position.y);
-    sprite.roundPixels = true;
     sprite.zIndex = getDepthZIndex(resolveScenePropDepthY(presentation, position), presentation.depthOffset ?? 20);
     const { revealAtWaypoint } = presentation;
     if (revealAtWaypoint !== undefined && reveal.enabled) {
@@ -584,14 +573,12 @@ function createComfortingMaineCoon(
   callbacks: RoomCallbacks,
   getFrame: ThunderComfortFrameProvider,
 ): Sprite {
-  source.source.scaleMode = "nearest";
   const texture = bake(source);
   const pair = new Sprite(texture);
   const baseScale = presentation.height / texture.height;
   pair.anchor.set(0.5, 1);
   pair.position.set(presentation.x, presentation.y);
   pair.scale.set(baseScale);
-  pair.roundPixels = true;
   pair.zIndex = getDepthZIndex(presentation.y, presentation.depthOffset);
   pair.label = "抱き合うエトキチとクーンちゃん";
   pair.eventMode = "static";
@@ -729,7 +716,6 @@ function createSpeechBubble(
 }
 
 function createGridFrames(sheet: Texture, columns: number, rows: number): Texture[][] {
-  sheet.source.scaleMode = "nearest";
   return Array.from({ length: rows }, (_, row) =>
     Array.from({ length: columns }, (_, column) => {
       const left = Math.round((column * sheet.width) / columns);
@@ -775,7 +761,6 @@ function createWalker(
   if (!baseFrame) throw new Error("歩行アニメーションのフレームがありません");
   character.anchor.set(0.5, 1);
   character.scale.set(WALK_FRAME_HEIGHT / baseFrame.height);
-  character.roundPixels = true;
   character.animationSpeed = 0.13;
   character.loop = true;
 
@@ -802,7 +787,6 @@ function createWalker(
     action.anchor.set(0.5, 1);
     action.scale.set(ACTION_FRAME_HEIGHT / baseActionFrame.height);
     baseActionScaleX = action.scale.x;
-    action.roundPixels = true;
     action.animationSpeed = 0.08;
     action.loop = true;
   }
@@ -859,12 +843,16 @@ function createWalker(
   if (visit.scene.id === "mimizouVisit") {
     const baseY = actor.y;
     let elapsed = 0;
+    let lastDepthY = actor.y;
     app.ticker.add((ticker) => {
       elapsed += ticker.deltaMS;
       const frame = getMimizouVisitFrame(elapsed);
       showAction(!frame.reacting);
       actor.y = baseY - frame.reactionHop;
-      actor.zIndex = getDepthZIndex(actor.y, 50);
+      if (actor.y !== lastDepthY) {
+        lastDepthY = actor.y;
+        actor.zIndex = getDepthZIndex(actor.y, 50);
+      }
       if (!frame.reacting) return;
 
       character.textures = frames.up;
@@ -937,11 +925,9 @@ function createSleeper(
   callbacks: RoomCallbacks,
   breathing: "smooth" | "subtle" | "alternating" = "smooth",
 ): Sprite {
-  texture.source.scaleMode = "nearest";
   const sleeper = new Sprite(texture);
   sleeper.anchor.set(0.5, 1);
   sleeper.scale.set(height / texture.height);
-  sleeper.roundPixels = true;
   sleeper.position.set(position.x, position.y);
   sleeper.zIndex = getDepthZIndex(depthY, 50);
   sleeper.eventMode = "dynamic";
@@ -959,7 +945,6 @@ function createSleeper(
     sleeper.scale.x = baseScaleX * (1 + breath * 0.018 * breathStrength);
     sleeper.scale.y = baseScaleY * (1 + breath * 0.045 * breathStrength);
     sleeper.y = position.y + breath * 0.8 * breathStrength;
-    sleeper.zIndex = getDepthZIndex(depthY, 50);
   });
   return sleeper;
 }
@@ -970,11 +955,9 @@ function createSleeperBase(
   depthY: number,
   presentation: NonNullable<ReturnType<typeof getRoomPresentation>["sleeperBase"]>,
 ): Sprite {
-  texture.source.scaleMode = "nearest";
   const base = new Sprite(texture);
   base.anchor.set(0.5, 1);
   base.scale.set(presentation.height / texture.height);
-  base.roundPixels = true;
   base.position.set(position.x, position.y);
   base.zIndex = getDepthZIndex(depthY, 40);
   return base;
@@ -987,11 +970,9 @@ function createCompanion(
   furniture: FurnitureLayout,
   callbacks: RoomCallbacks,
 ): Sprite {
-  texture.source.scaleMode = "nearest";
   const companion = new Sprite(texture);
   companion.anchor.set(0.5, 1);
   companion.scale.set(presentation.height / texture.height);
-  companion.roundPixels = true;
   const position = resolveGuestPosition(presentation, furniture);
   companion.position.set(position.x, position.y);
   companion.zIndex = getDepthZIndex(resolveGuestDepthY(presentation, sceneDepthY, furniture), 45);
@@ -1007,7 +988,6 @@ function createVisitor(
   presentation: NonNullable<ReturnType<typeof getRoomPresentation>["visitor"]>,
   callbacks: RoomCallbacks,
 ): Container {
-  texture.source.scaleMode = "nearest";
   const layer = new Container();
   layer.label = "windowVisitor";
   const visitor = new Container();
@@ -1015,7 +995,6 @@ function createVisitor(
   sprite.anchor.set(0.5);
   sprite.scale.set(presentation.height / texture.height);
   sprite.tint = 0x8791ad;
-  sprite.roundPixels = true;
   visitor.addChild(sprite);
   visitor.position.set(presentation.x, presentation.y + 8);
   visitor.alpha = 0;
