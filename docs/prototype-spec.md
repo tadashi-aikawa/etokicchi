@@ -10,22 +10,47 @@
 - 空腹や幸福度などの最適化対象となるゲージを表示しない
 - 関わりの結果は表情、後の生活、翌日の反応で示す
 
-## 時間帯
+## シーン一覧とデバッグURL
 
-| ID | 時刻 | 生活シーン |
-|---|---|---|
-| `earlyMorning` | 5:30以上7:30未満 | もうすぐ目が覚めそう<br>朝のストレッチ<br>今日の予定を考える<br>タツヲが起こしに来た<br>みみぞうを見送る |
-| `morning` | 7:30以上11:00未満 | 朝食を作りすぎる<br>寝坊して支度する<br>朝いちばんのお茶を飲む<br>クーンちゃんを朝ブラシする |
-| `daytime` | 11:00以上15:30未満 | 掃除中におもちゃを見つける<br>窓辺で昼寝する<br>クーンちゃんを枕に昼寝する<br>植物へ水やりする |
-| `evening` | 15:30以上19:00未満 | 泥だらけで帰宅する<br>夕食を煮込む<br>洗濯物をたたむ<br>タツヲがソファーでくつろぎすぎる<br>クーンちゃんを抱きしめる |
-| `night` | 19:00以上23:00未満 | 明日の持ち物を準備する<br>小さな夜食を楽しむ<br>漫画の続きを読む<br>みみぞうが窓からのぞいている |
-| `deepNight` | 23:00以上翌5:30未満 | 布団で眠る<br>タツヲと寄り添って眠る<br>布団を蹴飛ばして眠る<br>窓辺で星を数える |
+`pnpm dev`で起動したあと、各行の「開く」からLock状態に関係なく対象シーンを直接表示できる。デバッグ中の選択や発見は通常のIndexedDBへ保存されない。
+
+| 時間帯 | 時刻 | シーンID | 生活シーン | デバッグ |
+|---|---|---|---|---|
+| 早朝<br>`earlyMorning` | 5:30以上7:30未満 | `almostAwake` | もうすぐ目が覚めそう | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T06:00:00&debug=random&scene=almostAwake) |
+| 早朝<br>`earlyMorning` | 5:30以上7:30未満 | `morningStretch` | 朝のストレッチ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T06:00:00&debug=random&scene=morningStretch) |
+| 早朝<br>`earlyMorning` | 5:30以上7:30未満 | `planningDay` | 今日の予定を考える | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T06:00:00&debug=random&scene=planningDay) |
+| 早朝<br>`earlyMorning` | 5:30以上7:30未満 | `tatsuoWakeUp` | タツヲが起こしに来た | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T06:00:00&debug=random&scene=tatsuoWakeUp) |
+| 早朝<br>`earlyMorning` | 5:30以上7:30未満 | `mimizouFarewell` | みみぞうを見送る | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T06:00:00&debug=random&scene=mimizouFarewell) |
+| 朝<br>`morning` | 7:30以上11:00未満 | `tooMuchBreakfast` | 朝食を作りすぎた | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T08:00:00&debug=random&scene=tooMuchBreakfast) |
+| 朝<br>`morning` | 7:30以上11:00未満 | `overslept` | 寝坊して大あわて | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T08:00:00&debug=random&scene=overslept) |
+| 朝<br>`morning` | 7:30以上11:00未満 | `morningTea` | 朝いちばんのお茶 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T08:00:00&debug=random&scene=morningTea) |
+| 朝<br>`morning` | 7:30以上11:00未満 | `brushingMaineCoon` | クーンちゃんの朝ブラシ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T08:00:00&debug=random&scene=brushingMaineCoon) |
+| 昼<br>`daytime` | 11:00以上15:30未満 | `foundOldToy` | 昔のおもちゃを発見 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T12:00:00&debug=random&scene=foundOldToy) |
+| 昼<br>`daytime` | 11:00以上15:30未満 | `windowNap` | 窓辺でお昼寝 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T12:00:00&debug=random&scene=windowNap) |
+| 昼<br>`daytime` | 11:00以上15:30未満 | `nappingOnMaineCoon` | クーンちゃん枕でお昼寝 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T12:00:00&debug=random&scene=nappingOnMaineCoon) |
+| 昼<br>`daytime` | 11:00以上15:30未満 | `wateringPlants` | 植物へ水やり | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T12:00:00&debug=random&scene=wateringPlants) |
+| 夕方<br>`evening` | 15:30以上19:00未満 | `muddyReturn` | 泥だらけで帰宅 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T16:00:00&debug=random&scene=muddyReturn) |
+| 夕方<br>`evening` | 15:30以上19:00未満 | `simmeringDinner` | 夕食をことこと煮込む | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T16:00:00&debug=random&scene=simmeringDinner) |
+| 夕方<br>`evening` | 15:30以上19:00未満 | `foldingLaundry` | 洗濯物をたたんでいる | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T16:00:00&debug=random&scene=foldingLaundry) |
+| 夕方<br>`evening` | 15:30以上19:00未満 | `tatsuoTooComfortable` | タツヲ、くつろぎすぎ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T16:00:00&debug=random&scene=tatsuoTooComfortable) |
+| 夕方<br>`evening` | 15:30以上19:00未満 | `comfortingMaineCoon` | 大丈夫だよー | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T16:00:00&debug=random&scene=comfortingMaineCoon) |
+| 夜<br>`night` | 19:00以上23:00未満 | `packingTomorrow` | 明日の持ち物を準備 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T20:00:00&debug=random&scene=packingTomorrow) |
+| 夜<br>`night` | 19:00以上23:00未満 | `littleNightSnack` | 小さな夜食を楽しむ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T20:00:00&debug=random&scene=littleNightSnack) |
+| 夜<br>`night` | 19:00以上23:00未満 | `readingComics` | 漫画の続きに夢中 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T20:00:00&debug=random&scene=readingComics) |
+| 夜<br>`night` | 19:00以上23:00未満 | `mimizouVisit` | みみぞうが窓からのぞいている | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T20:00:00&debug=random&scene=mimizouVisit) |
+| 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `sleeping` | すやすや眠っている | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=sleeping) |
+| 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `sleepingWithTatsuo` | タツヲと眠る夜 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=sleepingWithTatsuo) |
+| 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `tatsuoAtWindow` | いま、窓にいた？ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=tatsuoAtWindow) |
+| 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `kickedBlanket` | 布団を蹴飛ばしている | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=kickedBlanket) |
+| 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `watchingStars` | 窓辺で星を数えている | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=watchingStars) |
 
 - 早朝は眠りから目覚めへ移る時間、朝は起きた後の生活を始める時間とする
 - 次のシーンは前提シーンを発見した後だけ抽選対象にする
     - `朝のストレッチ`は`もうすぐ目が覚めそう`の発見後に解放する
     - `クーンちゃん枕でお昼寝`は`クーンちゃんの朝ブラシ`の発見後に解放する
-    - `タツヲと眠る夜`と`タツヲ、くつろぎすぎ`は`タツヲが起こしに来た`の発見後に解放する
+    - `タツヲが起こしに来た`は`いま、窓にいた？`の発見後に解放する
+    - `タツヲ、くつろぎすぎ`は`タツヲが起こしに来た`の発見後に解放する
+    - `タツヲと眠る夜`は`タツヲ、くつろぎすぎ`の発見後に解放する
     - `みみぞうが窓からのぞいている`は`窓辺で星を数えている`の発見後に解放する
     - `みみぞうを見送る`は`みみぞうが窓からのぞいている`の発見後に解放する
 - 条件の追加前に対象シーンを発見済みなら、前提シーンが未発見でも解放済みとして扱う
@@ -152,6 +177,7 @@
 |---|---|---|
 | すやすや眠っている | なし | [x] |
 | タツヲと眠る夜 | なし | [x] |
+| いま、窓にいた？ | 雷光とタツヲの出現 | [x] |
 | 布団を蹴飛ばしている | 未選択 | [x] |
 | 布団を蹴飛ばしている | `cover`選択後 | [x] |
 | 布団を蹴飛ばしている | `cover`以外を選択後 | [x] |
@@ -165,8 +191,10 @@
 | 朝食を作りすぎた | なし | [x] |
 | 寝坊して大あわて | なし | [x] |
 | 朝いちばんのお茶 | なし | [x] |
+| クーンちゃんの朝ブラシ | なし | [x] |
 | 昔のおもちゃを発見 | なし | [x] |
 | 窓辺でお昼寝 | なし | [x] |
+| クーンちゃん枕でお昼寝 | なし | [x] |
 | 植物へ水やり | 横向きと下向き | [x] |
 | 泥だらけで帰宅 | なし | [x] |
 | 夕食をことこと煮込む | なし | [x] |
@@ -196,7 +224,7 @@
 - 未発見シーンの状態を次の2種類に分ける
     - 現在も抽選対象のシーンは「未遭遇」とし、この時間帯で出会えることを示す
     - 前提条件を満たすまで抽選対象にならないシーンは「ロック中」とし、解放条件を示す
-- 図鑑はスマートフォン縦画面で2列表示し、時間帯ごとのグループと絞り込みで全26シーンを閲覧する
+- 図鑑はスマートフォン縦画面で2列表示し、時間帯ごとのグループと絞り込みで全27シーンを閲覧する
 - 各カードへシーン固有のドット絵イラストを使用し、未発見カードでは内容を判別できないよう暗くぼかす
 - 発見済みカードを選ぶと、シーン名と時間帯を添えて図鑑イラスト全体を拡大表示する。未発見カードは開けない
 - 各シーンの遭遇回数を、1回、2回、3回、5回、10回、25回、50回、100回の8段階の達成度として表示する

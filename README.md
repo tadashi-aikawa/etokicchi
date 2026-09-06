@@ -33,6 +33,8 @@ Lock状態に関係なく特定のシーンを確認したい場合は、`debug=
 http://127.0.0.1:4173/etokicchi/?time=2026-09-03T12:20:00&debug=random&scene=nappingOnMaineCoon
 ```
 
+全シーンのIDと直接表示URLは、[シーン一覧とデバッグURL](./docs/prototype-spec.md#シーン一覧とデバッグurl)を参照してください。
+
 初めて見た暮らしは実績として解除され、左上の「図鑑」から発見済みシーンと遭遇回数を確認できます。
 
 通常の画面では右上の時計と壁時計を毎分更新します。時間帯の境界を越えると、再読み込みせず次の暮らしへ切り替わります。
@@ -40,7 +42,7 @@ http://127.0.0.1:4173/etokicchi/?time=2026-09-03T12:20:00&debug=random&scene=nap
 ## ドキュメント
 
 - [ゲームデザイン](./docs/game-design.md)
-- [初期プロト仕様](./docs/prototype-spec.md)
+- [初期プロト仕様・シーン別デバッグURL](./docs/prototype-spec.md)
 
 ## 検証
 
