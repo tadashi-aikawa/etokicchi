@@ -172,6 +172,8 @@ const TARGETS = [
 const WALK_SOURCE_NAME = "etokichi-walk-pixel-v2.webp";
 const WALK_COLUMNS = 3;
 const WALK_ROWS = 4;
+/** 行の並び。room.ts の directionRows と同じ順で、はみ出しの報告に使う。 */
+const WALK_ROW_DIRECTIONS = ["下向き", "左向き", "右向き", "上向き"];
 /** セル寸法(px)。論理48×52の2倍。 */
 const WALK_CELL_WIDTH = 96;
 const WALK_CELL_HEIGHT = 104;
@@ -237,7 +239,7 @@ async function buildWalkSheet() {
     footByRow.set(frame.row, Math.max(footByRow.get(frame.row) ?? 0, frame.box.y1));
   }
 
-  const composites = await Promise.all(
+  const placements = await Promise.all(
     frames.map(async ({ row, column, box, centerX }) => {
       const sourceWidth = box.x1 - box.x0 + 1;
       const sourceHeight = box.y1 - box.y0 + 1;
@@ -253,6 +255,10 @@ async function buildWalkSheet() {
       const offsetX = ((box.x0 + box.x1 + 1) / 2 - centerX) * scale;
       const liftY = Math.round((footByRow.get(row) - box.y1) * scale);
       return {
+        row,
+        column,
+        width,
+        height,
         input,
         left: column * WALK_CELL_WIDTH + Math.round(WALK_CELL_WIDTH / 2 + offsetX - width / 2),
         top: row * WALK_CELL_HEIGHT + (WALK_CELL_HEIGHT - WALK_FOOT_PADDING - liftY - height),
@@ -260,13 +266,24 @@ async function buildWalkSheet() {
     }),
   );
 
-  for (const { left, top, input } of composites) {
-    const { width, height } = await sharp(input).metadata();
-    if (left < 0 || top < 0 || left + width > WALK_COLUMNS * WALK_CELL_WIDTH || top + height > WALK_ROWS * WALK_CELL_HEIGHT) {
-      throw new Error(`${WALK_SOURCE_NAME}のコマがセルへ収まりません`);
-    }
+  // 隣のセルへはみ出すと歩行アニメーションに他の向きの断片が混ざるので、四辺すべてを検査する。
+  for (const { row, column, left, top, width, height } of placements) {
+    const cellLeft = column * WALK_CELL_WIDTH;
+    const cellTop = row * WALK_CELL_HEIGHT;
+    const overflow = [
+      left < cellLeft ? `左へ${cellLeft - left}px` : undefined,
+      top < cellTop ? `上へ${cellTop - top}px` : undefined,
+      left + width > cellLeft + WALK_CELL_WIDTH ? `右へ${left + width - cellLeft - WALK_CELL_WIDTH}px` : undefined,
+      top + height > cellTop + WALK_CELL_HEIGHT ? `下へ${top + height - cellTop - WALK_CELL_HEIGHT}px` : undefined,
+    ].filter(Boolean);
+    if (overflow.length === 0) continue;
+    throw new Error(
+      `${WALK_SOURCE_NAME}の${WALK_ROW_DIRECTIONS[row]}${column}コマ目が` +
+        `${WALK_CELL_WIDTH}x${WALK_CELL_HEIGHT}のセルからはみ出します: ${overflow.join("、")}`,
+    );
   }
 
+  const composites = placements.map(({ input, left, top }) => ({ input, left, top }));
   const sheet = await sharp({
     create: {
       width: WALK_COLUMNS * WALK_CELL_WIDTH,

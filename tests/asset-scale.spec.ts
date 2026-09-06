@@ -9,6 +9,7 @@ import {
   WALL_DECORATIONS,
 } from "../src/rendering/room-decor.ts";
 import { FIXTURE_DEFINITIONS } from "../src/rendering/room-fixtures.ts";
+import { SCENE_ROUTES } from "../src/rendering/room-layout.ts";
 import { FURNITURE_DEFINITIONS, type FurnitureId } from "../src/rendering/room-furniture.ts";
 import { getRoomPresentation, TATSUO_WINDOW_FACE_RATIO } from "../src/rendering/room-presentation.ts";
 import {
@@ -52,6 +53,8 @@ const PRIMARY_REQUIREMENT_SOURCES: Readonly<Record<string, string>> = {
   "furniture-round-stool-pixel.webp": "家具 roundStool",
   // 星見の同席では、窓の外から覗くときより小さいみみぞうを使っている。
   "mimizou-pixel.png": "mimizouVisit の来訪者",
+  // 食卓の鉢へ向く姿だけ経路のactionScaleで1.18倍に見せている(拡大率0.59)。床の鉢は等倍。
+  "etokichi-watering-directions-pixel.webp": "行動アニメ wateringPlants",
 };
 
 // 窓のタツヲは素材の上から切り出した顔だけを使うので、寸法の決まり方が他と違う。専用の検証を用意する。
@@ -108,11 +111,18 @@ function collectRequirements(): Map<string, SizeRequirement[]> {
   });
   for (const [sceneId, assetName] of Object.entries(ACTION_ASSET_NAMES) as [SceneId, string | undefined][]) {
     if (!assetName) continue;
-    add(assetName, {
-      source: `行動アニメ ${sceneId}`,
-      width: ACTION_FRAME_WIDTH * ASSET_PIXEL_RATIO * ACTION_FRAME_COLUMNS,
-      height: ACTION_FRAME_HEIGHT * ASSET_PIXEL_RATIO * (ACTION_ROW_COUNTS[sceneId] ?? 1),
+    const rows = ACTION_ROW_COUNTS[sceneId] ?? 1;
+    const sheetSize = (actionScale: number): Pick<SizeRequirement, "width" | "height"> => ({
+      width: ACTION_FRAME_WIDTH * actionScale * ASSET_PIXEL_RATIO * ACTION_FRAME_COLUMNS,
+      height: ACTION_FRAME_HEIGHT * actionScale * ASSET_PIXEL_RATIO * rows,
     });
+    add(assetName, { source: `行動アニメ ${sceneId}`, ...sheetSize(1) });
+    // 経路のwaypointが行動アニメを拡大していると、そのwaypointでは拡大率が0.5からずれる。
+    // 意図した拡大かどうかを PRIMARY_REQUIREMENT_SOURCES で申告させるため、要求として並べる。
+    for (const [index, waypoint] of SCENE_ROUTES[sceneId].waypoints.entries()) {
+      if (waypoint.actionScale === undefined) continue;
+      add(assetName, { source: `行動アニメ ${sceneId} の経路${index}`, ...sheetSize(waypoint.actionScale) });
+    }
   }
 
   for (const visit of VISITS) {
