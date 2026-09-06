@@ -20,8 +20,10 @@ describe("room viewport", () => {
     ["iPhone X", { innerWidth: 375, innerHeight: 812, devicePixelRatio: 3 }, 375],
     // 高さで決まる当てはめ幅308.2pxに対し、整数倍は195pxで63%。
     ["iPhone SE", { innerWidth: 375, innerHeight: 667, devicePixelRatio: 2 }, (667 * 195) / 422],
-    // 整数倍283.6pxは当てはめ幅393pxの72%。
-    ["Pixel 8", { innerWidth: 393, innerHeight: 852, devicePixelRatio: 2.75 }, 393],
+    // 整数倍283.6pxは上限390pxの73%。
+    ["Pixel 8", { innerWidth: 393, innerHeight: 852, devicePixelRatio: 2.75 }, 390],
+    // 高さで決まる当てはめ幅360.4pxに対し、整数倍は297.1pxで82%。閾値75%では採用されて左右に余白が出ていた。
+    ["Pixel 7a", { innerWidth: 411, innerHeight: 780, devicePixelRatio: 2.625 }, (780 * 195) / 422],
   ])("fills the screen instead of shrinking too far on %s", (_label, input, cssWidth) => {
     const viewport = resolveRoomViewport(input);
     expect(viewport.integerScaled).toBe(false);
@@ -32,6 +34,17 @@ describe("room viewport", () => {
   it("keeps the rejected integer width below the ratio that would have accepted it", () => {
     const viewport = resolveRoomViewport({ innerWidth: 375, innerHeight: 812, devicePixelRatio: 3 });
     expect((390 * 2) / 3 / viewport.cssWidth).toBeLessThan(INTEGER_SCALE_MIN_RATIO);
+  });
+
+  it("only takes the integer size when it costs almost no width", () => {
+    expect(INTEGER_SCALE_MIN_RATIO).toBeGreaterThanOrEqual(0.95);
+    // 当てはめ幅が整数倍の5%以内なら整数倍、それを超えて縮むなら当てはめ幅。
+    expect(resolveRoomViewport({ innerWidth: 400, innerHeight: 900, devicePixelRatio: 3 }).integerScaled).toBe(true);
+    // 2.5倍では整数倍が312pxで上限390pxの80%。整数倍を諦めて上限いっぱいに当てはめる。
+    expect(resolveRoomViewport({ innerWidth: 420, innerHeight: 950, devicePixelRatio: 2.5 })).toMatchObject({
+      integerScaled: false,
+      cssWidth: 390,
+    });
   });
 
   it("shrinks the room to fit a viewport too small for one device pixel per Canvas pixel", () => {

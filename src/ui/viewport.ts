@@ -6,13 +6,16 @@ export const ROOM_LOGICAL_WIDTH = ROOM_WIDTH;
 export const ROOM_LOGICAL_HEIGHT = ROOM_HEIGHT;
 const CANVAS_WIDTH = ROOM_LOGICAL_WIDTH * ASSET_PIXEL_RATIO;
 const CANVAS_HEIGHT = ROOM_LOGICAL_HEIGHT * ASSET_PIXEL_RATIO;
-const MAX_CSS_WIDTH = 430;
+// Canvasの実ピクセル幅と同じ値にしておくと、広い画面では倍率1〜3の整数倍がそのまま上限に乗る。
+const MAX_CSS_WIDTH = CANVAS_WIDTH;
 
 /**
  * 整数倍を選んだ結果の幅が、画面へ当てはめた幅のこの割合を下回るなら整数倍を諦める。
- * ドットの太さが揃わないより、部屋が極端に小さくなるほうを避ける。
+ * ドットの太さが揃わないより、部屋が小さくなるほうを避ける。
+ * 2.625倍や2.75倍のAndroidでは整数倍が当てはめ幅の8割前後になり、閾値75%では
+ * 左右に余白が出て縦長に見えたため、ほぼ損がないときだけ整数倍を採る。
  */
-export const INTEGER_SCALE_MIN_RATIO = 0.75;
+export const INTEGER_SCALE_MIN_RATIO = 0.95;
 
 export interface RoomViewportInput {
   innerWidth: number;
