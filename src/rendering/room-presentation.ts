@@ -13,26 +13,8 @@ import type {
   ScenePropAnchorLayout,
 } from "./room-presentation-types.ts";
 
+// 型は room-presentation-types.ts から直接読む。窓のタツヲの切り出し比だけは表示定義と一緒に引きたいので通す。
 export { TATSUO_WINDOW_FACE_RATIO } from "./room-presentation-types.ts";
-export type {
-  AbsoluteSceneProp,
-  AttachedSceneProp,
-  CharacterBubblePresentation,
-  ComfortingMaineCoonPresentation,
-  FixtureAttachedSceneProp,
-  FurnitureAttachedGuestPresentation,
-  FurnitureAttachedSceneProp,
-  GuestPresentation,
-  LayeredRoomPresentation,
-  ObservationOverrides,
-  ObservationTargetId,
-  PositionedGuestPresentation,
-  RoomPresentation,
-  RoomPresentationCommon,
-  RoomTint,
-  ScenePropAnchorLayout,
-  TatsuoWindowPresentation,
-} from "./room-presentation-types.ts";
 
 const TIME_WINDOW_ASSET_NAMES: Record<TimeBand, string> = {
   earlyMorning: "room-background-early-morning-pixel.webp",

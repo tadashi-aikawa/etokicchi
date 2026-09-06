@@ -171,7 +171,8 @@ export function isMovementSegmentValid(from: Point, to: Point, layout: RoomLayou
   );
 }
 
-export function validateSceneRoute(sceneId: SceneId, layout: RoomLayout): readonly LayoutValidationError[] {
+// 経路の検証は validateRoomLayout が全シーンぶんまとめて回すので、そこからだけ呼ぶ。
+function validateSceneRoute(sceneId: SceneId, layout: RoomLayout): readonly LayoutValidationError[] {
   const routeDefinition = SCENE_ROUTES[sceneId];
   if (routeDefinition.movement === "nonWalking") return [];
   const sceneLayout = resolveSceneLayout(sceneId, layout);

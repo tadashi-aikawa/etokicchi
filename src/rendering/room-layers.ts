@@ -12,7 +12,12 @@ import {
 import { getDepthZIndex, type RoomLayout } from "./room-layout.ts";
 import { getRoomLights } from "./room-lighting.ts";
 import type { BakeLitTexture } from "./room-lighting-bake.ts";
-import { applyTintToColor, resolveScenePropDepthY, resolveScenePropPosition } from "./room-presentation.ts";
+import {
+  applyTintToColor,
+  isScenePropInitiallyVisible,
+  resolveScenePropDepthY,
+  resolveScenePropPosition,
+} from "./room-presentation.ts";
 import type {
   AttachedSceneProp,
   ObservationOverrides,
@@ -331,7 +336,7 @@ export function createSceneProps(
     sprite.position.set(position.x, position.y);
     sprite.zIndex = getDepthZIndex(resolveScenePropDepthY(presentation, position), presentation.depthOffset ?? 20);
     const { revealAtWaypoint } = presentation;
-    if (revealAtWaypoint !== undefined && reveal.enabled) {
+    if (!isScenePropInitiallyVisible(presentation) && reveal.enabled) {
       sprite.visible = false;
       reveal.onWaypointArrival((arrivedIndex) => {
         if (arrivedIndex === revealAtWaypoint) sprite.visible = true;
