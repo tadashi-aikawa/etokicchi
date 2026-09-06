@@ -50,6 +50,16 @@ pnpm check
 
 型検査、Lint、フォーマット検査、単体テスト、本番ビルドをまとめて実行します。
 
+## 素材の変換
+
+`public/assets/` の素材は、`assets-src/` の原素材から機械変換して生成します。表示寸法や原素材を変えたときは次を実行します。
+
+```console
+pnpm assets:normalize
+```
+
+目標寸法は `tools/normalize-assets.mjs` の表が持ち、`tests/asset-scale.spec.ts` が「素材のピクセル寸法 = 表示する論理寸法 × 2」を検証します。
+
 ## 仕様
 
 収録シーン、時間帯、保存方針は [初期プロト仕様](docs/prototype-spec.md) を参照してください。
