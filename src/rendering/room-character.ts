@@ -288,7 +288,7 @@ export function createSleeperBase(
   const base = new Sprite(texture);
   base.anchor.set(0.5, 1);
   base.scale.set(presentation.height / texture.height);
-  base.position.set(position.x, position.y);
+  base.position.set(position.x + (presentation.offset?.x ?? 0), position.y + (presentation.offset?.y ?? 0));
   base.zIndex = getDepthZIndex(depthY, 40);
   return base;
 }

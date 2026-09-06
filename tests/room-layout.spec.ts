@@ -333,7 +333,7 @@ describe("room layout adoption and scene routes", () => {
       expect.objectContaining({ x: 70, y: 320, action: true }),
     ]);
     expect(resolveSceneRoute("nappingOnMaineCoon", DEFAULT_ROOM_LAYOUT)).toEqual([
-      expect.objectContaining({ x: 98, y: 320 }),
+      expect.objectContaining({ x: 88, y: 330 }),
     ]);
   });
 

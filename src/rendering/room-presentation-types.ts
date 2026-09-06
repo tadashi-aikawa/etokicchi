@@ -110,6 +110,7 @@ export interface RoomPresentationCommon {
   sleeperBase?: {
     assetName: string;
     height: number;
+    offset?: Point;
   };
   companion?: GuestPresentation;
   visitor?: PositionedGuestPresentation;

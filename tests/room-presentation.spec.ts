@@ -470,11 +470,16 @@ describe("room presentation", () => {
     });
   });
 
-  it("uses the combined sleeping asset without rendering the room's default Koon twice", () => {
+  it("layers Etokichi over a separately positioned Koon without rendering the room's default Koon twice", () => {
     expect(getRoomPresentation(visitFor("nappingOnMaineCoon"))).toMatchObject({
-      sleeperAssetName: "etokichi-napping-on-maine-coon-pixel.webp",
-      sleeperHeight: 56,
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
       sleeperBreathing: "alternating",
+      sleeperBase: {
+        assetName: "maine-coon-pillow-pixel.webp",
+        height: 32,
+        offset: { x: 14, y: -3 },
+      },
       hiddenDepthDecorationIds: ["maineCoon"],
     });
   });

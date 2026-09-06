@@ -469,7 +469,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
   nappingOnMaineCoon: {
     route: {
       movement: "nonWalking",
-      waypoints: [{ destination: point(98, 320), pauseMs: 5000 }],
+      waypoints: [{ destination: point(88, 330), pauseMs: 5000 }],
     },
     action: "none",
     observations: {
@@ -478,9 +478,14 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
     },
     collectionImage: "assets/collection/napping-on-maine-coon.webp",
     room: {
-      sleeperAssetName: "etokichi-napping-on-maine-coon-pixel.webp",
-      sleeperHeight: 56,
+      sleeperAssetName: "etokichi-sleep-pixel.webp",
+      sleeperHeight: 42,
       sleeperBreathing: "alternating",
+      sleeperBase: {
+        assetName: "maine-coon-pillow-pixel.webp",
+        height: 32,
+        offset: { x: 14, y: -3 },
+      },
       hiddenDepthDecorationIds: ["maineCoon"],
     },
   },
