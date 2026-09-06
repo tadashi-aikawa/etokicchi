@@ -33,6 +33,15 @@ export function makeSlotKey(localDate: string, band: TimeBand): string {
   return `${localDate}:${band}`;
 }
 
+export function parseSlotKey(slotKey: string): { localDate: string; band: TimeBand } | undefined {
+  const separator = slotKey.indexOf(":");
+  if (separator < 0) return undefined;
+  const localDate = slotKey.slice(0, separator);
+  const band = slotKey.slice(separator + 1) as TimeBand;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(localDate)) return undefined;
+  return TIME_BANDS.includes(band) ? { localDate, band } : undefined;
+}
+
 export function getSlotKey(date: Date): string {
   return makeSlotKey(formatSlotDate(date), getTimeBand(date));
 }

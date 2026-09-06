@@ -1,7 +1,15 @@
 import { findScene, getScene, getScenesForBand } from "../content/scenes.ts";
 import { indexFromSeed } from "./random.ts";
 import { isSceneUnlocked } from "./scene-unlock.ts";
-import { addDays, formatSlotDate, getTimeBand, makeSlotKey, nextChronologicalSlot, TIME_BANDS } from "./time.ts";
+import {
+  addDays,
+  formatSlotDate,
+  getTimeBand,
+  makeSlotKey,
+  nextChronologicalSlot,
+  parseSlotKey,
+  TIME_BANDS,
+} from "./time.ts";
 import type {
   ChoiceDefinition,
   EchoRecord,
@@ -219,7 +227,8 @@ export function pruneOldSlots(sourceState: GameState, today: string, retentionDa
       delete state.interactions[key];
     }
   }
-  state.echoes = state.echoes.filter((echo) => echo.targetSlotKey.slice(0, 10) >= oldest);
+  // 読めないキーは形式が分からないので、消さずに残す。
+  state.echoes = state.echoes.filter((echo) => (parseSlotKey(echo.targetSlotKey)?.localDate ?? oldest) >= oldest);
   return state;
 }
 

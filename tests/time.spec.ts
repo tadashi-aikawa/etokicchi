@@ -8,6 +8,7 @@ import {
   makeSlotKey,
   millisecondsUntilNextMinute,
   nextChronologicalSlot,
+  parseSlotKey,
 } from "../src/game/time.ts";
 
 describe("time bands", () => {
@@ -43,6 +44,18 @@ describe("time bands", () => {
   it("builds a slot key using the deep-night date boundary", () => {
     expect(getSlotKey(new Date(2026, 8, 3, 1))).toBe("2026-09-02:deepNight");
     expect(getSlotKey(new Date(2026, 8, 3, 5, 30))).toBe("2026-09-03:earlyMorning");
+  });
+
+  it("splits a slot key back into its date and band", () => {
+    expect(parseSlotKey("2026-09-02:deepNight")).toEqual({ localDate: "2026-09-02", band: "deepNight" });
+    expect(parseSlotKey(getSlotKey(new Date(2026, 8, 3, 12)))).toEqual({ localDate: "2026-09-03", band: "daytime" });
+  });
+
+  it("rejects slot keys it cannot read", () => {
+    expect(parseSlotKey("2026-09-02")).toBeUndefined();
+    expect(parseSlotKey("2026-09-02:lateNight")).toBeUndefined();
+    expect(parseSlotKey("2026-9-2:daytime")).toBeUndefined();
+    expect(parseSlotKey("")).toBeUndefined();
   });
 
   it("calculates the delay to the next minute boundary", () => {
