@@ -1,8 +1,18 @@
-// Canvasは195×422のドット絵をCSSで拡大して見せる。倍率が非整数だと拡大後のドットの太さが
-// 列ごとに変わるため、端末ピクセル単位で整数倍になる大きさへ丸める。
-export const ROOM_LOGICAL_WIDTH = 195;
-export const ROOM_LOGICAL_HEIGHT = 422;
+import { ASSET_PIXEL_RATIO, ROOM_HEIGHT, ROOM_WIDTH } from "../rendering/scene-assets.ts";
+
+// Canvasは論理195×422を描画解像度2で持つので、実ピクセルは390×844になる。
+// このCanvasピクセルが端末ピクセルの整数倍に乗らないと、拡大後のドットの太さが列ごとに変わる。
+export const ROOM_LOGICAL_WIDTH = ROOM_WIDTH;
+export const ROOM_LOGICAL_HEIGHT = ROOM_HEIGHT;
+const CANVAS_WIDTH = ROOM_LOGICAL_WIDTH * ASSET_PIXEL_RATIO;
+const CANVAS_HEIGHT = ROOM_LOGICAL_HEIGHT * ASSET_PIXEL_RATIO;
 const MAX_CSS_WIDTH = 430;
+
+/**
+ * 整数倍を選んだ結果の幅が、画面へ当てはめた幅のこの割合を下回るなら整数倍を諦める。
+ * ドットの太さが揃わないより、部屋が極端に小さくなるほうを避ける。
+ */
+export const INTEGER_SCALE_MIN_RATIO = 0.75;
 
 export interface RoomViewportInput {
   innerWidth: number;
@@ -11,21 +21,35 @@ export interface RoomViewportInput {
 }
 
 export interface RoomViewport {
+  /** Canvasの1ピクセルへ割り当てる端末ピクセル数。`integerScaled`がfalseなら非整数になる。 */
   scale: number;
   cssWidth: number;
   cssHeight: number;
+  /** Canvasピクセルが端末ピクセルの整数倍へ乗っているか。 */
+  integerScaled: boolean;
 }
 
 export function resolveRoomViewport(input: RoomViewportInput): RoomViewport {
   const ratio = input.devicePixelRatio > 0 ? input.devicePixelRatio : 1;
-  const deviceWidth = Math.max(input.innerWidth, 0) * ratio;
-  const deviceHeight = Math.max(input.innerHeight, 0) * ratio;
-  const fitScale = Math.floor(Math.min(deviceWidth / ROOM_LOGICAL_WIDTH, deviceHeight / ROOM_LOGICAL_HEIGHT));
-  const maxScale = Math.floor((MAX_CSS_WIDTH * ratio) / ROOM_LOGICAL_WIDTH);
-  const scale = Math.max(1, Math.min(fitScale, maxScale));
+  const innerWidth = Math.max(input.innerWidth, 0);
+  const innerHeight = Math.max(input.innerHeight, 0);
+
+  // 画面へそのまま当てはめた幅。整数倍を諦めたときはこれをそのまま使う。
+  const fitCssWidth = Math.min(innerWidth, (innerHeight * ROOM_LOGICAL_WIDTH) / ROOM_LOGICAL_HEIGHT, MAX_CSS_WIDTH);
+
+  const fitDeviceScale = Math.floor(
+    Math.min((innerWidth * ratio) / CANVAS_WIDTH, (innerHeight * ratio) / CANVAS_HEIGHT),
+  );
+  const maxDeviceScale = Math.floor((MAX_CSS_WIDTH * ratio) / CANVAS_WIDTH);
+  const deviceScale = Math.min(fitDeviceScale, maxDeviceScale);
+  const integerCssWidth = (CANVAS_WIDTH * deviceScale) / ratio;
+
+  const integerScaled = deviceScale >= 1 && integerCssWidth >= fitCssWidth * INTEGER_SCALE_MIN_RATIO;
+  const cssWidth = integerScaled ? integerCssWidth : fitCssWidth;
   return {
-    scale,
-    cssWidth: (ROOM_LOGICAL_WIDTH * scale) / ratio,
-    cssHeight: (ROOM_LOGICAL_HEIGHT * scale) / ratio,
+    scale: (cssWidth * ratio) / CANVAS_WIDTH,
+    cssWidth,
+    cssHeight: (cssWidth * ROOM_LOGICAL_HEIGHT) / ROOM_LOGICAL_WIDTH,
+    integerScaled,
   };
 }
