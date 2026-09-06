@@ -104,6 +104,8 @@ function applyLighting(displayObject: Container | Graphics | Sprite, tint: RoomT
   if (tint.alpha === 0) return;
   const filter = new ColorMatrixFilter();
   filter.matrix = getLightingColorMatrix(tint);
+  // フィルターの既定解像度は1で、昼以外は中間テクスチャが論理座標のまま作られて2倍化が打ち消される。
+  filter.resolution = ASSET_PIXEL_RATIO;
   displayObject.filters = [filter];
 }
 
