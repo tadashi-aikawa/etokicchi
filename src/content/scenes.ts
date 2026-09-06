@@ -21,7 +21,6 @@ export const SCENES: readonly SceneDefinition[] = [
     unlockRequirement: {
       kind: "sceneDiscovery",
       sceneId: "tatsuoTooComfortable",
-      hint: "タツヲがソファでくつろぐと解放",
     },
     characterPose: "sleep",
     accent: "#706f9e",
@@ -79,7 +78,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "眠れない夜、窓辺に座って小さな星をひとつずつ数えている。",
     lines: ["あの明るい星、きっとこっちを見てるキチ。", "ひとつ、ふたつ……あれ、どこまで数えたっけ？"],
     details: ["窓辺に小さな望遠鏡を置いている", "星の並びをノートへ丸く描いている"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#6570a6",
   },
   {
@@ -102,9 +101,8 @@ export const SCENES: readonly SceneDefinition[] = [
     unlockRequirement: {
       kind: "sceneDiscovery",
       sceneId: "almostAwake",
-      hint: "目覚めそうな朝を見ると解放",
     },
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#e2ad6b",
   },
   {
@@ -117,7 +115,7 @@ export const SCENES: readonly SceneDefinition[] = [
       "まずはこれ。それから……おやつの予定も忘れないようにしなきゃ。",
     ],
     details: ["手帳の先頭に大きな星印を描いた", "鉛筆の後ろを頬へ当てて考え込んでいる"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#dca66d",
   },
   {
@@ -130,7 +128,6 @@ export const SCENES: readonly SceneDefinition[] = [
     unlockRequirement: {
       kind: "sceneDiscovery",
       sceneId: "tatsuoAtWindow",
-      hint: "雷の夜に窓のタツヲを見ると解放",
     },
     characterPose: "sleep",
     accent: "#c99c72",
@@ -145,9 +142,8 @@ export const SCENES: readonly SceneDefinition[] = [
     unlockRequirement: {
       kind: "sceneDiscovery",
       sceneId: "mimizouVisit",
-      hint: "みみぞうと出会うと解放",
     },
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#c7a575",
   },
   {
@@ -183,7 +179,7 @@ export const SCENES: readonly SceneDefinition[] = [
         nextDay: "朝のぼくが夜のぼくを助けたんだ。すごい連係プレーだったよ！",
       },
     ],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#f2ad4f",
   },
   {
@@ -193,7 +189,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "靴下を片方だけ履いて、部屋の中を行ったり来たりしている。",
     lines: ["あれっ、ぼくの靴下どこ！？ さっきまで持ってたのに！", "まだ間に合う！ たぶん！ きっと！"],
     details: ["帽子がなぜか台所の椅子に掛かっている", "鞄の中から昨日のおやつが出てきた"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#ed9e52",
   },
   {
@@ -203,7 +199,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "朝の静かなテーブルに座り、湯気の立つお茶を黙々と飲んでいる。",
     lines: ["ふう……。", "……あったかいキチ。"],
     details: ["お気に入りの黄色いカップを両手で包んでいる", "窓から差す光が湯気を照らしている"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#e8a45a",
   },
   {
@@ -219,7 +215,7 @@ export const SCENES: readonly SceneDefinition[] = [
       "ブラシが長い毛の流れに沿って、ゆっくり往復している",
       "クーンちゃんは目を細め、エトキチの手へ背中を預けている",
     ],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#e5a55e",
   },
   {
@@ -255,7 +251,7 @@ export const SCENES: readonly SceneDefinition[] = [
         nextDay: "きれいな部屋って気持ちいいね！ 手伝ってくれてありがとう。",
       },
     ],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#73b47d",
   },
   {
@@ -281,7 +277,6 @@ export const SCENES: readonly SceneDefinition[] = [
     unlockRequirement: {
       kind: "sceneDiscovery",
       sceneId: "brushingMaineCoon",
-      hint: "クーンちゃんの朝ブラシを見ると解放",
     },
     characterPose: "sleep",
     accent: "#78b47a",
@@ -293,7 +288,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "部屋中の鉢植えへ声をかけながら、少しずつ水を分けている。",
     lines: ["今日は葉っぱが元気そう。お水、ちょうどよかったかな？", "こっちの小さい芽にも、忘れず一口ぶんキチ。"],
     details: ["じょうろの先から水がきらきら落ちている", "新しい葉を見つけてうれしそうにしている"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#69aa72",
   },
   {
@@ -332,7 +327,7 @@ export const SCENES: readonly SceneDefinition[] = [
         nextDay: "話を聞いてくれてありがとう。思い出すと、また誰かを助けたくなるよ。",
       },
     ],
-    characterPose: "stand",
+    characterPose: "active",
     accent: "#d58457",
   },
   {
@@ -342,7 +337,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "丸椅子に乗り、コンロの鍋が煮えるのを楽しみに見つめている。",
     lines: ["あと少しで完成！ ……今の味も確認しておこうかな。", "一口ずつ味見してるのに、どうして減っていくんだろう？"],
     details: ["星形に切ったにんじんが浮かんでいる", "湯気が部屋いっぱいにやさしく広がっている"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#ca7651",
   },
   {
@@ -352,7 +347,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "カーペットに座り、乾いた洗濯物を角をそろえて小さくたたんでいる。",
     lines: ["ぴったり重なると、ちょっと気持ちいいキチ！", "この靴下の相棒は……きみだったね。"],
     details: ["たたんだタオルが色順に積まれている", "靴下を一組ずつ楽しそうに揃えている"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#c77c68",
   },
   {
@@ -368,9 +363,8 @@ export const SCENES: readonly SceneDefinition[] = [
     unlockRequirement: {
       kind: "sceneDiscovery",
       sceneId: "tatsuoWakeUp",
-      hint: "タツヲが起こしに来ると解放",
     },
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#c97861",
   },
   {
@@ -380,7 +374,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "雷を怖がるクーンちゃんを抱きしめ、そばにいることを伝えている。",
     lines: ["大丈夫だよー。ぼくがぎゅってしてるからね。", "びっくりしたね。でも、ここなら一緒だよ。"],
     details: ["雷が光るたび、エトキチの腕に少し力がこもる", "窓の外では、雨粒が絶え間なく斜めに流れている"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#607b9d",
   },
   {
@@ -419,7 +413,7 @@ export const SCENES: readonly SceneDefinition[] = [
         nextDay: "自分で準備できたよ！ 任せてもらえると、ちょっと大人になった気分だね。",
       },
     ],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#586b91",
   },
   {
@@ -429,7 +423,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "静かな台所で、一皿だけの夜食を大事そうに食べている。",
     lines: ["しーっ。これは夜だけの、小さな楽しみなんだ。", "一口だけのつもりだったけど、二口目のほうがおいしいかも。"],
     details: ["小さなプリンをゆっくり味わっている", "温かいミルクから白い湯気が上がっている"],
-    characterPose: "stand",
+    characterPose: "active",
     accent: "#536589",
   },
   {
@@ -439,7 +433,7 @@ export const SCENES: readonly SceneDefinition[] = [
     description: "ソファーに腰掛け、ページをめくるのも惜しそうに漫画の続きを読んでいる。",
     lines: ["ここで終わるなんて……次の巻も読んでいい？", "この子、きっと次のページで大活躍するキチ！"],
     details: ["ソファーの脇に読み終えた巻が積まれている", "驚くたびに耳がぴょこんと立っている"],
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#6975a3",
   },
   {
@@ -452,9 +446,8 @@ export const SCENES: readonly SceneDefinition[] = [
     unlockRequirement: {
       kind: "sceneDiscovery",
       sceneId: "watchingStars",
-      hint: "星を数える夜を見ると解放",
     },
-    characterPose: "busy",
+    characterPose: "active",
     accent: "#b4a56d",
   },
 ] as const;

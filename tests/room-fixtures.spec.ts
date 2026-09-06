@@ -3,11 +3,9 @@ import {
   DEFAULT_FIXTURE_LAYOUT,
   FIXTURE_DEFINITIONS,
   getFixtureDefinition,
-  getFixturePartDefinition,
   placeFixture,
   resolveFixtureActionPoint,
   resolveFixtureLayout,
-  resolveFixturePartState,
 } from "../src/rendering/room-fixtures.ts";
 
 describe("room fixtures", () => {
@@ -18,7 +16,7 @@ describe("room fixtures", () => {
       anchor: { x: 202, y: 285 },
       displayWidth: 44,
       displayHeight: 130,
-      hotspots: [{ id: "fridge", partId: "fridgeDoor" }, { id: "sink" }, { id: "stove", partId: "stove" }],
+      hotspots: [{ id: "fridge" }, { id: "sink" }, { id: "stove" }],
     });
   });
 
@@ -87,38 +85,9 @@ describe("room fixtures", () => {
     });
   });
 
-  it("keeps replaceable refrigerator and stove parts on their intended layers", () => {
-    const fixture = getFixtureDefinition("kitchenUnit");
-    expect(getFixturePartDefinition(fixture, "fridgeDoor")).toMatchObject({
-      defaultStateId: "closed",
-      offset: { x: -6, y: -98 },
-      displayHeight: 22,
-      layer: "floorDepth",
-      depthOffset: 10,
-      states: [{ id: "closed" }, { id: "open", assetName: "fixture-kitchen-unit-fridge-door-open-pixel.webp" }],
-    });
-    expect(getFixturePartDefinition(fixture, "stove")).toMatchObject({
-      defaultStateId: "off",
-      layer: "fixture",
-      states: [{ id: "off" }, { id: "on", assetName: "fixture-kitchen-unit-stove-on-pixel.webp" }],
-    });
-  });
-
-  it("resolves part states and rejects unknown action or state IDs", () => {
-    expect(resolveFixturePartState("kitchenUnit", "fridgeDoor", "closed")).toEqual({ id: "closed" });
-    expect(resolveFixturePartState("kitchenUnit", "fridgeDoor", "open")).toEqual({
-      id: "open",
-      assetName: "fixture-kitchen-unit-fridge-door-open-pixel.webp",
-    });
-    expect(resolveFixturePartState("kitchenUnit", "stove", "on")).toEqual({
-      id: "on",
-      assetName: "fixture-kitchen-unit-stove-on-pixel.webp",
-    });
+  it("rejects unknown action point IDs", () => {
     expect(() => resolveFixtureActionPoint(DEFAULT_FIXTURE_LAYOUT, "kitchenUnit", "missing")).toThrow(
       "Unknown fixture action point: kitchenUnit.missing",
-    );
-    expect(() => resolveFixturePartState("kitchenUnit", "stove", "missing")).toThrow(
-      "Unknown fixture part state: kitchenUnit.stove.missing",
     );
   });
 });

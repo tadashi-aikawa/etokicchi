@@ -478,6 +478,22 @@ describe("state sanitization", () => {
     expect(Object.keys(sanitized.discoveries)).toEqual(["wateringPlants"]);
   });
 
+  it("trims a long saved history down to the entries the draw still reads", () => {
+    const state = createInitialState();
+    state.histories.morning = ["morningTea", "tooMuchBreakfast", "overslept", "morningTea", "planningDay"];
+
+    expect(sanitizeGameState(state).histories.morning).toEqual(["morningTea", "planningDay"]);
+  });
+
+  it("keeps only the last two entries of a band history while playing", () => {
+    let state = createInitialState();
+    for (const day of [1, 2, 3, 4]) {
+      state = resolveVisit(new Date(2026, 8, day, 12), state).state;
+    }
+
+    expect(state.histories.daytime).toHaveLength(2);
+  });
+
   it("leaves a consistent saved state untouched", () => {
     const resolved = resolveVisit(new Date(2026, 8, 1, 12), createInitialState());
     const interacted = pruneOldSlots(resolved.state, "2026-09-01");

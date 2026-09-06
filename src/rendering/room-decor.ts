@@ -71,8 +71,6 @@ export const FLOOR_DECORATIONS: readonly RoomDecoration[] = [
   },
 ];
 
-export const WALL_DECORATIONS: readonly RoomDecoration[] = [];
-
 export const DEPTH_DECORATIONS: readonly RoomDepthDecoration[] = [
   {
     id: "maineCoon",

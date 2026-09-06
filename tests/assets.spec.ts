@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { SCENES } from "../src/content/scenes.ts";
 import { getCollectionImagePath } from "../src/game/collection.ts";
-import { DEPTH_DECORATIONS, FLOOR_DECORATIONS, ROOM_CLOCK, WALL_DECORATIONS } from "../src/rendering/room-decor.ts";
+import { DEPTH_DECORATIONS, FLOOR_DECORATIONS, ROOM_CLOCK } from "../src/rendering/room-decor.ts";
 import { FIXTURE_DEFINITIONS } from "../src/rendering/room-fixtures.ts";
 import { FURNITURE_DEFINITIONS } from "../src/rendering/room-furniture.ts";
 import { ACTION_ASSET_NAMES, WALK_ASSET_NAME } from "../src/rendering/scene-assets.ts";
@@ -18,7 +18,6 @@ const referencedAssetNames = new Set<string>([
   ...FIXTURE_DEFINITIONS.map(({ baseAssetName }) => baseAssetName),
   ...FLOOR_DECORATIONS.map(({ assetName }) => assetName),
   ...DEPTH_DECORATIONS.map(({ assetName }) => assetName),
-  ...WALL_DECORATIONS.map(({ assetName }) => assetName),
   ROOM_CLOCK.assetName,
 ]);
 

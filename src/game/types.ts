@@ -41,7 +41,6 @@ export interface ChoiceDefinition {
 export interface SceneUnlockRequirement {
   kind: "sceneDiscovery";
   sceneId: SceneId;
-  hint: string;
 }
 
 export interface SceneDefinition {
@@ -53,7 +52,7 @@ export interface SceneDefinition {
   details: readonly string[];
   choices?: readonly ChoiceDefinition[];
   unlockRequirement?: SceneUnlockRequirement;
-  characterPose: "stand" | "sleep" | "busy";
+  characterPose: "sleep" | "active";
   accent: string;
 }
 

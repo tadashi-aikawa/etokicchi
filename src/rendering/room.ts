@@ -21,7 +21,6 @@ import {
   ROOM_CLOCK,
   type RoomDecoration,
   type RoomDepthDecoration,
-  WALL_DECORATIONS,
 } from "./room-decor.ts";
 import {
   FURNITURE_DEFINITIONS,
@@ -1161,7 +1160,6 @@ export async function renderRoom(
     ...new Set([
       ...FLOOR_DECORATIONS.map(({ assetName }) => assetName),
       ...DEPTH_DECORATIONS.map(({ assetName }) => assetName),
-      ...WALL_DECORATIONS.map(({ assetName }) => assetName),
       ...Object.values(presentation.depthDecorationOverrides ?? {})
         .map((override) => override?.assetName)
         .filter((assetName): assetName is string => Boolean(assetName)),
@@ -1213,7 +1211,6 @@ export async function renderRoom(
     presentation.observationOverrides,
   );
   const floorDecor = createDecorationLayer(FLOOR_DECORATIONS, textureByDecorationAsset, "floorDecor", lighting.bake);
-  const wallDecor = createDecorationLayer(WALL_DECORATIONS, textureByDecorationAsset, "wallDecor", lighting.bake);
   const clockLayer = createClockLayer(clockTexture, now, presentation.tint, lighting.bake);
   const depthContainer = new Container();
   depthContainer.label = "floorDepth";
@@ -1245,7 +1242,7 @@ export async function renderRoom(
 
   app.stage.addChild(base, windowLayer);
   if (rainWindowLayer && !tatsuoWindowFace) app.stage.addChild(rainWindowLayer);
-  app.stage.addChild(floorDecor, fixtureLayer, wallDecor, clockLayer.container);
+  app.stage.addChild(floorDecor, fixtureLayer, clockLayer.container);
   if (visitor) app.stage.addChild(visitor);
   if (!tatsuoWindowFace) app.stage.addChild(createWindowForeground());
   app.stage.addChild(depthContainer, createTimeLightingLayer(visit, sceneLayout));

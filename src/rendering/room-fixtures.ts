@@ -2,30 +2,12 @@ import type { Aabb, Point } from "./room-furniture.ts";
 
 export type FixtureId = "kitchenUnit";
 export type FixtureHotspotId = "fridge" | "sink" | "stove";
-export type FixturePartId = "fridgeDoor" | "stove";
-export type FixturePartLayer = "fixture" | "floorDepth";
-
-export interface FixturePartStateDefinition {
-  id: string;
-  assetName?: string;
-}
-
-export interface FixturePartDefinition {
-  id: FixturePartId;
-  defaultStateId: string;
-  offset: Point;
-  displayHeight: number;
-  layer: FixturePartLayer;
-  depthOffset?: number;
-  states: readonly FixturePartStateDefinition[];
-}
 
 export interface FixtureHotspot {
   id: FixtureHotspotId;
   displayName: string;
   observation: string;
   area: Aabb;
-  partId?: FixturePartId;
 }
 
 export interface FixtureDefinition {
@@ -40,7 +22,6 @@ export interface FixtureDefinition {
   occupancy: Aabb;
   hotspots: readonly FixtureHotspot[];
   actionPoints: Readonly<Record<string, Point>>;
-  parts: readonly FixturePartDefinition[];
 }
 
 export interface PlacedFixture extends Omit<FixtureDefinition, "anchor" | "occupancy" | "hotspots" | "actionPoints"> {
@@ -69,7 +50,6 @@ export const FIXTURE_DEFINITIONS = [
         observation: "冷蔵庫には、エトキチが選んだ小さな食材がきれいに並んでいる。",
         // 素材(192x600)の実測: 冷蔵庫は texY 0..148。displayHeight 130 換算で上端から32px分。
         area: { x: -44, y: -130, width: 23, height: 32 },
-        partId: "fridgeDoor",
       },
       {
         id: "sink",
@@ -84,7 +64,6 @@ export const FIXTURE_DEFINITIONS = [
         observation: "コンロは、次の料理を始めるのを静かに待っている。",
         // 実測: コンロ天板 texY 308..377 と、その下の天板前縁 texY 377..408 まで。
         area: { x: -29, y: -63, width: 24, height: 21 },
-        partId: "stove",
       },
     ],
     actionPoints: {
@@ -97,32 +76,6 @@ export const FIXTURE_DEFINITIONS = [
       // 静止シーンでしか使えない。
       stoveSide: { x: -53, y: -27 },
     },
-    parts: [
-      {
-        id: "fridgeDoor",
-        defaultStateId: "closed",
-        // 実測: 扉の正面パネルは texY 46..148。下端を冷蔵庫の下端(-98)に合わせる。
-        offset: { x: -6, y: -98 },
-        displayHeight: 22,
-        layer: "floorDepth",
-        depthOffset: 10,
-        states: [
-          { id: "closed" },
-          {
-            id: "open",
-            assetName: "fixture-kitchen-unit-fridge-door-open-pixel.webp",
-          },
-        ],
-      },
-      {
-        id: "stove",
-        defaultStateId: "off",
-        offset: { x: 0, y: -32 },
-        displayHeight: 24,
-        layer: "fixture",
-        states: [{ id: "off" }, { id: "on", assetName: "fixture-kitchen-unit-stove-on-pixel.webp" }],
-      },
-    ],
   },
 ] as const satisfies readonly FixtureDefinition[];
 
@@ -147,12 +100,6 @@ export function getFixtureDefinition(id: FixtureId): FixtureDefinition {
   const definition = fixtureDefinitionById.get(id);
   if (!definition) throw new Error(`Unknown fixture: ${id}`);
   return definition;
-}
-
-export function getFixturePartDefinition(fixture: FixtureDefinition, partId: FixturePartId): FixturePartDefinition {
-  const part = fixture.parts.find(({ id }) => id === partId);
-  if (!part) throw new Error(`Unknown fixture part: ${fixture.id}.${partId}`);
-  return part;
 }
 
 export function placeFixture(definition: FixtureDefinition, anchor: Point = definition.anchor): PlacedFixture {
@@ -184,16 +131,4 @@ export function resolveFixtureActionPoint(layout: FixtureLayout, fixtureId: Fixt
   const point = layout[fixtureId].actionPoints[actionPointId];
   if (!point) throw new Error(`Unknown fixture action point: ${fixtureId}.${actionPointId}`);
   return point;
-}
-
-export function resolveFixturePartState(
-  fixtureId: FixtureId,
-  partId: FixturePartId,
-  stateId: string,
-): FixturePartStateDefinition {
-  const fixture = getFixtureDefinition(fixtureId);
-  const part = getFixturePartDefinition(fixture, partId);
-  const state = part.states.find(({ id }) => id === stateId);
-  if (!state) throw new Error(`Unknown fixture part state: ${fixtureId}.${partId}.${stateId}`);
-  return state;
 }

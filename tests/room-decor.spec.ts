@@ -4,17 +4,15 @@ import {
   FLOOR_DECORATIONS,
   resolveClockHandAngles,
   ROOM_CLOCK,
-  WALL_DECORATIONS,
 } from "../src/rendering/room-decor.ts";
 
 describe("room decorations", () => {
-  it("keeps floor and wall decorations on their dedicated layers", () => {
+  it("keeps floor decorations on their dedicated layer", () => {
     expect(FLOOR_DECORATIONS.map(({ assetName }) => assetName)).toEqual([
       "decor-genkan-pixel.webp",
       "decor-rug-back-pixel.webp",
       "decor-rug-front-pixel.webp",
     ]);
-    expect(WALL_DECORATIONS).toEqual([]);
     expect(ROOM_CLOCK.assetName).toBe("decor-wall-clock-pixel.webp");
     expect(FLOOR_DECORATIONS[0]).toMatchObject({ x: 148, y: 107, width: 60, height: 24 });
     expect(FLOOR_DECORATIONS[2]).toMatchObject({ x: 96, y: 305, width: 84, height: 82 });

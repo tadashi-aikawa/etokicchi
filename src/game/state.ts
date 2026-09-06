@@ -14,6 +14,9 @@ import type {
   VisitView,
 } from "./types.ts";
 
+// 同じシーンの3連続を避ける判定は直近2件しか見ないので、それより長い履歴は持たない。
+const SCENE_HISTORY_LIMIT = 2;
+
 export function createInitialState(): GameState {
   return {
     dataVersion: 2,
@@ -103,7 +106,7 @@ function recordNewAssignment(state: GameState, assignment: SlotAssignment): bool
   state.assignments[assignment.slotKey] = assignment;
   const history = state.histories[assignment.band];
   history.push(assignment.sceneId);
-  if (history.length > 8) history.splice(0, history.length - 8);
+  if (history.length > SCENE_HISTORY_LIMIT) history.splice(0, history.length - SCENE_HISTORY_LIMIT);
 
   const discovery = state.discoveries[assignment.sceneId];
   if (discovery) {
@@ -363,7 +366,10 @@ export function sanitizeGameState(state: GameState): GameState {
   }
 
   for (const band of TIME_BANDS) {
-    sanitized.histories[band] = sanitized.histories[band].filter((sceneId) => findScene(sceneId));
+    // 保存済みの長い履歴は、判定に使う末尾だけ残して切り詰める。
+    sanitized.histories[band] = sanitized.histories[band]
+      .filter((sceneId) => findScene(sceneId))
+      .slice(-SCENE_HISTORY_LIMIT);
   }
 
   for (const sceneId of Object.keys(sanitized.discoveries)) {

@@ -6,7 +6,6 @@ import {
   FLOOR_DECORATIONS,
   ROOM_CLOCK,
   type RoomDepthDecorationId,
-  WALL_DECORATIONS,
 } from "../src/rendering/room-decor.ts";
 import { FIXTURE_DEFINITIONS } from "../src/rendering/room-fixtures.ts";
 import { SCENE_ROUTES } from "../src/rendering/room-layout.ts";
@@ -85,9 +84,9 @@ function collectRequirements(): Map<string, SizeRequirement[]> {
       height: definition.displayHeight * ASSET_PIXEL_RATIO,
     });
   }
-  for (const decoration of [...FLOOR_DECORATIONS, ...WALL_DECORATIONS]) {
+  for (const decoration of FLOOR_DECORATIONS) {
     add(decoration.assetName, {
-      source: `壁床の装飾 ${decoration.assetName}`,
+      source: `床の装飾 ${decoration.assetName}`,
       width: decoration.width * ASSET_PIXEL_RATIO,
       height: decoration.height * ASSET_PIXEL_RATIO,
     });
@@ -249,7 +248,6 @@ describe("asset pixel scale", () => {
       ...FIXTURE_DEFINITIONS.map(({ baseAssetName }) => baseAssetName),
       ...FLOOR_DECORATIONS.map(({ assetName }) => assetName),
       ...DEPTH_DECORATIONS.map(({ assetName }) => assetName),
-      ...WALL_DECORATIONS.map(({ assetName }) => assetName),
       ROOM_CLOCK.assetName,
     ]);
     for (const assetName of referenced) {
