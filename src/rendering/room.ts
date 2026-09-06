@@ -49,6 +49,7 @@ import {
   resolveGuestPosition,
   resolveScenePropDepthY,
   resolveScenePropPosition,
+  TATSUO_WINDOW_FACE_RATIO,
   type AttachedSceneProp,
   type CharacterBubblePresentation,
   type ComfortingMaineCoonPresentation,
@@ -64,15 +65,26 @@ import {
   THUNDER_FLASH_COLOR,
   type ThunderComfortFrame,
 } from "./thunder-comfort.ts";
-import { ACTION_ASSET_NAMES, WALK_ASSET_NAME } from "./scene-assets.ts";
+import {
+  ACTION_ASSET_NAMES,
+  ACTION_FRAME_COLUMNS,
+  ACTION_FRAME_HEIGHT,
+  ACTION_ROW_COUNTS,
+  ASSET_PIXEL_RATIO,
+  ROOM_BACKGROUND_HEIGHT,
+  ROOM_HEIGHT,
+  ROOM_WIDTH,
+  WALK_ASSET_NAME,
+  WALK_FRAME_COLUMNS,
+  WALK_FRAME_HEIGHT,
+  WALK_FRAME_ROWS,
+} from "./scene-assets.ts";
 import { getThunderWindowFrame, type ThunderWindowFrame } from "./thunder-window.ts";
 
-const WIDTH = 195;
-const HEIGHT = 422;
-const BACKGROUND_HEIGHT = 347;
+const WIDTH = ROOM_WIDTH;
+const HEIGHT = ROOM_HEIGHT;
+const BACKGROUND_HEIGHT = ROOM_BACKGROUND_HEIGHT;
 const WALK_SPEED = 19;
-const WALKER_FRAME_HEIGHT = 52;
-const ACTION_FRAME_HEIGHT = 60;
 
 type Direction = "down" | "left" | "right" | "up";
 
@@ -330,7 +342,7 @@ function createTatsuoWindowFaceLayer(
   texture.source.scaleMode = "nearest";
   const layer = new Container();
   layer.label = "tatsuoWindowFace";
-  const faceHeight = Math.floor(texture.frame.height * 0.55);
+  const faceHeight = Math.floor(texture.frame.height * TATSUO_WINDOW_FACE_RATIO);
   const faceTexture = new Texture({
     source: texture.source,
     frame: new Rectangle(texture.frame.x, texture.frame.y, texture.frame.width, faceHeight),
@@ -421,7 +433,7 @@ function createFurnitureSprites(
     const scale = definition.displayHeight / texture.height;
     sprite.anchor.set(0.5, 1);
     sprite.scale.set(scale);
-    if (definition.displayWidth) sprite.width = definition.displayWidth;
+    sprite.width = definition.displayWidth;
     sprite.position.set(placed.anchor.x, placed.anchor.y);
     sprite.roundPixels = true;
     applyLighting(sprite, tint);
@@ -453,7 +465,7 @@ function createFixtureLayer(
     const placed = fixtures[definition.id];
     const sprite = new Sprite(texture);
     sprite.anchor.set(1, 1);
-    sprite.width = definition.displayWidth ?? texture.width * (definition.displayHeight / texture.height);
+    sprite.width = definition.displayWidth;
     sprite.height = definition.displayHeight;
     sprite.position.set(placed.anchor.x, placed.anchor.y);
     sprite.roundPixels = true;
@@ -668,36 +680,24 @@ function createSpeechBubble(
   };
 }
 
-function createGridFrames(
-  sheet: Texture,
-  columns: number,
-  rows: number,
-  bottomTrimByRow: readonly number[] = [],
-  topBleedByRow: readonly number[] = [],
-): Texture[][] {
+function createGridFrames(sheet: Texture, columns: number, rows: number): Texture[][] {
   sheet.source.scaleMode = "nearest";
   return Array.from({ length: rows }, (_, row) =>
     Array.from({ length: columns }, (_, column) => {
       const left = Math.round((column * sheet.width) / columns);
-      const baseTop = Math.round((row * sheet.height) / rows);
-      const top = baseTop - (topBleedByRow[row] ?? 0);
+      const top = Math.round((row * sheet.height) / rows);
       const right = Math.round(((column + 1) * sheet.width) / columns);
-      const fullBottom = Math.round(((row + 1) * sheet.height) / rows);
-      const bottomTrim = bottomTrimByRow[row] ?? 0;
-      const frameWidth = right - left;
-      const frameHeight = fullBottom - top - bottomTrim;
+      const bottom = Math.round(((row + 1) * sheet.height) / rows);
       return new Texture({
         source: sheet.source,
-        frame: new Rectangle(left, top, frameWidth, frameHeight),
-        orig: bottomTrim > 0 ? new Rectangle(0, 0, frameWidth, fullBottom - top) : undefined,
-        trim: bottomTrim > 0 ? new Rectangle(0, 0, frameWidth, frameHeight) : undefined,
+        frame: new Rectangle(left, top, right - left, bottom - top),
       });
     }),
   );
 }
 
 function createDirectionFrames(sheet: Texture): Record<Direction, Texture[]> {
-  const grid = createGridFrames(sheet, 3, 4, [0, 2, 17, 0], [0, 0, 0, 17]);
+  const grid = createGridFrames(sheet, WALK_FRAME_COLUMNS, WALK_FRAME_ROWS);
   return Object.fromEntries(
     Object.entries(directionRows).map(([direction, row]) => [direction, grid[row] ?? []]),
   ) as Record<Direction, Texture[]>;
@@ -726,13 +726,13 @@ function createWalker(
   const baseFrame = frames.down.at(0);
   if (!baseFrame) throw new Error("歩行アニメーションのフレームがありません");
   character.anchor.set(0.5, 1);
-  character.scale.set(WALKER_FRAME_HEIGHT / baseFrame.height);
+  character.scale.set(WALK_FRAME_HEIGHT / baseFrame.height);
   character.roundPixels = true;
   character.animationSpeed = 0.13;
   character.loop = true;
 
   const actionFrameRows = actionSheet
-    ? createGridFrames(actionSheet, 3, visit.scene.id === "wateringPlants" ? 2 : 1)
+    ? createGridFrames(actionSheet, ACTION_FRAME_COLUMNS, ACTION_ROW_COUNTS[visit.scene.id] ?? 1)
     : [];
   const actionLoops = actionFrameRows.map((actionFrames) =>
     [
@@ -1020,7 +1020,9 @@ export async function renderRoom(
     backgroundAlpha: 0,
     antialias: false,
     autoDensity: false,
-    resolution: 1,
+    // 素材は表示する論理寸法のちょうどASSET_PIXEL_RATIO倍で持っているので、描画解像度も揃えてドットを1対1で出す。
+    // autoDensityはCanvasのインラインstyleが .room-canvas のCSSに勝つため使わない。
+    resolution: ASSET_PIXEL_RATIO,
     roundPixels: true,
     preference: "webgl",
   });

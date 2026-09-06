@@ -35,7 +35,8 @@ export interface FixtureDefinition {
   observation: string;
   anchor: Point;
   displayHeight: number;
-  displayWidth?: number;
+  // 素材のピクセル寸法のちょうど半分にする。拡大率が正確に0.5になる。
+  displayWidth: number;
   occupancy: Aabb;
   hotspots: readonly FixtureHotspot[];
   actionPoints: Readonly<Record<string, Point>>;

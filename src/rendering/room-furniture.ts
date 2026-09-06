@@ -18,8 +18,10 @@ export interface FurnitureDefinition {
   displayName: string;
   observation: string;
   anchor: Point;
+  // 素材のピクセル寸法のちょうど半分にする。拡大率が正確に0.5になり、
+  // 描画解像度2のCanvasへ素材のドットが1対1で乗る。
   displayHeight: number;
-  displayWidth?: number;
+  displayWidth: number;
   footY: number;
   occupancy: Aabb;
   clickArea: Aabb;
@@ -62,6 +64,7 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     observation: "棚には、どこで見つけたのか分からない宝物が少しずつ増えている。",
     anchor: { x: 103, y: 111 },
     displayHeight: 67,
+    displayWidth: 47,
     footY: 0,
     occupancy: { x: -16, y: -7, width: 32, height: 7 },
     clickArea: { x: -24, y: -67, width: 48, height: 67 },
@@ -76,6 +79,7 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     observation: "食卓には、今日使ったものがそのまま残っている。",
     anchor: { x: 52, y: 264 },
     displayHeight: 74,
+    displayWidth: 97,
     footY: 0,
     occupancy: { x: -32, y: -17, width: 50, height: 17 },
     clickArea: { x: -39, y: -74, width: 78, height: 74 },
@@ -91,6 +95,7 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     observation: "軽い丸椅子は、必要な場所へすぐ運べるようにしてある。",
     anchor: { x: 85, y: 249 },
     displayHeight: 22,
+    displayWidth: 17,
     footY: -10,
     occupancy: { x: -9, y: -5, width: 18, height: 5 },
     clickArea: { x: -10, y: -22, width: 20, height: 22 },
@@ -105,6 +110,7 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     observation: "大きな葉が、窓から入る光のほうへゆっくり伸びている。",
     anchor: { x: 160, y: 342 },
     displayHeight: 66,
+    displayWidth: 63,
     footY: 0,
     occupancy: { x: -13, y: -10, width: 26, height: 10 },
     clickArea: { x: -31, y: -66, width: 62, height: 66 },
@@ -135,6 +141,7 @@ export const FURNITURE_DEFINITIONS: readonly FurnitureDefinition[] = [
     observation: "照明台の柔らかな明かりが、眠る前の部屋を落ち着かせてくれる。",
     anchor: { x: 61, y: 125 },
     displayHeight: 42,
+    displayWidth: 24,
     footY: 0,
     occupancy: { x: -8, y: -5, width: 16, height: 5 },
     clickArea: { x: -13, y: -42, width: 26, height: 42 },

@@ -124,6 +124,10 @@ export interface ComfortingMaineCoonPresentation {
   observation: string;
 }
 
+// 窓のタツヲは素材の上からこの割合だけを切り出して顔として出す。
+// 切り出し高さ floor(素材の高さ × この値) が表示する論理高さの2倍になるよう素材を作る。
+export const TATSUO_WINDOW_FACE_RATIO = 0.55;
+
 export interface TatsuoWindowPresentation {
   assetName: string;
   height: number;
@@ -464,7 +468,8 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         thunderstorm: true,
         tatsuoWindow: {
           assetName: "tatsuo-awake-pixel.png",
-          height: 48,
+          // 素材160pxの55%=88pxを切り出すので、拡大率0.5になる44を表示高さにする。
+          height: 44,
           x: 69,
           y: 25,
         },

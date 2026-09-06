@@ -182,7 +182,7 @@ describe("room presentation", () => {
       thunderstorm: true,
       tatsuoWindow: {
         assetName: "tatsuo-awake-pixel.png",
-        height: 48,
+        height: 44,
         x: 69,
         y: 25,
       },
