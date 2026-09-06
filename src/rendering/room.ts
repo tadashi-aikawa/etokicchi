@@ -62,10 +62,10 @@ import {
   getRainDropPosition,
   getThunderComfortFrame,
   RAIN_DROP_SEEDS,
-  RAIN_WINDOW_BOUNDS,
   THUNDER_FLASH_COLOR,
   type ThunderComfortFrame,
 } from "./thunder-comfort.ts";
+import { WINDOW_FRAME, WINDOW_GLASS, WINDOW_GLASS_PANES, WINDOW_MULLION, WINDOW_SILL } from "./window-geometry.ts";
 import {
   ACTION_ASSET_NAMES,
   ACTION_FRAME_COLUMNS,
@@ -331,15 +331,19 @@ function createThunderWindowFrameProvider(app: Application): ThunderWindowFrameP
   return () => frame;
 }
 
+// ガラスは中央の桟で左右に割れているので、覆う図形も2枚へ分ける。
+function drawGlassPanes(graphics: Graphics): Graphics {
+  for (const pane of WINDOW_GLASS_PANES) {
+    graphics.rect(pane.x, WINDOW_GLASS.y, pane.width, WINDOW_GLASS.height);
+  }
+  return graphics;
+}
+
 function createRainWindowLayer(app: Application): Container {
   const layer = new Container();
   layer.label = "rainWindow";
   const rain = new Container();
-  const { x, y, height } = RAIN_WINDOW_BOUNDS;
-  const stormShade = new Graphics()
-    .rect(x, y, 15, height)
-    .rect(x + 17, y, 17, height)
-    .fill({ color: 0x243a56, alpha: 0.58 });
+  const stormShade = drawGlassPanes(new Graphics()).fill({ color: 0x243a56, alpha: 0.58 });
   const drops = RAIN_DROP_SEEDS.map((seed) => {
     const drop = new Graphics()
       .moveTo(0, 0)
@@ -348,10 +352,7 @@ function createRainWindowLayer(app: Application): Container {
     rain.addChild(drop);
     return drop;
   });
-  const mask = new Graphics()
-    .rect(x, y, 15, height)
-    .rect(x + 17, y, 17, height)
-    .fill(0xffffff);
+  const mask = drawGlassPanes(new Graphics()).fill(0xffffff);
   rain.mask = mask;
   layer.addChild(stormShade, rain, mask);
 
@@ -399,11 +400,7 @@ function createTatsuoWindowFaceLayer(
   face.position.set(presentation.x, presentation.y);
   face.tint = 0xd8b470;
 
-  const { x, y, height } = RAIN_WINDOW_BOUNDS;
-  const mask = new Graphics()
-    .rect(x, y, 15, height)
-    .rect(x + 17, y, 17, height)
-    .fill(0xffffff);
+  const mask = drawGlassPanes(new Graphics()).fill(0xffffff);
   face.mask = mask;
   layer.addChild(face, mask);
   layer.alpha = 0;
@@ -445,14 +442,21 @@ function createWindowLayer(
   const window = new Sprite(bake(windowTexture));
   window.width = WIDTH;
   window.height = BACKGROUND_HEIGHT;
-  const windowMask = new Graphics().rect(22, 25, 56, 54).fill(0xffffff);
+  const windowMask = new Graphics()
+    .rect(WINDOW_FRAME.x, WINDOW_FRAME.y, WINDOW_FRAME.width, WINDOW_FRAME.height)
+    .fill(0xffffff);
   window.mask = windowMask;
   window.eventMode = "static";
   window.cursor = "pointer";
   window.label = "窓";
   const scaleX = windowTexture.width / WIDTH;
   const scaleY = windowTexture.height / BACKGROUND_HEIGHT;
-  window.hitArea = new Rectangle(22 * scaleX, 25 * scaleY, 56 * scaleX, 54 * scaleY);
+  window.hitArea = new Rectangle(
+    WINDOW_FRAME.x * scaleX,
+    WINDOW_FRAME.y * scaleY,
+    WINDOW_FRAME.width * scaleX,
+    WINDOW_FRAME.height * scaleY,
+  );
   window.on("pointertap", () => callbacks.onObservation(observation, "窓"));
   windowLayer.addChild(window, windowMask);
   return windowLayer;
@@ -1001,7 +1005,9 @@ function createVisitor(
   visitor.hitArea = new Rectangle(-28, -28, 56, 56);
   visitor.cursor = "pointer";
   visitor.on("pointertap", callbacks.onCharacterTap);
-  const mask = new Graphics().rect(22, 25, 56, 54).fill(0xffffff);
+  const mask = new Graphics()
+    .rect(WINDOW_FRAME.x, WINDOW_FRAME.y, WINDOW_FRAME.width, WINDOW_FRAME.height)
+    .fill(0xffffff);
   visitor.mask = mask;
   layer.addChild(visitor, mask);
 
@@ -1018,7 +1024,11 @@ function createVisitor(
 }
 
 function createWindowForeground(): Graphics {
-  return new Graphics().rect(49, 29, 2, 49).fill(0x4a3028).rect(22, 77, 56, 2).fill(0x65402d);
+  return new Graphics()
+    .rect(WINDOW_MULLION.x, WINDOW_MULLION.y, WINDOW_MULLION.width, WINDOW_MULLION.height)
+    .fill(0x4a3028)
+    .rect(WINDOW_SILL.x, WINDOW_SILL.y, WINDOW_SILL.width, WINDOW_SILL.height)
+    .fill(0x65402d);
 }
 
 export interface RenderedRoom {

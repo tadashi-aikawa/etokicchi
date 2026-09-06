@@ -3,9 +3,9 @@ import {
   getRainDropPosition,
   getThunderComfortFrame,
   RAIN_DROP_SEEDS,
-  RAIN_WINDOW_BOUNDS,
   THUNDER_FLASH_COLOR,
 } from "../src/rendering/thunder-comfort.ts";
+import { WINDOW_GLASS } from "../src/rendering/window-geometry.ts";
 
 describe("thunder comfort animation", () => {
   it("flashes, trembles, and then tightens the embrace", () => {
@@ -22,10 +22,10 @@ describe("thunder comfort animation", () => {
     for (const elapsedMs of [0, 1_000, 9_000, 80_000]) {
       for (const seed of RAIN_DROP_SEEDS) {
         const position = getRainDropPosition(seed, elapsedMs);
-        expect(position.x).toBeGreaterThanOrEqual(RAIN_WINDOW_BOUNDS.x);
-        expect(position.x).toBeLessThan(RAIN_WINDOW_BOUNDS.x + RAIN_WINDOW_BOUNDS.width);
-        expect(position.y).toBeGreaterThanOrEqual(RAIN_WINDOW_BOUNDS.y);
-        expect(position.y).toBeLessThan(RAIN_WINDOW_BOUNDS.y + RAIN_WINDOW_BOUNDS.height);
+        expect(position.x).toBeGreaterThanOrEqual(WINDOW_GLASS.x);
+        expect(position.x).toBeLessThan(WINDOW_GLASS.x + WINDOW_GLASS.width);
+        expect(position.y).toBeGreaterThanOrEqual(WINDOW_GLASS.y);
+        expect(position.y).toBeLessThan(WINDOW_GLASS.y + WINDOW_GLASS.height);
       }
     }
   });
