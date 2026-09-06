@@ -13,6 +13,7 @@
     "format": "biome format --write src tests vite.config.ts",
     "format:check": "biome format src tests vite.config.ts",
     "test": "vitest run",
+    "assets:normalize": "node tools/normalize-assets.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build"
   },
   "dependencies": {
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.7",
+    "sharp": "0.35.4",
     "typescript": "7.0.2",
     "vite": "7.1.2",
     "vitest": "4.1.10"
