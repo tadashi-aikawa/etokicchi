@@ -107,10 +107,10 @@ const TARGETS = [
   },
   {
     name: "etokichi-napping-on-maine-coon-pixel.webp",
-    width: 168,
+    width: 200,
     height: 112,
     kernel: "lanczos",
-    note: "クーン枕の昼寝 84×56",
+    note: "横たわるクーン枕の昼寝 100×56",
   },
   {
     name: "etokichi-comforting-maine-coon-pixel.webp",

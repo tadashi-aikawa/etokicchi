@@ -185,7 +185,7 @@ describe("room presentation", () => {
         assetName: "tatsuo-awake-pixel.png",
         height: 44,
         x: 69,
-        y: 25,
+        y: 30,
       },
     });
   });
@@ -477,6 +477,10 @@ describe("room presentation", () => {
       sleeperBreathing: "alternating",
       hiddenDepthDecorationIds: ["maineCoon"],
     });
+  });
+
+  it("turns off every room light while watching stars", () => {
+    expect(getRoomPresentation(visitFor("watchingStars"))).toMatchObject({ lightsOff: true });
   });
 
   it("uses layered rendering for every scene", () => {

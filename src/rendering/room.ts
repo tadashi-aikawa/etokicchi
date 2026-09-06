@@ -275,7 +275,7 @@ export async function renderRoom(
   app.stage.addChild(floorDecor, fixtureLayer, clockLayer.container);
   if (visitor) app.stage.addChild(visitor);
   if (!tatsuoWindowFace) app.stage.addChild(createWindowForeground());
-  app.stage.addChild(depthContainer, createTimeLightingLayer(visit, sceneLayout));
+  app.stage.addChild(depthContainer, createTimeLightingLayer(visit, sceneLayout, presentation.lightsOff));
   if (getThunderFlashFrame) app.stage.addChild(createThunderFlashLayer(app, getThunderFlashFrame));
   if (tatsuoWindowFace) {
     app.stage.addChild(tatsuoWindowFace);

@@ -272,7 +272,7 @@ export const SCENES: readonly SceneDefinition[] = [
     lines: ["むにゃ……クーンちゃん、ふかふか……", "すー……すー……雲の枕みたいだね……"],
     details: [
       "エトキチの頭が、クーンちゃんの長い毛へゆっくり沈んでいる",
-      "クーンちゃんの大きなしっぽが、エトキチを毛布のように包んでいる",
+      "横に伸びて眠るクーンちゃんの身体を、エトキチが枕にしている",
     ],
     unlockRequirement: {
       kind: "sceneDiscovery",

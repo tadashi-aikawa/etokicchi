@@ -161,10 +161,12 @@ export function createClockLayer(source: Texture, now: Date, tint: RoomTint, bak
   };
 }
 
-export function createTimeLightingLayer(visit: VisitView, sceneLayout: RoomLayout): Container {
+export function createTimeLightingLayer(visit: VisitView, sceneLayout: RoomLayout, lightsOff = false): Container {
   const layer = new Container();
   layer.label = "timeLighting";
-  const lights = getRoomLights(visit.assignment.band, visit.scene.characterPose === "sleep", sceneLayout);
+  const lights = lightsOff
+    ? []
+    : getRoomLights(visit.assignment.band, visit.scene.characterPose === "sleep", sceneLayout);
   for (const light of lights) {
     const graphic = new Graphics();
     if (light.kind === "circle") {

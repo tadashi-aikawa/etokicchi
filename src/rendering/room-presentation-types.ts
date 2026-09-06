@@ -123,6 +123,8 @@ export interface RoomPresentationCommon {
   comfortingMaineCoon?: ComfortingMaineCoonPresentation;
   thunderstorm?: boolean;
   tatsuoWindow?: TatsuoWindowPresentation;
+  /** シーン設定として部屋の灯りをすべて消す。時間帯Tintは維持する。 */
+  lightsOff?: boolean;
   observationOverrides?: ObservationOverrides;
   // 時間帯から決まる既定の照明を、このシーンだけ差し替える。
   tint?: RoomTint;

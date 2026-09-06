@@ -109,7 +109,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
         // 素材160pxの55%=88pxを切り出すので、拡大率0.5になる44を表示高さにする。
         height: 44,
         x: 69,
-        y: 25,
+        y: 30,
       },
       tint: { color: 0x101a3b, alpha: 0.72 },
     },
@@ -177,10 +177,11 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bedsideTable: "照明は消してある。星を見るには暗いほうがいいらしい。",
     },
     collectionImage: "assets/collection/watching-stars.webp",
-    room: (visit) =>
-      visit.mimizouPresent
+    room: (visit) => ({
+      ...DEFAULT_ROOM,
+      lightsOff: true,
+      ...(visit.mimizouPresent
         ? {
-            ...DEFAULT_ROOM,
             companion: {
               assetName: "mimizou-pixel.png",
               height: 34,
@@ -188,7 +189,8 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
               y: 126,
             },
           }
-        : DEFAULT_ROOM,
+        : {}),
+    }),
   },
   almostAwake: {
     route: {
