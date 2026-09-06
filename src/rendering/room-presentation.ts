@@ -719,7 +719,8 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         hiddenDepthDecorationIds: ["maineCoon"],
         comfortingMaineCoon: {
           assetName: "etokichi-comforting-maine-coon-pixel.webp",
-          height: 73,
+          // 素材142×104を整数比2で表示する(2倍解像度化と同じ基準)
+          height: 52,
           x: 96,
           y: 326,
           depthOffset: 20,

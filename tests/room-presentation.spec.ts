@@ -429,7 +429,7 @@ describe("room presentation", () => {
       thunderstorm: true,
       comfortingMaineCoon: {
         assetName: "etokichi-comforting-maine-coon-pixel.webp",
-        height: 73,
+        height: 52,
         x: 96,
         y: 326,
       },
