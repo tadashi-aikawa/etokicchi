@@ -469,7 +469,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
   nappingOnMaineCoon: {
     route: {
       movement: "nonWalking",
-      waypoints: [{ destination: point(58, 340), pauseMs: 5000 }],
+      waypoints: [{ destination: point(88, 340), pauseMs: 5000 }],
     },
     action: "none",
     observations: {
@@ -480,12 +480,12 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
     room: {
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
       sleeperHeight: 72,
-      sleeperRotation: Math.PI / 3,
+      sleeperRotation: 0,
       sleeperBreathing: "alternating",
       sleeperBase: {
         assetName: "maine-coon-pillow-pixel.webp",
         height: 32,
-        offset: { x: 52, y: -18 },
+        offset: { x: 10, y: -34 },
       },
       hiddenDepthDecorationIds: ["maineCoon"],
     },
