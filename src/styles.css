@@ -337,9 +337,11 @@ button {
 
 .hud-observe {
   display: flex;
-  gap: 6px;
+  grid-column: 1 / -1;
+  flex-direction: column;
+  gap: 4px;
   align-items: flex-start;
-  margin: 5px 0 0;
+  margin: 0;
   border-radius: 8px;
   padding: 6px 8px;
   background: #e3f4f1;
@@ -367,11 +369,7 @@ button {
 }
 
 .hud-observe-text {
-  display: -webkit-box;
-  overflow: hidden;
   min-width: 0;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .hud-observe-text.is-hint {
@@ -1404,10 +1402,6 @@ button {
 @media (max-height: 650px) {
   .scene-hud {
     padding-block: 7px;
-  }
-
-  .hud-observe-text {
-    -webkit-line-clamp: 1;
   }
 
   .scene-sheet {

@@ -160,13 +160,13 @@ function createShell(
     observeText.classList.toggle("is-hint", targetName === undefined);
   };
   showObservation(OBSERVATION_HINT);
-  hudText.append(kicker, title, observe);
+  hudText.append(kicker, title);
   const openButton = document.createElement("button");
   openButton.className = "hud-action";
   openButton.type = "button";
   openButton.textContent = visit.scene.choices?.length ? "関わる" : "見る";
   openButton.setAttribute("aria-haspopup", "dialog");
-  hud.append(hudText, openButton);
+  hud.append(hudText, openButton, observe);
 
   const sheetLayer = document.createElement("div");
   sheetLayer.className = "sheet-layer";
