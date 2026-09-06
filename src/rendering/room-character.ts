@@ -254,11 +254,13 @@ export function createSleeper(
   height: number,
   callbacks: RoomCallbacks,
   breathing: "smooth" | "subtle" | "alternating" = "smooth",
+  rotation = 0,
 ): Sprite {
   const sleeper = new Sprite(texture);
   sleeper.anchor.set(0.5, 1);
   sleeper.scale.set(height / texture.height);
   sleeper.position.set(position.x, position.y);
+  sleeper.rotation = rotation;
   sleeper.zIndex = getDepthZIndex(depthY, 50);
   sleeper.eventMode = "dynamic";
   sleeper.cursor = "pointer";

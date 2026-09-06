@@ -472,13 +472,14 @@ describe("room presentation", () => {
 
   it("layers Etokichi over a separately positioned Koon without rendering the room's default Koon twice", () => {
     expect(getRoomPresentation(visitFor("nappingOnMaineCoon"))).toMatchObject({
-      sleeperAssetName: "etokichi-sleep-pixel.webp",
-      sleeperHeight: 42,
+      sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
+      sleeperHeight: 72,
+      sleeperRotation: Math.PI / 3,
       sleeperBreathing: "alternating",
       sleeperBase: {
         assetName: "maine-coon-pillow-pixel.webp",
         height: 32,
-        offset: { x: 14, y: -3 },
+        offset: { x: 52, y: -18 },
       },
       hiddenDepthDecorationIds: ["maineCoon"],
     });

@@ -106,6 +106,7 @@ export interface TatsuoWindowPresentation {
 export interface RoomPresentationCommon {
   sleeperAssetName: string;
   sleeperHeight: number;
+  sleeperRotation?: number;
   sleeperBreathing?: "smooth" | "subtle" | "alternating";
   sleeperBase?: {
     assetName: string;

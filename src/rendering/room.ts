@@ -151,6 +151,7 @@ export async function renderRoom(
           presentation.sleeperHeight,
           callbacks,
           presentation.sleeperBreathing,
+          presentation.sleeperRotation,
         )
       : createWalker(
           app,
