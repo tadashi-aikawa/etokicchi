@@ -91,6 +91,10 @@ export const FIXTURE_DEFINITIONS = [
       stoveFront: { x: -83, y: -22 },
       stoveStool: { x: -44, y: -19 },
       sinkFront: { x: -83, y: -46 },
+      // 歩いてコンロへ寄る経路用。占有領域(x -47..-7)の左外側ぎりぎりに置き、
+      // 通路線のstoveFrontより天板寄りへ立たせる。stoveStoolは占有領域の内側なので
+      // 静止シーンでしか使えない。
+      stoveSide: { x: -53, y: -27 },
     },
     parts: [
       {

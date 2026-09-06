@@ -9,6 +9,7 @@ import {
   resolveFurnitureLayout,
   resolveFurnitureSpriteHitArea,
 } from "../src/rendering/room-furniture.ts";
+import { resolveFixtureActionPoint } from "../src/rendering/room-fixtures.ts";
 import {
   CHARACTER_FOOT_RADIUS,
   DEFAULT_ROOM_LAYOUT,
@@ -302,12 +303,17 @@ describe("room layout adoption and scene routes", () => {
     ).toEqual([{ code: "furnitureOverlap", sceneId: "watchingStars", furnitureId: "bedsideTable" }]);
   });
 
-  it("stops at the dining chair before the fridge so the breakfast dishes appear there", () => {
+  it("cooks only at the stove and then carries the breakfast dishes to the dining chair", () => {
     const route = resolveSceneRoute("tooMuchBreakfast", DEFAULT_ROOM_LAYOUT);
+    expect(route[0]).toMatchObject({
+      ...resolveFixtureActionPoint(DEFAULT_ROOM_LAYOUT.fixtures, "kitchenUnit", "stoveSide"),
+      action: true,
+    });
     expect(route[2]).toMatchObject(
       resolveFurnitureActionPoint(DEFAULT_ROOM_LAYOUT.furniture, "diningSet", "morningTea"),
     );
-    expect(route[2]).toMatchObject({ action: true });
+    // 料理のドット絵はコンロ前だけ。食卓では皿を置くだけで行動アニメーションを出さない。
+    expect(route.filter(({ action }) => action)).toHaveLength(1);
   });
 
   it("seats Mimizou's visitor scene on the dining chair instead of the bare floor", () => {

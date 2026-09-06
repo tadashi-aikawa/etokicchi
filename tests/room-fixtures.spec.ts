@@ -38,6 +38,7 @@ describe("room fixtures", () => {
       stoveFront: { x: 97, y: 278 },
       stoveStool: { x: 136, y: 281 },
       sinkFront: { x: 97, y: 254 },
+      stoveSide: { x: 127, y: 273 },
     });
   });
 
@@ -78,6 +79,11 @@ describe("room fixtures", () => {
     expect(resolveFixtureActionPoint(DEFAULT_FIXTURE_LAYOUT, "kitchenUnit", "stoveFront")).toEqual({
       x: 119,
       y: 263,
+    });
+    // 歩行経路から寄れる最寄り。占有領域の左端(155)へキャラクターの足半径5px分だけ余裕を残す。
+    expect(resolveFixtureActionPoint(DEFAULT_FIXTURE_LAYOUT, "kitchenUnit", "stoveSide")).toEqual({
+      x: 149,
+      y: 258,
     });
   });
 

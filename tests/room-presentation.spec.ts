@@ -593,7 +593,7 @@ describe("scene props", () => {
   it("draws the muddy footprints above the entrance mat but behind every furniture piece", () => {
     const [footprints] = propsFor("muddyReturn");
     if (!footprints || footprints.type !== "absolute") throw new Error("muddy footprints are missing");
-    expect(footprints).toMatchObject({ assetName: "scene-mud-footprints-pixel.webp", height: 30, x: 166, y: 148 });
+    expect(footprints).toMatchObject({ assetName: "scene-mud-footprints-pixel.webp", height: 17, x: 162, y: 148 });
 
     const depth = getDepthZIndex(resolveScenePropDepthY(footprints, footprints), 20);
     for (const { id } of FURNITURE_DEFINITIONS) {

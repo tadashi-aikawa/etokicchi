@@ -153,16 +153,16 @@ export const SCENE_ROUTES: Readonly<Record<SceneId, SceneRoute>> = {
     ],
   },
   tooMuchBreakfast: {
-    // 添字2の食卓で朝食の皿(sceneProps)が現れる。順序を変えるときは
+    // 添字0のコンロ脇だけで料理の行動アニメーションを出し、添字2の食卓で
+    // 朝食の皿(sceneProps)が現れる。順序を変えるときは
     // room-presentation.ts の revealAtWaypoint も合わせること。
+    // 添字1・3は丸椅子と食卓の占有を避けるための中継点。
     movement: "walking",
     waypoints: [
-      { destination: point(103, 193), pauseMs: 900 },
-      { destination: point(105, 252), pauseMs: 0 },
-      { destination: furnitureAction("diningSet", "morningTea"), pauseMs: 3200, action: true },
-      { destination: point(105, 252), pauseMs: 0 },
-      { destination: fixtureAction("kitchenUnit", "fridgeFront"), pauseMs: 2600, action: true },
-      { destination: point(98, 225), pauseMs: 1200 },
+      { destination: fixtureAction("kitchenUnit", "stoveSide"), pauseMs: 3000, action: true },
+      { destination: point(104, 269), pauseMs: 0 },
+      { destination: furnitureAction("diningSet", "morningTea"), pauseMs: 1500 },
+      { destination: point(104, 254), pauseMs: 0 },
     ],
   },
   overslept: {

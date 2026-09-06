@@ -611,9 +611,10 @@ export function getRoomPresentation(visit: VisitView): RoomPresentation {
         {
           type: "absolute",
           assetName: "scene-mud-footprints-pixel.webp",
-          height: 30,
+          // エトキチの足(約8px)に対して自然な二歩になる大きさ。
+          height: 17,
           // 玄関マットからエトキチの立ち位置へ向かう二歩。エトキチの右脇で止め、体で隠れないようにする。
-          x: 166,
+          x: 162,
           y: 148,
           // 玄関の床装飾の直上、家具より奥へ描く。
           depthY: 81,
