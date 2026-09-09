@@ -633,6 +633,20 @@ button {
   box-shadow: 0 5px 0 rgba(58, 35, 22, 0.18);
 }
 
+.collection-layer {
+  overflow-x: hidden;
+}
+
+.collection-transition {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .updates-header {
   display: flex;
   justify-content: space-between;

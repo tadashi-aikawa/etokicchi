@@ -16,4 +16,6 @@
 
 図鑑の本文で左右に48px以上スワイプすると隣のタブへ移動する。順番は「すべて → 早朝 → 朝 → 昼 → 夕方 → 夜 → 深夜」で、両端では止まる。縦スクロール・ピンチズーム・拡大イラスト内の操作はタブ変更に使わない。
 
+スワイプ・タブのタップによる切り替えは、移動方向に合わせて220msで横にスライドする。初期表示・同じタブの選び直し・端末の「視差効果を減らす」設定ではアニメーションを行わない。連続操作では前のアニメーションを片付け、最後の選択を優先する。
+
 API確認: [MDN touch-action](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/touch-action)、[MDN localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)。

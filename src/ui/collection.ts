@@ -263,8 +263,20 @@ export function createCollectionLayer(state: GameState): CollectionLayer {
   }
 
   const filterButtons = new Map<CollectionFilter, HTMLButtonElement>();
+  const filterDefinitions: ReadonlyArray<readonly [CollectionFilter, string]> = [
+    ["all", "すべて"],
+    ...TIME_BANDS.map((timeBand) => [timeBand, TIME_BAND_LABELS[timeBand]] as const),
+  ];
   let currentFilter: CollectionFilter = "all";
-  const setFilter = (selected: CollectionFilter): void => {
+  let finishTransition: (() => void) | undefined;
+  const setFilter = (selected: CollectionFilter, animate = true): void => {
+    finishTransition?.();
+    const previousIndex = filterDefinitions.findIndex(([filter]) => filter === currentFilter);
+    const selectedIndex = filterDefinitions.findIndex(([filter]) => filter === selected);
+    const shouldAnimate =
+      animate && selected !== currentFilter && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const outgoing = shouldAnimate ? (content.cloneNode(true) as HTMLElement) : undefined;
+    const previousScrollTop = layer.scrollTop;
     currentFilter = selected;
     for (const [filter, button] of filterButtons) button.setAttribute("aria-pressed", String(filter === selected));
     for (const [timeBand, section] of sections) section.hidden = selected !== "all" && selected !== timeBand;
@@ -276,11 +288,40 @@ export function createCollectionLayer(state: GameState): CollectionLayer {
       if (bounds.left < viewport.left) filters.scrollLeft += bounds.left - viewport.left;
       else if (bounds.right > viewport.right) filters.scrollLeft += bounds.right - viewport.right;
     }
+    if (!outgoing) return;
+
+    // 旧表示は見えていた位置を保つ。操作・読み上げ対象は新表示だけにする。
+    const snapshot = document.createElement("div");
+    snapshot.className = "collection-transition";
+    snapshot.style.top = `${header.offsetHeight}px`;
+    snapshot.inert = true;
+    snapshot.setAttribute("aria-hidden", "true");
+    outgoing.style.marginTop = `-${previousScrollTop}px`;
+    snapshot.append(outgoing);
+    layer.append(snapshot);
+    const distance = content.offsetWidth * (selectedIndex > previousIndex ? 1 : -1);
+    const timing: KeyframeAnimationOptions = {
+      duration: 220,
+      easing: "cubic-bezier(0.22, 0.7, 0.3, 1)",
+      fill: "both",
+    };
+    const outgoingAnimation = outgoing.animate(
+      [{ transform: "translateX(0)" }, { transform: `translateX(${-distance}px)` }],
+      timing,
+    );
+    const incomingAnimation = content.animate(
+      [{ transform: `translateX(${distance}px)` }, { transform: "translateX(0)" }],
+      timing,
+    );
+    const finish = (): void => {
+      incomingAnimation.cancel();
+      outgoingAnimation.cancel();
+      snapshot.remove();
+      if (finishTransition === finish) finishTransition = undefined;
+    };
+    incomingAnimation.onfinish = finish;
+    finishTransition = finish;
   };
-  const filterDefinitions: ReadonlyArray<readonly [CollectionFilter, string]> = [
-    ["all", "すべて"],
-    ...TIME_BANDS.map((timeBand) => [timeBand, TIME_BAND_LABELS[timeBand]] as const),
-  ];
   for (const [filter, label] of filterDefinitions) {
     const button = document.createElement("button");
     button.className = "collection-filter";
@@ -338,5 +379,5 @@ export function createCollectionLayer(state: GameState): CollectionLayer {
 
   header.append(headerMain, filters);
   layer.append(header, content, viewer);
-  return { layer, closeButton, closeViewer, resetFilter: (now) => setFilter(getTimeBand(now)) };
+  return { layer, closeButton, closeViewer, resetFilter: (now) => setFilter(getTimeBand(now), false) };
 }
