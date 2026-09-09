@@ -173,11 +173,7 @@ button {
 }
 
 .room-speech-bubble-text {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  display: block;
   word-break: normal;
   overflow-wrap: anywhere;
 }
