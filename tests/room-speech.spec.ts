@@ -3,7 +3,6 @@ import { getRoomPresentation } from "../src/rendering/room-presentation.ts";
 import { visitFor } from "./helpers/asset-references.ts";
 import {
   resolveSpeechBubblePlacement,
-  resolveSpeechTargetBounds,
   type SpeechBubblePlacementInput,
   TOP_BAR_LIMIT,
 } from "../src/rendering/room-speech.ts";
@@ -22,25 +21,18 @@ const place = (overrides: Partial<SpeechBubblePlacementInput> = {}) =>
   resolveSpeechBubblePlacement({ ...BASE, ...overrides });
 
 describe("speech bubble placement", () => {
-  it("ignores Mimizou's transparent padding when placing a bubble above his head", () => {
+  it("places a bubble above Mimizou using the trimmed sprite's ordinary bounds", () => {
     const guest = getRoomPresentation(visitFor("watchingStars", { mimizouPresent: true })).companion;
-    if (!guest) throw new Error("みみぞうが同席していません");
-    // 高さ72、足元(100,126)で表示した144px画像。画面倍率2で頭上に置けることを確認する。
-    const bounds = resolveSpeechTargetBounds({ x: 64, y: 54, width: 72, height: 72 }, guest.speechContentBounds);
+    if (!guest || !("x" in guest)) throw new Error("みみぞうが同席していません");
+    // 余白を除いた93×97px画像を倍率2の画面へ表示する。
     const placement = place({
-      characterX: (bounds.x + bounds.width / 2) * 2,
-      characterTopY: bounds.y * 2,
-      characterWidth: bounds.width * 2,
+      characterX: guest.x * 2,
+      characterTopY: (guest.y - guest.height) * 2,
+      characterWidth: ((guest.height * 93) / 97) * 2,
     });
     expect(placement.tail).toBe("down");
     expect(placement.left + placement.tailOffset).toBe(204.5);
     expect(placement.top + BASE.bubbleHeight).toBe(129);
-  });
-
-  it("uses the whole target again when the next speaker has no content bounds", () => {
-    const bounds = { x: 10, y: 200, width: 60, height: 80 };
-    resolveSpeechTargetBounds(bounds, { x: 0.2, y: 0.2, width: 0.6, height: 0.6 });
-    expect(resolveSpeechTargetBounds(bounds)).toEqual({ x: 10, y: 200, width: 60, height: 80 });
   });
 
   it("centers the bubble above Etokichi with a downward tail", () => {

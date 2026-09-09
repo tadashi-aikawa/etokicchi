@@ -11,26 +11,6 @@ export const TOP_BAR_LIMIT = 88;
 /** セリフの表示時間 */
 export const SPEECH_DURATION_MS = 6_000;
 
-interface SpeechBounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-/** 画像全体を1とする、透明な余白を除いた本体の範囲。 */
-export type SpeechContentBounds = SpeechBounds;
-
-export function resolveSpeechTargetBounds(bounds: SpeechBounds, content?: SpeechContentBounds): SpeechBounds {
-  if (!content) return bounds;
-  return {
-    x: bounds.x + bounds.width * content.x,
-    y: bounds.y + bounds.height * content.y,
-    width: bounds.width * content.width,
-    height: bounds.height * content.height,
-  };
-}
-
 export interface SpeechBubblePlacementInput {
   /** 部屋の表示領域 */
   roomWidth: number;

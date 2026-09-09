@@ -39,10 +39,10 @@ const MIMIZOU_WINDOW_ROOM: RoomPresentationCommon = {
   ...DEFAULT_ROOM,
   visitor: {
     assetName: "mimizou-pixel.png",
-    height: 72,
+    height: 48.5,
     observation: { text: "窓の向こうから、みみぞうがこちらをのぞいている。", targetName: "みみぞう" },
-    x: 49,
-    y: 60,
+    x: 51.25,
+    y: 62.75,
   },
 };
 
@@ -185,12 +185,10 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
         ? {
             companion: {
               assetName: "mimizou-pixel.png",
-              height: 72,
+              height: 48.5,
               speech: "ホゥ……。",
-              // 144px素材の透明余白を除いた本体。拡大時も頭上へフキダシを置く。
-              speechContentBounds: { x: 30 / 144, y: 29 / 144, width: 93 / 144, height: 97 / 144 },
-              x: 100,
-              y: 126,
+              x: 102.25,
+              y: 117,
             },
           }
         : {}),
