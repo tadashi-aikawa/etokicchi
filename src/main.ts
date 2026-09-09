@@ -1,6 +1,6 @@
 import "./styles.css";
 import { countDiscoveries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
-import { getDebugSceneId, isRandomDebugMode } from "./game/debug.ts";
+import { getDebugMimizouPresent, getDebugSceneId, isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
 import { formatSlotDate, getSlotKey, millisecondsUntilNextMinute, TIME_BAND_LABELS } from "./game/time.ts";
 import type { GameState, SceneId, StateRepository, VisitView } from "./game/types.ts";
@@ -19,6 +19,7 @@ interface LaunchOptions {
   liveTime: boolean;
   debugRandom: boolean;
   debugSceneId?: SceneId;
+  debugMimizouPresent?: boolean;
 }
 
 interface ShellElements {
@@ -47,6 +48,7 @@ function getLaunchOptions(): LaunchOptions {
     liveTime: !fixedNow,
     debugRandom: isRandomDebugMode(parameters),
     debugSceneId: getDebugSceneId(parameters),
+    debugMimizouPresent: getDebugMimizouPresent(parameters),
   };
 }
 
@@ -405,6 +407,9 @@ async function bootstrap(): Promise<void> {
   };
 
   const mountVisit = async (now: Date, visit: VisitView): Promise<void> => {
+    if (visit.scene.id === "watchingStars" && options.debugMimizouPresent !== undefined) {
+      visit = { ...visit, mimizouPresent: options.debugMimizouPresent };
+    }
     currentRoom?.destroy();
     currentElements?.dispose();
     currentVisit = visit;

@@ -72,6 +72,11 @@
 
 `debug=random`と`scene`クエリを併用すると、Lock状態に関係なく指定シーンを一時表示する。`time`は指定シーンの時間帯に合わせる。
 
+夜空の同席差分は`mimizou=true`で強制表示、`mimizou=false`で非表示にできる。`debug=random`中の`watchingStars`だけに効き、みみぞうとの遭遇前でも確認できる。
+
+- [夜空・みみぞう同席](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=watchingStars&mimizou=true)
+- [夜空・みみぞう不在](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=watchingStars&mimizou=false)
+
 ## 画面と生活ルーチン
 
 - 低解像度のドット絵ワンルームをスマートフォン画面へ拡大表示する

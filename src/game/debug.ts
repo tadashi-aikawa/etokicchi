@@ -12,3 +12,9 @@ export function getDebugSceneId(parameters: URLSearchParams): SceneId | undefine
   const requested = parameters.get("scene") as SceneId | null;
   return requested && sceneIds.has(requested) ? requested : undefined;
 }
+
+export function getDebugMimizouPresent(parameters: URLSearchParams): boolean | undefined {
+  if (!isRandomDebugMode(parameters)) return undefined;
+  const requested = parameters.get("mimizou");
+  return requested === "true" ? true : requested === "false" ? false : undefined;
+}
