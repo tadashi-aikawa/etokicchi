@@ -27,7 +27,7 @@ export function createCharacterBubbleElement(
 
 export interface SpeechBubble {
   element: HTMLDivElement;
-  show: (text: string, durationMs: number) => void;
+  show: (text: string, durationMs: number, target?: Container) => void;
   destroy: () => void;
 }
 
@@ -35,7 +35,7 @@ export interface SpeechBubble {
 export function createSpeechBubble(
   app: Application,
   host: HTMLElement,
-  target: Container,
+  defaultTarget: Container,
   onVisibilityChange: (visible: boolean) => void,
 ): SpeechBubble {
   const element = document.createElement("div");
@@ -55,6 +55,7 @@ export function createSpeechBubble(
   roomResize.observe(host);
 
   let visible = false;
+  let target = defaultTarget;
   let bubbleWidth = 0;
   let bubbleHeight = 0;
   let characterTop = 0;
@@ -94,7 +95,8 @@ export function createSpeechBubble(
     onVisibilityChange(false);
   };
 
-  const show = (text: string, durationMs: number): void => {
+  const show = (text: string, durationMs: number, speaker: Container = defaultTarget): void => {
+    target = speaker;
     label.textContent = text;
     // 見かけの大きさは描画後の座標系で測る。歩行中も使えるよう、上端は基準点からの相対位置で持つ
     const bounds = target.getBounds();

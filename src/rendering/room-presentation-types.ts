@@ -18,6 +18,8 @@ export type ObservationOverrides = Partial<Record<ObservationTargetId, string>>;
 interface GuestPresentationCommon {
   assetName: string;
   height: number;
+  speech?: string;
+  observation?: { text: string; targetName: string };
 }
 
 export interface PositionedGuestPresentation extends GuestPresentationCommon {

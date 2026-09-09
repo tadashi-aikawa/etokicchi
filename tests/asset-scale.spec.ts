@@ -50,8 +50,6 @@ const PRIMARY_REQUIREMENT_SOURCES: Readonly<Record<string, string>> = {
   "etokichi-sleep-tucked-pixel.png": "sleeping の寝姿",
   // 煮込みの場面ではキッチンの手前へ大きめの丸椅子として置き直している。
   "furniture-round-stool-pixel.webp": "家具 roundStool",
-  // 星見の同席では、窓の外から覗くときより小さいみみぞうを使っている。
-  "mimizou-pixel.png": "mimizouVisit の来訪者",
   // 食卓の鉢へ向く姿だけ経路のactionScaleで1.18倍に見せている(拡大率0.59)。床の鉢は等倍。
   "etokichi-watering-directions-pixel.webp": "行動アニメ wateringPlants",
 };

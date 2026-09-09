@@ -44,6 +44,7 @@ import {
 import { createRoomLighting } from "./room-lighting-bake.ts";
 import { getRoomPresentation } from "./room-presentation.ts";
 import type { RoomCallbacks } from "./room-types.ts";
+import { SPEECH_DURATION_MS } from "./room-speech.ts";
 import { ACTION_ASSET_NAMES, ASSET_PIXEL_RATIO, ROOM_HEIGHT, ROOM_WIDTH, WALK_ASSET_NAME } from "./scene-assets.ts";
 
 // ドット絵はどの素材も等倍で出したいので、補間の既定をここで一度だけ切り替える。
@@ -124,13 +125,22 @@ export async function renderRoom(
       ? Assets.load<Texture>(`${import.meta.env.BASE_URL}assets/${presentation.tatsuoWindow.assetName}`)
       : undefined,
   ]);
+  const onGuestTap = (target: Container): void => {
+    if (guestPresentation?.speech) {
+      speechBubble.show(guestPresentation.speech, SPEECH_DURATION_MS, target);
+    } else if (guestPresentation?.observation) {
+      callbacks.onObservation(guestPresentation.observation.text, guestPresentation.observation.targetName);
+    } else {
+      callbacks.onCharacterTap();
+    }
+  };
   const companion =
     guestTexture && presentation.companion
-      ? createCompanion(guestTexture, presentation.companion, initialDepthY, sceneLayout.furniture, callbacks)
+      ? createCompanion(guestTexture, presentation.companion, initialDepthY, sceneLayout.furniture, onGuestTap)
       : undefined;
   const visitor =
     guestTexture && presentation.visitor
-      ? createVisitor(app, guestTexture, presentation.visitor, callbacks)
+      ? createVisitor(app, guestTexture, presentation.visitor, onGuestTap)
       : undefined;
   const sleeperBase =
     sleeperBaseTexture && presentation.sleeperBase

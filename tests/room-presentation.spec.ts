@@ -342,7 +342,8 @@ describe("room presentation", () => {
     expect(getRoomPresentation(visitFor("watchingStars", true))).toMatchObject({
       companion: {
         assetName: "mimizou-pixel.png",
-        height: 34,
+        height: 40,
+        speech: "ホゥ……。",
         x: 100,
         y: 126,
       },

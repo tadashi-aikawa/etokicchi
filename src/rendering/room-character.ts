@@ -300,7 +300,7 @@ export function createCompanion(
   presentation: GuestPresentation,
   sceneDepthY: number,
   furniture: FurnitureLayout,
-  callbacks: RoomCallbacks,
+  onTap: (target: Container) => void,
 ): Sprite {
   const companion = new Sprite(texture);
   companion.anchor.set(0.5, 1);
@@ -310,7 +310,7 @@ export function createCompanion(
   companion.zIndex = getDepthZIndex(resolveGuestDepthY(presentation, sceneDepthY, furniture), 45);
   companion.eventMode = "dynamic";
   companion.cursor = "pointer";
-  companion.on("pointertap", callbacks.onCharacterTap);
+  companion.on("pointertap", () => onTap(companion));
   return companion;
 }
 
@@ -318,7 +318,7 @@ export function createVisitor(
   app: Application,
   texture: Texture,
   presentation: PositionedGuestPresentation,
-  callbacks: RoomCallbacks,
+  onTap: (target: Container) => void,
 ): Container {
   const layer = new Container();
   layer.label = "windowVisitor";
@@ -333,7 +333,7 @@ export function createVisitor(
   visitor.eventMode = "none";
   visitor.hitArea = new Rectangle(-28, -28, 56, 56);
   visitor.cursor = "pointer";
-  visitor.on("pointertap", callbacks.onCharacterTap);
+  visitor.on("pointertap", () => onTap(visitor));
   const mask = new Graphics()
     .rect(WINDOW_FRAME.x, WINDOW_FRAME.y, WINDOW_FRAME.width, WINDOW_FRAME.height)
     .fill(0xffffff);
