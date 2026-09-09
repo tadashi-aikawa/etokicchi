@@ -119,7 +119,7 @@ const TARGETS = [
     kernel: "nearest",
     note: "抱きしめ 71×52(原素材が既に2倍)",
   },
-  { name: "mimizou-pixel.png", width: 80, height: 80, kernel: "lanczos", note: "みみぞう 40×40" },
+  { name: "mimizou-pixel.png", width: 144, height: 144, kernel: "nearest", note: "みみぞう 72×72" },
   { name: "tatsuo-sleeping-pixel.png", width: 112, height: 160, kernel: "nearest", note: "眠るタツヲ 56×80" },
   { name: "tatsuo-awake-pixel-v2.png", width: 180, height: 160, kernel: "nearest", note: "起こしにくるタツヲ 90×80" },
   {

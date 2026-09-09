@@ -304,7 +304,7 @@ export function createCompanion(
 ): Sprite {
   const companion = new Sprite(texture);
   companion.anchor.set(0.5, 1);
-  companion.scale.set((presentation.height * (presentation.displayScale ?? 1)) / texture.height);
+  companion.scale.set(presentation.height / texture.height);
   const position = resolveGuestPosition(presentation, furniture);
   companion.position.set(position.x, position.y);
   companion.zIndex = getDepthZIndex(resolveGuestDepthY(presentation, sceneDepthY, furniture), 45);
@@ -325,7 +325,7 @@ export function createVisitor(
   const visitor = new Container();
   const sprite = new Sprite(texture);
   sprite.anchor.set(0.5);
-  sprite.scale.set((presentation.height * (presentation.displayScale ?? 1)) / texture.height);
+  sprite.scale.set(presentation.height / texture.height);
   sprite.tint = 0x8791ad;
   visitor.addChild(sprite);
   visitor.position.set(presentation.x, presentation.y + 8);

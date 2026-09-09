@@ -194,7 +194,7 @@ describe("room presentation", () => {
     expect(getRoomPresentation(visitFor("mimizouVisit"))).toMatchObject({
       visitor: {
         assetName: "mimizou-pixel.png",
-        height: 40,
+        height: 72,
         x: 49,
         y: 60,
       },
@@ -316,7 +316,7 @@ describe("room presentation", () => {
     expect(getRoomPresentation(visitFor("mimizouFarewell"))).toMatchObject({
       visitor: {
         assetName: "mimizou-pixel.png",
-        height: 40,
+        height: 72,
         x: 49,
         y: 60,
       },
@@ -342,7 +342,7 @@ describe("room presentation", () => {
     expect(getRoomPresentation(visitFor("watchingStars", true))).toMatchObject({
       companion: {
         assetName: "mimizou-pixel.png",
-        height: 40,
+        height: 72,
         speech: "ホゥ……。",
         x: 100,
         y: 126,
