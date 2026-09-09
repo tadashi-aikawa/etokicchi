@@ -1,6 +1,6 @@
 import type { Application, Container } from "pixi.js";
 import type { CharacterBubblePresentation } from "./room-presentation-types.ts";
-import { resolveSpeechBubblePlacement } from "./room-speech.ts";
+import { resolveSpeechBubblePlacement, resolveSpeechTargetBounds, type SpeechContentBounds } from "./room-speech.ts";
 import { ROOM_HEIGHT, ROOM_WIDTH } from "./scene-assets.ts";
 
 /** シーンに固定で出るフキダシ。エトキチの現在位置へ毎フレーム追随する。 */
@@ -27,7 +27,7 @@ export function createCharacterBubbleElement(
 
 export interface SpeechBubble {
   element: HTMLDivElement;
-  show: (text: string, durationMs: number, target?: Container) => void;
+  show: (text: string, durationMs: number, target?: Container, contentBounds?: SpeechContentBounds) => void;
   destroy: () => void;
 }
 
@@ -59,6 +59,7 @@ export function createSpeechBubble(
   let bubbleWidth = 0;
   let bubbleHeight = 0;
   let characterTop = 0;
+  let characterCenter = 0;
   let characterWidth = 0;
   let tailSide = "";
   let timerId: number | undefined;
@@ -70,7 +71,7 @@ export function createSpeechBubble(
     const placement = resolveSpeechBubblePlacement({
       roomWidth,
       roomHeight,
-      characterX: target.x * scaleX,
+      characterX: (target.x + characterCenter) * scaleX,
       characterTopY: (target.y + characterTop) * scaleY,
       characterWidth: characterWidth * scaleX,
       bubbleWidth,
@@ -95,11 +96,17 @@ export function createSpeechBubble(
     onVisibilityChange(false);
   };
 
-  const show = (text: string, durationMs: number, speaker: Container = defaultTarget): void => {
+  const show = (
+    text: string,
+    durationMs: number,
+    speaker: Container = defaultTarget,
+    contentBounds?: SpeechContentBounds,
+  ): void => {
     target = speaker;
     label.textContent = text;
     // 見かけの大きさは描画後の座標系で測る。歩行中も使えるよう、上端は基準点からの相対位置で持つ
-    const bounds = target.getBounds();
+    const bounds = resolveSpeechTargetBounds(target.getBounds(), contentBounds);
+    characterCenter = contentBounds ? bounds.x + bounds.width / 2 - target.x : 0;
     characterTop = bounds.y - target.y;
     characterWidth = bounds.width;
     roomWidth = host.clientWidth;

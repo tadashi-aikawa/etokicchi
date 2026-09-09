@@ -187,6 +187,8 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
               assetName: "mimizou-pixel.png",
               height: 72,
               speech: "ホゥ……。",
+              // 144px素材の透明余白を除いた本体。拡大時も頭上へフキダシを置く。
+              speechContentBounds: { x: 30 / 144, y: 29 / 144, width: 93 / 144, height: 97 / 144 },
               x: 100,
               y: 126,
             },

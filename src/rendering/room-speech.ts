@@ -11,6 +11,26 @@ export const TOP_BAR_LIMIT = 88;
 /** セリフの表示時間 */
 export const SPEECH_DURATION_MS = 6_000;
 
+interface SpeechBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** 画像全体を1とする、透明な余白を除いた本体の範囲。 */
+export type SpeechContentBounds = SpeechBounds;
+
+export function resolveSpeechTargetBounds(bounds: SpeechBounds, content?: SpeechContentBounds): SpeechBounds {
+  if (!content) return bounds;
+  return {
+    x: bounds.x + bounds.width * content.x,
+    y: bounds.y + bounds.height * content.y,
+    width: bounds.width * content.width,
+    height: bounds.height * content.height,
+  };
+}
+
 export interface SpeechBubblePlacementInput {
   /** 部屋の表示領域 */
   roomWidth: number;
@@ -48,7 +68,7 @@ function clampTail(value: number, length: number): number {
 
 /**
  * エトキチの頭上へフキダシを置く。左右がはみ出すときは内側へ寄せてしっぽだけを頭上へ残し、
- * 上端がトップバーへ食い込むときはエトキチの左右で空いている側へ逃がす。
+ * 上端がトップバーへ食い込むときは、右側を優先して収まる側へ逃がす。
  */
 export function resolveSpeechBubblePlacement(input: SpeechBubblePlacementInput): SpeechBubblePlacement {
   const { roomWidth, roomHeight, characterX, characterTopY, characterWidth, bubbleWidth, bubbleHeight } = input;
@@ -65,7 +85,10 @@ export function resolveSpeechBubblePlacement(input: SpeechBubblePlacementInput):
   const halfWidth = characterWidth / 2;
   const rightEdge = characterX + halfWidth + CHARACTER_GAP;
   const leftEdge = characterX - halfWidth - CHARACTER_GAP;
-  const putsRight = roomWidth - ROOM_MARGIN - rightEdge >= leftEdge - ROOM_MARGIN;
+  const rightSpace = roomWidth - ROOM_MARGIN - rightEdge;
+  const leftSpace = leftEdge - ROOM_MARGIN;
+  // 右側に収まるならそちらへ置く。両側とも足りない場合だけ、広い側へ寄せる。
+  const putsRight = rightSpace >= bubbleWidth || (leftSpace < bubbleWidth && rightSpace >= leftSpace);
   const left = clamp(putsRight ? rightEdge : leftEdge - bubbleWidth, minLeft, maxLeft);
   const top = clamp(characterTopY, topLimit, Math.max(topLimit, roomHeight - ROOM_MARGIN - bubbleHeight));
   return {

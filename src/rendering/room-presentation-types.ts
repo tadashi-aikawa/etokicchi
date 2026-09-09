@@ -1,6 +1,7 @@
 import type { FurnitureId, Point } from "./room-furniture.ts";
 import type { FixtureHotspotId, FixtureId } from "./room-fixtures.ts";
 import type { RoomDepthDecorationId, RoomDepthDecorationOverride } from "./room-decor.ts";
+import type { SpeechContentBounds } from "./room-speech.ts";
 
 // 部屋の描画定義の型。シーン定義(content/scene-presentations.ts)と描画側の両方から読むので、
 // 値と手続きを持つ room-presentation.ts から型だけを切り離してある。
@@ -19,6 +20,7 @@ interface GuestPresentationCommon {
   assetName: string;
   height: number;
   speech?: string;
+  speechContentBounds?: SpeechContentBounds;
   observation?: { text: string; targetName: string };
 }
 

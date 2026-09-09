@@ -127,7 +127,7 @@ export async function renderRoom(
   ]);
   const onGuestTap = (target: Container): void => {
     if (guestPresentation?.speech) {
-      speechBubble.show(guestPresentation.speech, SPEECH_DURATION_MS, target);
+      speechBubble.show(guestPresentation.speech, SPEECH_DURATION_MS, target, guestPresentation.speechContentBounds);
     } else if (guestPresentation?.observation) {
       callbacks.onObservation(guestPresentation.observation.text, guestPresentation.observation.targetName);
     } else {
