@@ -40,7 +40,7 @@ const MIMIZOU_WINDOW_ROOM: RoomPresentationCommon = {
   visitor: {
     assetName: "mimizou-pixel.png",
     height: 40,
-    displayScale: 1.2,
+    displayScale: 1.8,
     observation: { text: "窓の向こうから、みみぞうがこちらをのぞいている。", targetName: "みみぞう" },
     x: 49,
     y: 60,
@@ -187,7 +187,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
             companion: {
               assetName: "mimizou-pixel.png",
               height: 40,
-              displayScale: 1.2,
+              displayScale: 1.8,
               speech: "ホゥ……。",
               x: 100,
               y: 126,
