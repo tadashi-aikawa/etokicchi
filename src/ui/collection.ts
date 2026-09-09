@@ -4,13 +4,14 @@ import {
   getCollectionEntries,
   type CollectionEntry,
 } from "../game/collection.ts";
-import { TIME_BAND_LABELS, TIME_BANDS } from "../game/time.ts";
+import { getTimeBand, TIME_BAND_LABELS, TIME_BANDS } from "../game/time.ts";
 import type { GameState, TimeBand } from "../game/types.ts";
 
 export interface CollectionLayer {
   layer: HTMLElement;
   closeButton: HTMLButtonElement;
   closeViewer: (restoreFocus?: boolean) => boolean;
+  resetFilter: (now: Date) => void;
 }
 
 type CollectionFilter = "all" | TimeBand;
@@ -262,9 +263,19 @@ export function createCollectionLayer(state: GameState): CollectionLayer {
   }
 
   const filterButtons = new Map<CollectionFilter, HTMLButtonElement>();
+  let currentFilter: CollectionFilter = "all";
   const setFilter = (selected: CollectionFilter): void => {
+    currentFilter = selected;
     for (const [filter, button] of filterButtons) button.setAttribute("aria-pressed", String(filter === selected));
     for (const [timeBand, section] of sections) section.hidden = selected !== "all" && selected !== timeBand;
+    layer.scrollTop = 0;
+    const button = filterButtons.get(selected);
+    if (button) {
+      const bounds = button.getBoundingClientRect();
+      const viewport = filters.getBoundingClientRect();
+      if (bounds.left < viewport.left) filters.scrollLeft += bounds.left - viewport.left;
+      else if (bounds.right > viewport.right) filters.scrollLeft += bounds.right - viewport.right;
+    }
   };
   const filterDefinitions: ReadonlyArray<readonly [CollectionFilter, string]> = [
     ["all", "すべて"],
@@ -281,7 +292,51 @@ export function createCollectionLayer(state: GameState): CollectionLayer {
     filterButtons.set(filter, button);
   }
 
+  let gesture: { id: number; x: number; y: number } | undefined;
+  let suppressClickUntil = 0;
+  content.addEventListener("pointerdown", (event) => {
+    suppressClickUntil = 0;
+    if (event.pointerType !== "touch" || !event.isPrimary) {
+      gesture = undefined;
+      return;
+    }
+    gesture = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  });
+  content.addEventListener("pointermove", (event) => {
+    if (!gesture || gesture.id !== event.pointerId) return;
+    const dx = event.clientX - gesture.x;
+    const dy = event.clientY - gesture.y;
+    // 縦スクロールを始めた指は、途中で斜めに動いてもタブ操作に変えない。
+    if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) gesture = undefined;
+  });
+  content.addEventListener("pointercancel", () => {
+    gesture = undefined;
+  });
+  content.addEventListener("pointerup", (event) => {
+    const start = gesture;
+    gesture = undefined;
+    if (!start || start.id !== event.pointerId) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    // スワイプ終端で発生するclickが発見済みカードを開くのを防ぐ。
+    suppressClickUntil = performance.now() + 500;
+    const index = filterDefinitions.findIndex(([filter]) => filter === currentFilter);
+    const next = filterDefinitions[index + (dx < 0 ? 1 : -1)];
+    if (next) setFilter(next[0]);
+  });
+  content.addEventListener(
+    "click",
+    (event) => {
+      if (event.detail !== 0 && performance.now() < suppressClickUntil) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    },
+    true,
+  );
+
   header.append(headerMain, filters);
   layer.append(header, content, viewer);
-  return { layer, closeButton, closeViewer };
+  return { layer, closeButton, closeViewer, resetFilter: (now) => setFilter(getTimeBand(now)) };
 }

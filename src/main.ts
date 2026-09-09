@@ -1,4 +1,5 @@
 import "./styles.css";
+import { UPDATES } from "./content/updates.ts";
 import { countDiscoveries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
 import { getDebugMimizouPresent, getDebugSceneId, isRandomDebugMode } from "./game/debug.ts";
 import { applyInteraction, createInitialState, pruneOldSlots, resolveVisit } from "./game/state.ts";
@@ -12,6 +13,8 @@ import {
 import { renderRoom, type RenderedRoom } from "./rendering/room.ts";
 import { SPEECH_DURATION_MS } from "./rendering/room-speech.ts";
 import { createCollectionLayer } from "./ui/collection.ts";
+import { createUpdatesLayer } from "./ui/updates.ts";
+import { updateReadState } from "./persistence/update-read-state.ts";
 import { resolveRoomViewport } from "./ui/viewport.ts";
 
 interface LaunchOptions {
@@ -129,9 +132,23 @@ function createShell(
   collectionButton.type = "button";
   collectionButton.textContent = `図鑑 ${countDiscoveries(state.discoveries)}/${SCENE_COUNT}`;
   collectionButton.setAttribute("aria-haspopup", "dialog");
+  const updatesButton = document.createElement("button");
+  updatesButton.className = "collection-button updates-button";
+  updatesButton.type = "button";
+  updatesButton.setAttribute("aria-haspopup", "dialog");
+  updatesButton.append("更新履歴");
+  const unreadBadge = document.createElement("span");
+  unreadBadge.className = "updates-unread";
+  unreadBadge.textContent = "新着";
+  const latestUpdate = UPDATES[0];
+  unreadBadge.hidden = !latestUpdate || !updateReadState.isUnread(latestUpdate.id);
+  updatesButton.append(unreadBadge);
+  const menuActions = document.createElement("div");
+  menuActions.className = "top-menu-actions";
+  menuActions.append(collectionButton, updatesButton);
   const topMenu = document.createElement("div");
   topMenu.className = "top-menu";
-  topMenu.append(brand, collectionButton);
+  topMenu.append(brand, menuActions);
 
   const clock = document.createElement("div");
   clock.className = "clock";
@@ -259,6 +276,8 @@ function createShell(
   sheetLayer.append(scrim, sheet);
 
   const collection = createCollectionLayer(state);
+  const updates = createUpdatesLayer();
+  let currentNow = now;
 
   const toast = document.createElement("div");
   toast.className = "toast";
@@ -278,6 +297,7 @@ function createShell(
     sheetLayer.hidden = true;
     shell.classList.remove("sheet-open");
     collection.layer.hidden = false;
+    collection.resetFilter(currentNow);
     focusWithoutScroll(collection.closeButton);
   };
   const closeCollection = (): void => {
@@ -285,13 +305,37 @@ function createShell(
     collection.layer.hidden = true;
     focusWithoutScroll(collectionButton);
   };
+  const setRoomInert = (inert: boolean): void => {
+    for (const element of [roomHost, topBar, hud, sheetLayer, collection.layer]) element.inert = inert;
+  };
+  const openUpdates = (): void => {
+    sheetLayer.hidden = true;
+    shell.classList.remove("sheet-open");
+    updates.layer.hidden = false;
+    updates.layer.scrollTop = 0;
+    setRoomInert(true);
+    if (latestUpdate) updateReadState.markRead(latestUpdate.id);
+    unreadBadge.hidden = true;
+    focusWithoutScroll(updates.closeButton);
+  };
+  const closeUpdates = (): void => {
+    updates.layer.hidden = true;
+    setRoomInert(false);
+    focusWithoutScroll(updatesButton);
+  };
   openButton.addEventListener("click", openSheet);
   closeButton.addEventListener("click", closeSheet);
   scrim.addEventListener("click", closeSheet);
   collectionButton.addEventListener("click", openCollection);
   collection.closeButton.addEventListener("click", closeCollection);
+  updatesButton.addEventListener("click", openUpdates);
+  updates.closeButton.addEventListener("click", closeUpdates);
   const handleKeydown = (event: KeyboardEvent): void => {
     if (event.key !== "Escape") return;
+    if (!updates.layer.hidden) {
+      closeUpdates();
+      return;
+    }
     if (collection.closeViewer()) return;
     if (!collection.layer.hidden) closeCollection();
     else if (!sheetLayer.hidden) closeSheet();
@@ -299,13 +343,14 @@ function createShell(
   document.addEventListener("keydown", handleKeydown);
 
   const updateClock = (nextNow: Date): void => {
+    currentNow = nextNow;
     dateLabel.textContent = formatDateLabel(nextNow);
     time.dateTime = nextNow.toISOString();
     time.textContent = formatClock(nextNow);
   };
   updateClock(now);
 
-  shell.append(roomHost, topBar, hud, sheetLayer, collection.layer, toast);
+  shell.append(roomHost, topBar, hud, sheetLayer, collection.layer, updates.layer, toast);
   root.replaceChildren(shell);
   return {
     roomHost,
