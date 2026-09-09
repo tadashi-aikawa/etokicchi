@@ -12,10 +12,10 @@ export interface WindowPane {
   width: number;
 }
 
-/** 窓枠の外形。窓レイヤーのマスクとタップ判定、窓辺の訪問者のマスクに使う */
+/** 窓枠の外形。窓レイヤーのマスクとタップ判定に使う */
 export const WINDOW_FRAME: WindowRect = { x: 22, y: 25, width: 56, height: 54 };
 
-/** 窓枠の内側のガラス。雨粒と窓のタツヲのマスクに使う */
+/** 窓枠の内側のガラス。雨粒・窓のタツヲ・みみぞうのマスクに使う。カーテンには重ねない */
 export const WINDOW_GLASS: WindowRect = { x: 34, y: 29, width: 34, height: 47 };
 
 const LEFT_PANE: WindowPane = { x: 34, width: 15 };

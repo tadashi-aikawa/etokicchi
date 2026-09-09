@@ -31,7 +31,7 @@ import {
   WALK_FRAME_HEIGHT,
   WALK_FRAME_ROWS,
 } from "./scene-assets.ts";
-import { WINDOW_FRAME } from "./window-geometry.ts";
+import { WINDOW_GLASS } from "./window-geometry.ts";
 
 const WALK_SPEED = 19;
 
@@ -331,11 +331,17 @@ export function createVisitor(
   visitor.position.set(presentation.x, presentation.y + 8);
   visitor.alpha = 0;
   visitor.eventMode = "none";
-  visitor.hitArea = new Rectangle(-28, -28, 56, 56);
+  const hitArea = new Rectangle(
+    WINDOW_GLASS.x - visitor.x,
+    WINDOW_GLASS.y - visitor.y,
+    WINDOW_GLASS.width,
+    WINDOW_GLASS.height,
+  );
+  visitor.hitArea = hitArea;
   visitor.cursor = "pointer";
   visitor.on("pointertap", () => onTap(visitor));
   const mask = new Graphics()
-    .rect(WINDOW_FRAME.x, WINDOW_FRAME.y, WINDOW_FRAME.width, WINDOW_FRAME.height)
+    .rect(WINDOW_GLASS.x, WINDOW_GLASS.y, WINDOW_GLASS.width, WINDOW_GLASS.height)
     .fill(0xffffff);
   visitor.mask = mask;
   layer.addChild(visitor, mask);
@@ -346,6 +352,7 @@ export function createVisitor(
     const frame = getMimizouVisitFrame(elapsed);
     visitor.alpha = frame.visitorVisibility;
     visitor.y = presentation.y + frame.visitorYOffset;
+    hitArea.y = WINDOW_GLASS.y - visitor.y;
     visitor.eventMode = frame.visitorInteractive ? "dynamic" : "none";
   });
 
