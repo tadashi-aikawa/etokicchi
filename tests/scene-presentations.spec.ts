@@ -471,7 +471,7 @@ describe("values derived from the scene presentation table", () => {
             {
               "destination": {
                 "type": "point",
-                "x": 58,
+                "x": 88,
                 "y": 340,
               },
               "pauseMs": 5000,

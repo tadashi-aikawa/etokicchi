@@ -475,12 +475,12 @@ describe("room presentation", () => {
     expect(getRoomPresentation(visitFor("nappingOnMaineCoon"))).toMatchObject({
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
       sleeperHeight: 72,
-      sleeperRotation: Math.PI / 3,
+      sleeperRotation: 0,
       sleeperBreathing: "alternating",
       sleeperBase: {
         assetName: "maine-coon-pillow-pixel.webp",
         height: 32,
-        offset: { x: 52, y: -18 },
+        offset: { x: 10, y: -34 },
       },
       hiddenDepthDecorationIds: ["maineCoon"],
     });
