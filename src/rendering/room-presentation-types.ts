@@ -18,6 +18,8 @@ export type ObservationOverrides = Partial<Record<ObservationTargetId, string>>;
 interface GuestPresentationCommon {
   assetName: string;
   height: number;
+  /** 素材の基準寸法を保ったまま、画面上で意図的に拡大する倍率。 */
+  displayScale?: number;
   speech?: string;
   observation?: { text: string; targetName: string };
 }
