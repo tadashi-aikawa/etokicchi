@@ -245,11 +245,10 @@ describe("values derived from the scene presentation table", () => {
           "movement": "nonWalking",
           "waypoints": [
             {
-              "action": true,
               "destination": {
                 "type": "point",
-                "x": 117,
-                "y": 194,
+                "x": 88,
+                "y": 197,
               },
               "pauseMs": 5000,
             },
@@ -864,7 +863,6 @@ describe("values derived from the scene presentation table", () => {
       morningTea: "etokichi-morning-tea-pixel.webp",
       brushingMaineCoon: "etokichi-brushing-maine-coon-pixel.webp",
       foundOldToy: "etokichi-old-toy-pixel.webp",
-      masaruSunbeam: "etokichi-with-masaru-pixel.webp",
       wateringPlants: "etokichi-watering-directions-pixel.webp",
       muddyReturn: "etokichi-muddy-return-pixel.webp",
       simmeringDinner: "etokichi-watching-pot-up-right-pixel.webp",

@@ -115,7 +115,7 @@ export interface RoomPresentationCommon {
   sleeperAssetName: string;
   sleeperHeight: number;
   sleeperRotation?: number;
-  sleeperBreathing?: "smooth" | "subtle" | "alternating";
+  sleeperBreathing?: "smooth" | "subtle" | "alternating" | "none";
   sleeperBase?: {
     assetName: string;
     height: number;

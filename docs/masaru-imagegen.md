@@ -1,35 +1,26 @@
 # マサル「ひなたを半分こ」の画像制作
 
-組み込みimagegenで制作した。写真の左の犬を外見の参照とし、右のフクロウは登場させない。マサルの茶白の毛並み、白い口元、巻きしっぽ、赤い首輪を保持する。エトキチは星形の輪郭と腰から左右へ張り出す金色の輪っかを全コマで確認する。
+組み込みimagegenで制作した、最初から二人が寄り添って眠る一枚絵。マサルの茶白の毛並み、白い口元、巻きしっぽ、赤い首輪、エトキチの星形と腰の輪っかを保持する。
 
-- マサル原画: `assets-src/masaru-sunbeam-pixel.webp`
-- エトキチ原画: `assets-src/etokichi-with-masaru-pixel.webp`
-- 部屋用: `public/assets/masaru-sunbeam-pixel.webp`、`public/assets/etokichi-with-masaru-pixel.webp`
+- 原画: `assets-src/etokichi-masaru-sleep-pixel.webp`
+- 部屋用: `public/assets/etokichi-masaru-sleep-pixel.webp`
 - 図鑑: `public/assets/collection/masaru-sunbeam.webp`
 
-部屋用は各360×120、横3コマ、1コマの論理サイズ60×60。図鑑は512×512。原画の機械変換は `pnpm assets:normalize`、図鑑はcwebpのlossless変換を使用した。
+部屋用は216×144、論理108×72。図鑑は512×512。原画からの機械変換は `pnpm assets:normalize` を使う。部屋用の縮小は周囲の素材と同じLanczosにし、描画時はnearestでゲーム全体のドットを揃える。
 
-マサルへの透過指定はアルファを持たない市松模様になったため、画像ツールで背景だけをマゼンタに直した。エトキチも同じ単色背景に統一し、既存のGPU透過処理を `chroma-key-texture.ts` へ改名して共有する。生成時に一度だけ透過へ焼き込み、部屋の破棄時に解放する。
+初版の3コマは太い輪郭と大きなドットで生成し、nearestで縮小したため、家具やクーンちゃんより粗く見えた。細かな毛並みと控えめな輪郭で寝姿を再制作し、旧3コマと18秒の動きを撤去した。位置・姿・大きさは変化させない。
 
-## マサルの3コマ
+原画の背景はマゼンタ。 `chroma-key-texture.ts` で部屋生成時に一度だけ透過へ焼き込み、部屋の破棄時に解放する。
 
-```text
-Use case: stylized-concept. Game pixel art sprite sheet, wide 3:1 canvas with exactly THREE equal square cells in one row. Image 1 references ONLY the dog on the LEFT, Masaru: plush-like tan-and-white Akita dog, triangular ears, white forehead blaze and muzzle, black small eyes and nose, white chest and paws, curled fluffy tail, red collar. Ignore owl entirely. Image 2 reference for crisp chunky outlined pixel art style only. Draw ONLY Masaru in all three cells, three-quarter facing RIGHT toward a friend offscreen. Same scale and bottom baseline, dog occupies 80 percent cell width and 70 percent height. Frame 1 sits upright looking gently right, slightly shifted toward left to make space. Frame 2 lying comfortably belly down, forepaws forward, gentle half-closed eyes, looking right. Frame 3 same lying position, fully sleepy closed eyes and relaxed head resting lower on paws, curled tail visible. Maintain tan white markings and red collar in ALL frames. True transparent alpha background, no checkerboard, no furniture, no floor, no text, no symbols, no props. Full silhouette padding inside each equal cell.
-```
+## 寝姿のプロンプト
 
-## 背景の修正
+参照1は図鑑画像の二人の外見と寄り添う構図、参照2は `decor-cat-loaf-pixel.webp` の画風と粒度。
 
 ```text
-Use case: precise-object-edit. Keep all three Masaru dog sprites EXACTLY as reference, same canvas and equal three-cell layout, poses, markings, scale, red collars and pixel edges. Replace ONLY the entire gray checkerboard backing with uniform pure solid #ff00ff magenta. No checkerboard remaining, no gradients or shadows on background. Do not change dog pixels. This is a chroma-key sprite sheet.
+Use case: stylized-concept. Create ONE stationary game sprite showing BOTH friends already sleeping cuddled together. Reference 1 identifies Masaru the tan and white dog and Etokichi the yellow five-point star, and their close sleeping composition. Reference 2 is the EXACT desired fine detailed game pixel-art rendering density and subtle brown contour style, NOT a character to add. Render at same refined pixel art fidelity as reference 2: small fine pixels, delicate fur shading, thin nuanced brown contours, avoid chunky black stair-step outline or large pixel blocks. Masaru on LEFT lies belly down with eyes fully CLOSED, cream white muzzle and paws, tan fur, triangular ears, curled fluffy tail, RED collar. Etokichi on RIGHT sleeps with eyes fully CLOSED and a small closed relaxed smile, head leaning against Masaru's shoulder; preserve yellow FIVE POINT STAR silhouette, pink cheeks, small yellow hands and feet, thin golden Saturn-like oval WAIST RING extending beyond both sides of body. No open mouth or wide smile. They TOUCH naturally and are already asleep; no animation frames, no panels, no grid. One coherent full-body pair, 3:2 wide canvas, comfortable padding, whole pair occupies 88 percent width and 85 percent height, feet baseline consistent, subtle 3/4 elevated RPG view. No room, furniture, cushion, floor, cast shadow, text, letters, Z symbols or other characters. Background absolutely flat pure solid #ff00ff magenta for chroma key, no checkerboard or texture. Don't put magenta into the characters. Do not imitate the coarse outline of reference 1, use fine rendering of reference 2.
 ```
 
-## エトキチの3コマ
-
-```text
-Use case: stylized-concept. Create NEW Etokichi pixel art reaction sprite sheet. Wide 3:1 canvas, exactly THREE equal square cells in one horizontal row. Reference image only defines exact character identity: yellow FIVE POINT STAR shaped head/body, black eyes, pink orange cheeks, tiny yellow arms and feet, thin golden oval SATURN WAIST RING extending beyond both sides of lower body. Ring MUST be visible in ALL three cells; NOT halo above head, NOT belt. Etokichi seated on floor, three-quarter facing LEFT to dog friend offscreen. Frame 1: sitting upright smiling softly at friend, hands resting by legs. Frame 2: seated, relaxed, gently leaning left toward friend, eyes half closed. Frame 3: same seat, closed eyes with head nodding sleepily, hands relaxed. EMPTY HANDS. Keep same size and bottom baseline, 80 percent cell height, ample padding. Crisp chunky restrained pixel shading dark brown outlines as reference. Background flat solid pure #ff00ff magenta for chroma key, absolutely no checkerboard. No dog, owl, furniture, floor, books, accessories, text, symbols, speech bubbles.
-```
-
-## 図鑑イラスト
+## 図鑑イラストのプロンプト
 
 ```text
 Use case: illustration-story. Square collectible pixel art illustration for cozy room game, no text. Image 1 references ONLY LEFT dog Masaru: tan white Akita-like plush dog, white face muzzle chest paws, triangular ears, curled fluffy tail, RED collar. Do not include owl. Image 2 defines exact Etokichi yellow FIVE POINT STAR character, orange pink cheeks, tiny yellow limbs and thin golden oval SATURN WAIST RING extending outside both sides of torso; must visibly preserve waist ring. Image 3 room mood reference only; replace its book-reading action with requested moment. Scene: warm midday sun streams from a wooden window into a cozy wooden-floor room. Masaru is lying belly down on LEFT, closed gentle eyes, forepaws extended. Etokichi sits RIGHT closely beside Masaru, leaning slightly against fluffy shoulder, closed sleepy smiling eyes. They share one broad patch of sunshine, feeling safe and peaceful. Both full bodies readable, roughly equal importance, characters central foreground. Soft green cushion under Etokichi optional, no book, no toy, no food, no other characters, no speech bubbles, no Z symbols. Crisp coherent chunky pixel art with dark outlines and restrained warm shading. Warm green curtains, bookshelf in background, enough breathing space. Ring around waist, NOT halo.
@@ -37,4 +28,4 @@ Use case: illustration-story. Square collectible pixel art illustration for cozy
 
 ## 描画の参照資料
 
-- [PixiJS AnimatedSprite](https://pixijs.download/release/docs/scene.AnimatedSprite.html): フレーム停止・選択と破棄を確認。Context7ではPixiJS本体の該当資料を取得できなかったため、公式APIと導入済みの型定義を参照した。
+- [PixiJS FederatedMouseEvent](https://pixijs.download/release/docs/events.FederatedMouseEvent.html): 一枚絵のローカル座標で左右のキャラへのタップを分ける。

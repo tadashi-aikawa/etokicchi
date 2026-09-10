@@ -268,10 +268,13 @@ export const SCENES: readonly SceneDefinition[] = [
     id: "masaruSunbeam",
     band: "daytime",
     title: "ひなたを半分こ",
-    description: "マサルが日だまりの隣を空けてくれた。寄り添ううちに、二人ともまぶたが重くなる。",
-    lines: ["ぼくの分も、空けてくれたの？", "マサル、あったかいねえ……", "むにゃ……ひなた、半分こだね……"],
-    details: ["マサルの巻きしっぽが、ゆっくり落ち着いていく", "二人の足元に、窓から同じ日だまりが伸びている"],
-    characterPose: "active",
+    description: "日だまりの中で、マサルとエトキチがぴったり寄り添って眠っている。",
+    lines: ["むにゃ……マサル、あったかい……", "すー……すー……ひなた、半分こ……"],
+    details: [
+      "マサルのふわふわの体に、エトキチがそっと寄りかかっている",
+      "二人の足元に、窓から同じ日だまりが伸びている",
+    ],
+    characterPose: "sleep",
     accent: "#c89853",
   },
   {

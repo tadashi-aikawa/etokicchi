@@ -266,7 +266,7 @@ export function createSleeper(
   depthY: number,
   height: number,
   callbacks: RoomCallbacks,
-  breathing: "smooth" | "subtle" | "alternating" = "smooth",
+  breathing: "smooth" | "subtle" | "alternating" | "none" = "smooth",
   rotation = 0,
 ): Sprite {
   const sleeper = new Sprite(texture);
@@ -278,6 +278,8 @@ export function createSleeper(
   sleeper.eventMode = "dynamic";
   sleeper.cursor = "pointer";
   sleeper.on("pointertap", callbacks.onCharacterTap);
+
+  if (breathing === "none") return sleeper;
 
   const baseScaleX = sleeper.scale.x;
   const baseScaleY = sleeper.scale.y;
