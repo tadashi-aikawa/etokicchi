@@ -610,6 +610,49 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       ],
     },
   },
+  sunagimoGrill: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: point(146, 284), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-breakfast-pixel.webp" },
+    observations: {
+      stove: "夕食の鍋がことこと煮えている。隣ではsunagimoが串の焼き色を真剣に確かめている。",
+      diningSet: "二人分のお皿が、焼きたての串を待っている。",
+    },
+    collectionImage: "assets/collection/sunagimo-grill.webp",
+    room: {
+      ...DEFAULT_ROOM,
+      hiddenFurnitureIds: ["roundStool"],
+      companion: {
+        assetName: "sunagimo-grill-pixel.webp",
+        height: 48,
+        x: 96,
+        y: 283,
+        depth: "position",
+        animation: {
+          columns: 2,
+          rows: 2,
+          frames: [
+            { durationMs: 3000, speech: "まだ早いギモ" },
+            { durationMs: 2200, speech: "裏も確かめるギモ" },
+            { durationMs: 2000, speech: "今が食べごろギモ！" },
+            { durationMs: 3000, speech: "いっしょに食べるギモ！" },
+          ],
+        },
+      },
+      sceneProps: [
+        {
+          type: "fixture",
+          assetName: "scene-simmering-pot-pixel.webp",
+          height: 24,
+          fixtureId: "kitchenUnit",
+          offset: { x: -18, y: -54 },
+          depthOffset: -10,
+        },
+      ],
+    },
+  },
   foldingLaundry: {
     route: {
       movement: "nonWalking",

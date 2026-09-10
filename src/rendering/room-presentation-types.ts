@@ -19,6 +19,12 @@ interface GuestPresentationCommon {
   assetName: string;
   height: number;
   speech?: string;
+  /** 等間隔のセルを読書順に再生し、その姿に対応する台詞をタップ時に使う。 */
+  animation?: {
+    columns: number;
+    rows: number;
+    frames: readonly { durationMs: number; speech: string }[];
+  };
   observation?: { text: string; targetName: string };
 }
 

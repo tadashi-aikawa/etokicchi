@@ -21,6 +21,7 @@ export type SceneId =
   | "wateringPlants"
   | "muddyReturn"
   | "simmeringDinner"
+  | "sunagimoGrill"
   | "foldingLaundry"
   | "tatsuoTooComfortable"
   | "comfortingMaineCoon"

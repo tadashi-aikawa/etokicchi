@@ -144,7 +144,7 @@ function collectRequirements(): Map<string, SizeRequirement[]> {
     if (presentation.companion) {
       add(presentation.companion.assetName, {
         source: `${sceneId} の同席者`,
-        height: presentation.companion.height * ASSET_PIXEL_RATIO,
+        height: presentation.companion.height * ASSET_PIXEL_RATIO * (presentation.companion.animation?.rows ?? 1),
       });
     }
     if (presentation.visitor) {

@@ -302,9 +302,24 @@ export function createCompanion(
   furniture: FurnitureLayout,
   onTap: (target: Container) => void,
 ): Sprite {
-  const companion = new Sprite(texture);
+  const animation = presentation.animation;
+  const frames = animation ? createGridFrames(texture, animation.columns, animation.rows).flat() : [];
+  if (animation && animation.frames.length !== frames.length) throw new Error("同席者のコマ数と台詞数が一致しません");
+  const companion = animation
+    ? new AnimatedSprite(
+        frames.map((frame, index) => {
+          const timing = animation.frames[index];
+          if (!timing || timing.durationMs <= 0) throw new Error("同席者のコマ時間が不正です");
+          return { texture: frame, time: timing.durationMs };
+        }),
+      )
+    : new Sprite(texture);
   companion.anchor.set(0.5, 1);
-  companion.scale.set(presentation.height / texture.height);
+  companion.scale.set(presentation.height / (frames[0]?.height ?? texture.height));
+  if (companion instanceof AnimatedSprite) companion.play();
+  companion.on("destroyed", () => {
+    for (const frame of frames) frame.destroy();
+  });
   const position = resolveGuestPosition(presentation, furniture);
   companion.position.set(position.x, position.y);
   companion.zIndex = getDepthZIndex(resolveGuestDepthY(presentation, sceneDepthY, furniture), 45);

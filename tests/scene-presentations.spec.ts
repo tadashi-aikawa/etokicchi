@@ -616,6 +616,20 @@ describe("values derived from the scene presentation table", () => {
             },
           ],
         },
+        "sunagimoGrill": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 146,
+                "y": 284,
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
         "tatsuoAtWindow": {
           "movement": "nonWalking",
           "waypoints": [
@@ -839,6 +853,7 @@ describe("values derived from the scene presentation table", () => {
       wateringPlants: "etokichi-watering-directions-pixel.webp",
       muddyReturn: "etokichi-muddy-return-pixel.webp",
       simmeringDinner: "etokichi-watching-pot-up-right-pixel.webp",
+      sunagimoGrill: "etokichi-breakfast-pixel.webp",
       foldingLaundry: "etokichi-folding-laundry-pixel.webp",
       tatsuoTooComfortable: "etokichi-troubled-pixel.webp",
       packingTomorrow: "etokichi-packing-pixel.webp",
@@ -874,6 +889,7 @@ describe("values derived from the scene presentation table", () => {
       wateringPlants: "assets/collection/watering-plants.webp",
       muddyReturn: "assets/collection/muddy-return.webp",
       simmeringDinner: "assets/collection/simmering-dinner.webp",
+      sunagimoGrill: "assets/collection/sunagimo-grill.webp",
       foldingLaundry: "assets/collection/folding-laundry.webp",
       tatsuoTooComfortable: "assets/collection/tatsuo-too-comfortable.webp",
       comfortingMaineCoon: "assets/collection/comforting-maine-coon.webp",
@@ -991,6 +1007,10 @@ describe("values derived from the scene presentation table", () => {
           "bed": "タツヲの大きな手が、ベッドの縁にそっと添えられている。",
           "bedsideTable": "枕元の水は、タツヲが持ってきてくれたものかもしれない。",
           "sofa": "タツヲにはソファーより、エトキチのそばのほうが落ち着くらしい。",
+        },
+        "sunagimoGrill": {
+          "diningSet": "二人分のお皿が、焼きたての串を待っている。",
+          "stove": "夕食の鍋がことこと煮えている。隣ではsunagimoが串の焼き色を真剣に確かめている。",
         },
         "tatsuoAtWindow": {
           "bed": "エトキチは布団を鼻まで引き上げ、窓のほうをちらちら見ている。",

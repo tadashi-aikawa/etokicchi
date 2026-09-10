@@ -28,6 +28,7 @@ const outputDir = path.join(root, "public", "assets");
 
 /** @type {readonly Target[]} */
 const TARGETS = [
+  { name: "sunagimo-grill-pixel.webp", width: 192, height: 192, kernel: "nearest", note: "sunagimo 48×48 の2列×2行" },
   // 背景と窓。room.ts が 195×347 へ引き伸ばして描く。
   { name: "room-base-empty-daytime-pixel.webp", width: 390, height: 694, kernel: "lanczos", note: "背景 195×347" },
   { name: "room-background-early-morning-pixel.webp", width: 390, height: 694, kernel: "lanczos", note: "窓 195×347" },

@@ -341,6 +341,17 @@ export const SCENES: readonly SceneDefinition[] = [
     accent: "#ca7651",
   },
   {
+    id: "sunagimoGrill",
+    band: "evening",
+    title: "焼き加減はまかせるギモ",
+    description: "夕食の支度の横で、sunagimoが串の焼き加減を真剣に見守っている。",
+    lines: ["そんなに真剣に見てると、串も緊張するキチ", "いい焼き色だね。一緒に食べるのが楽しみキチ！"],
+    details: ["串を裏返し、焼き色をじっくり確かめている", "食べごろになると目を輝かせ、エトキチに見せている"],
+    unlockRequirement: { kind: "sceneDiscovery", sceneId: "simmeringDinner" },
+    characterPose: "active",
+    accent: "#9c859f",
+  },
+  {
     id: "foldingLaundry",
     band: "evening",
     title: "洗濯物をたたんでいる",

@@ -1,6 +1,7 @@
-import { Application, Assets, Container, type Texture, TextureSource } from "pixi.js";
+import { AnimatedSprite, Application, Assets, Container, type Texture, TextureSource } from "pixi.js";
 import "pixi.js/browser";
 import type { VisitView } from "../game/types.ts";
+import { createSunagimoTexture } from "./sunagimo-texture.ts";
 import { createCharacterBubbleElement, createSpeechBubble } from "./room-bubbles.ts";
 import {
   createComfortingMaineCoon,
@@ -126,17 +127,29 @@ export async function renderRoom(
       : undefined,
   ]);
   const onGuestTap = (target: Container): void => {
-    if (guestPresentation?.speech) {
-      speechBubble.show(guestPresentation.speech, SPEECH_DURATION_MS, target);
+    const speech =
+      target instanceof AnimatedSprite
+        ? (guestPresentation?.animation?.frames[target.currentFrame]?.speech ?? guestPresentation?.speech)
+        : guestPresentation?.speech;
+    if (speech) {
+      speechBubble.show(speech, SPEECH_DURATION_MS, target);
     } else if (guestPresentation?.observation) {
       callbacks.onObservation(guestPresentation.observation.text, guestPresentation.observation.targetName);
     } else {
       callbacks.onCharacterTap();
     }
   };
+  const sunagimoTexture =
+    visit.scene.id === "sunagimoGrill" && guestTexture ? createSunagimoTexture(app, guestTexture) : undefined;
   const companion =
     guestTexture && presentation.companion
-      ? createCompanion(guestTexture, presentation.companion, initialDepthY, sceneLayout.furniture, onGuestTap)
+      ? createCompanion(
+          sunagimoTexture ?? guestTexture,
+          presentation.companion,
+          initialDepthY,
+          sceneLayout.furniture,
+          onGuestTap,
+        )
       : undefined;
   const visitor =
     guestTexture && presentation.visitor
@@ -307,6 +320,7 @@ export async function renderRoom(
       speechBubble.destroy();
       lighting.destroy();
       app.destroy({ removeView: true }, { children: true });
+      sunagimoTexture?.destroy(true);
     },
   };
 }
