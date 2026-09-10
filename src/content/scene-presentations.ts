@@ -615,7 +615,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       movement: "nonWalking",
       waypoints: [{ destination: point(146, 284), pauseMs: 5000, action: true }],
     },
-    action: { assetName: "etokichi-breakfast-pixel.webp" },
+    action: { assetName: "etokichi-watching-sunagimo-pixel.webp" },
     observations: {
       stove: "夕食の鍋がことこと煮えている。隣ではsunagimoが串の焼き色を真剣に確かめている。",
       diningSet: "二人分のお皿が、焼きたての串を待っている。",

@@ -84,6 +84,7 @@ export function createWalker(
   callbacks: RoomCallbacks,
   hideShadow: boolean,
   onWaypointArrival: (waypointIndex: number) => void,
+  getReactionFrame?: () => number,
 ): Container {
   const frames = createDirectionFrames(sheet);
   const character = new AnimatedSprite(frames.down);
@@ -169,6 +170,18 @@ export function createWalker(
     route[0]?.actionOffsetY,
     route[0]?.actionScale,
   );
+
+  if (action && getReactionFrame) {
+    // 相手の姿を基準にすることで、別々のループの周期がずれるのを防ぐ。
+    const reactionFrames = actionFrameRows[0] ?? [];
+    action.stop();
+    action.textures = reactionFrames;
+    const updateReaction = (): void => {
+      action.gotoAndStop(getReactionFrame());
+    };
+    updateReaction();
+    app.ticker.add(updateReaction);
+  }
 
   if (visit.scene.id === "mimizouVisit") {
     const baseY = actor.y;

@@ -853,7 +853,7 @@ describe("values derived from the scene presentation table", () => {
       wateringPlants: "etokichi-watering-directions-pixel.webp",
       muddyReturn: "etokichi-muddy-return-pixel.webp",
       simmeringDinner: "etokichi-watching-pot-up-right-pixel.webp",
-      sunagimoGrill: "etokichi-breakfast-pixel.webp",
+      sunagimoGrill: "etokichi-watching-sunagimo-pixel.webp",
       foldingLaundry: "etokichi-folding-laundry-pixel.webp",
       tatsuoTooComfortable: "etokichi-troubled-pixel.webp",
       packingTomorrow: "etokichi-packing-pixel.webp",

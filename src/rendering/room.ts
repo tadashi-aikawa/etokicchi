@@ -141,6 +141,8 @@ export async function renderRoom(
   };
   const sunagimoTexture =
     visit.scene.id === "sunagimoGrill" && guestTexture ? createSunagimoTexture(app, guestTexture) : undefined;
+  const reactionTexture =
+    visit.scene.id === "sunagimoGrill" && actionTexture ? createSunagimoTexture(app, actionTexture) : undefined;
   const companion =
     guestTexture && presentation.companion
       ? createCompanion(
@@ -179,7 +181,7 @@ export async function renderRoom(
       : createWalker(
           app,
           characterTexture,
-          actionTexture,
+          reactionTexture ?? actionTexture,
           visit,
           route,
           sceneLayout,
@@ -188,6 +190,9 @@ export async function renderRoom(
           (waypointIndex) => {
             for (const listener of waypointArrivalListeners) listener(waypointIndex);
           },
+          visit.scene.id === "sunagimoGrill" && companion instanceof AnimatedSprite
+            ? () => Math.max(0, companion.currentFrame - 1)
+            : undefined,
         );
   const comfortingMaineCoon =
     comfortingMaineCoonTexture && presentation.comfortingMaineCoon && getThunderComfortFrame
@@ -321,6 +326,7 @@ export async function renderRoom(
       lighting.destroy();
       app.destroy({ removeView: true }, { children: true });
       sunagimoTexture?.destroy(true);
+      reactionTexture?.destroy(true);
     },
   };
 }
