@@ -241,6 +241,20 @@ describe("values derived from the scene presentation table", () => {
             },
           ],
         },
+        "masaruSunbeam": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 117,
+                "y": 194,
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
         "mimizouFarewell": {
           "movement": "walking",
           "waypoints": [
@@ -850,6 +864,7 @@ describe("values derived from the scene presentation table", () => {
       morningTea: "etokichi-morning-tea-pixel.webp",
       brushingMaineCoon: "etokichi-brushing-maine-coon-pixel.webp",
       foundOldToy: "etokichi-old-toy-pixel.webp",
+      masaruSunbeam: "etokichi-with-masaru-pixel.webp",
       wateringPlants: "etokichi-watering-directions-pixel.webp",
       muddyReturn: "etokichi-muddy-return-pixel.webp",
       simmeringDinner: "etokichi-watching-pot-up-right-pixel.webp",
@@ -885,6 +900,7 @@ describe("values derived from the scene presentation table", () => {
       brushingMaineCoon: "assets/collection/brushing-maine-coon.webp",
       foundOldToy: "assets/collection/found-old-toy.webp",
       windowNap: "assets/collection/window-nap.webp",
+      masaruSunbeam: "assets/collection/masaru-sunbeam.webp",
       nappingOnMaineCoon: "assets/collection/napping-on-maine-coon.webp",
       wateringPlants: "assets/collection/watering-plants.webp",
       muddyReturn: "assets/collection/muddy-return.webp",
@@ -938,6 +954,11 @@ describe("values derived from the scene presentation table", () => {
           "diningSet": "食卓の上に、小さなプリンの空き容器がひとつ。",
           "fridge": "冷蔵庫の扉を開けた回数が、今夜はいつもより多い気がする。",
           "stove": "温めたミルクの鍋が、コンロで静かに冷めている。",
+        },
+        "masaruSunbeam": {
+          "bed": "今日はベッドより、マサルの隣が気持ちよさそう。",
+          "bookshelf": "本は棚にしまったまま。今は二人でのんびりする時間。",
+          "window": "窓から伸びる日だまりを、マサルとエトキチが半分こしている。",
         },
         "mimizouFarewell": {
           "bed": "ベッドは空っぽ。エトキチは窓辺で手を振っている。",

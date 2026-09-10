@@ -1,7 +1,7 @@
 import { type Application, Filter, GlProgram, Rectangle, Sprite, type Texture } from "pixi.js";
 
-/** 原画のマゼンタ背景を一度だけ透過へ焼き込み、4コマで共有する。 */
-export function createSunagimoTexture(app: Application, source: Texture): Texture {
+/** 原画のマゼンタ背景を一度だけ透過へ焼き込み、各コマで共有する。 */
+export function createChromaKeyTexture(app: Application, source: Texture): Texture {
   const filter = new Filter({
     resolution: 1,
     glProgram: GlProgram.from({

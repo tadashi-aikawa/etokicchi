@@ -28,6 +28,8 @@ const outputDir = path.join(root, "public", "assets");
 
 /** @type {readonly Target[]} */
 const TARGETS = [
+  { name: "masaru-sunbeam-pixel.webp", width: 360, height: 120, kernel: "nearest", note: "マサル 60×60 の3コマ" },
+  { name: "etokichi-with-masaru-pixel.webp", width: 360, height: 120, kernel: "nearest", note: "マサルに寄り添うエトキチ 60×60 の3コマ" },
   { name: "etokichi-watching-sunagimo-pixel.webp", width: 360, height: 120, kernel: "nearest", note: "sunagimoを見守るリアクション 60×60 の3コマ" },
   { name: "sunagimo-grill-pixel.webp", width: 192, height: 192, kernel: "nearest", note: "sunagimo 48×48 の2列×2行" },
   // 背景と窓。room.ts が 195×347 へ引き伸ばして描く。

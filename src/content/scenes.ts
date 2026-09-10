@@ -265,6 +265,16 @@ export const SCENES: readonly SceneDefinition[] = [
     accent: "#7fba76",
   },
   {
+    id: "masaruSunbeam",
+    band: "daytime",
+    title: "ひなたを半分こ",
+    description: "マサルが日だまりの隣を空けてくれた。寄り添ううちに、二人ともまぶたが重くなる。",
+    lines: ["ぼくの分も、空けてくれたの？", "マサル、あったかいねえ……", "むにゃ……ひなた、半分こだね……"],
+    details: ["マサルの巻きしっぽが、ゆっくり落ち着いていく", "二人の足元に、窓から同じ日だまりが伸びている"],
+    characterPose: "active",
+    accent: "#c89853",
+  },
+  {
     id: "nappingOnMaineCoon",
     band: "daytime",
     title: "クーンちゃん枕でお昼寝",

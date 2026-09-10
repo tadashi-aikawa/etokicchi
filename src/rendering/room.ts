@@ -1,7 +1,8 @@
-import { AnimatedSprite, Application, Assets, Container, type Texture, TextureSource } from "pixi.js";
+import { AnimatedSprite, Application, Assets, Container, Graphics, type Texture, TextureSource } from "pixi.js";
 import "pixi.js/browser";
 import type { VisitView } from "../game/types.ts";
-import { createSunagimoTexture } from "./sunagimo-texture.ts";
+import { createChromaKeyTexture } from "./chroma-key-texture.ts";
+import { getMasaruSunbeamFrame } from "./masaru-sunbeam.ts";
 import { createCharacterBubbleElement, createSpeechBubble } from "./room-bubbles.ts";
 import {
   createComfortingMaineCoon,
@@ -139,14 +140,13 @@ export async function renderRoom(
       callbacks.onCharacterTap();
     }
   };
-  const sunagimoTexture =
-    visit.scene.id === "sunagimoGrill" && guestTexture ? createSunagimoTexture(app, guestTexture) : undefined;
-  const reactionTexture =
-    visit.scene.id === "sunagimoGrill" && actionTexture ? createSunagimoTexture(app, actionTexture) : undefined;
+  const usesChromaKey = visit.scene.id === "sunagimoGrill" || visit.scene.id === "masaruSunbeam";
+  const keyedGuestTexture = usesChromaKey && guestTexture ? createChromaKeyTexture(app, guestTexture) : undefined;
+  const reactionTexture = usesChromaKey && actionTexture ? createChromaKeyTexture(app, actionTexture) : undefined;
   const companion =
     guestTexture && presentation.companion
       ? createCompanion(
-          sunagimoTexture ?? guestTexture,
+          keyedGuestTexture ?? guestTexture,
           presentation.companion,
           initialDepthY,
           sceneLayout.furniture,
@@ -166,6 +166,27 @@ export async function renderRoom(
     enabled: visit.scene.characterPose !== "sleep" && route.length > 1,
     onWaypointArrival: (listener) => waypointArrivalListeners.push(listener),
   };
+  let masaruFrame = getMasaruSunbeamFrame(0);
+  if (visit.scene.id === "masaruSunbeam" && companion instanceof AnimatedSprite) {
+    companion.stop();
+    let elapsed = 0;
+    const baseX = companion.x;
+    const baseY = companion.y;
+    const baseScaleY = companion.scale.y;
+    // リアクション更新より先に二人の共通時刻を進める。
+    app.ticker.add((ticker) => {
+      elapsed += ticker.deltaMS;
+      masaruFrame = getMasaruSunbeamFrame(elapsed);
+      companion.gotoAndStop(masaruFrame.frame);
+      companion.x = baseX + masaruFrame.dogOffsetX;
+      companion.y = baseY + masaruFrame.breathY;
+      companion.scale.y = baseScaleY * masaruFrame.stretchScale;
+    });
+  }
+  const characterCallbacks =
+    visit.scene.id === "masaruSunbeam"
+      ? { ...callbacks, onCharacterTap: () => speechBubble.show(masaruFrame.speech, SPEECH_DURATION_MS, character) }
+      : callbacks;
   const character =
     visit.scene.characterPose === "sleep"
       ? createSleeper(
@@ -174,7 +195,7 @@ export async function renderRoom(
           initialPosition,
           initialDepthY,
           presentation.sleeperHeight,
-          callbacks,
+          characterCallbacks,
           presentation.sleeperBreathing,
           presentation.sleeperRotation,
         )
@@ -185,15 +206,26 @@ export async function renderRoom(
           visit,
           route,
           sceneLayout,
-          callbacks,
+          characterCallbacks,
           presentation.hideCharacterShadow ?? false,
           (waypointIndex) => {
             for (const listener of waypointArrivalListeners) listener(waypointIndex);
           },
-          visit.scene.id === "sunagimoGrill" && companion instanceof AnimatedSprite
-            ? () => Math.max(0, companion.currentFrame - 1)
-            : undefined,
+          visit.scene.id === "masaruSunbeam"
+            ? () => masaruFrame.frame
+            : visit.scene.id === "sunagimoGrill" && companion instanceof AnimatedSprite
+              ? () => Math.max(0, companion.currentFrame - 1)
+              : undefined,
         );
+  if (visit.scene.id === "masaruSunbeam") {
+    const baseX = character.x;
+    const baseY = character.y;
+    app.ticker.add(() => {
+      character.x = baseX + masaruFrame.characterOffsetX;
+      character.y = baseY + masaruFrame.breathY;
+      character.scale.y = masaruFrame.stretchScale;
+    });
+  }
   const comfortingMaineCoon =
     comfortingMaineCoonTexture && presentation.comfortingMaineCoon && getThunderComfortFrame
       ? createComfortingMaineCoon(
@@ -302,6 +334,11 @@ export async function renderRoom(
   app.stage.addChild(base, windowLayer);
   if (rainWindowLayer && !tatsuoWindowFace) app.stage.addChild(rainWindowLayer);
   app.stage.addChild(floorDecor, fixtureLayer, clockLayer.container);
+  if (visit.scene.id === "masaruSunbeam") {
+    const sunbeam = new Graphics().poly([39, 166, 102, 156, 137, 199, 64, 216]).fill({ color: 0xffde87, alpha: 0.2 });
+    sunbeam.eventMode = "none";
+    app.stage.addChild(sunbeam);
+  }
   if (visitor) app.stage.addChild(visitor);
   if (!tatsuoWindowFace) app.stage.addChild(createWindowForeground());
   app.stage.addChild(depthContainer, createTimeLightingLayer(visit, sceneLayout, presentation.lightsOff));
@@ -325,7 +362,7 @@ export async function renderRoom(
       speechBubble.destroy();
       lighting.destroy();
       app.destroy({ removeView: true }, { children: true });
-      sunagimoTexture?.destroy(true);
+      keyedGuestTexture?.destroy(true);
       reactionTexture?.destroy(true);
     },
   };

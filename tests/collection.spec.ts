@@ -13,10 +13,10 @@ describe("scene collection", () => {
   it("lists every scene as undiscovered for an empty history", () => {
     const entries = getCollectionEntries({});
 
-    expect(entries).toHaveLength(28);
-    expect(SCENE_COUNT).toBe(28);
+    expect(entries).toHaveLength(29);
+    expect(SCENE_COUNT).toBe(29);
     expect(entries.every((entry) => entry.discovery === undefined)).toBe(true);
-    expect(entries.filter((entry) => entry.status === "available")).toHaveLength(20);
+    expect(entries.filter((entry) => entry.status === "available")).toHaveLength(21);
     expect(entries.filter((entry) => entry.status === "locked").map((entry) => entry.scene.id)).toEqual([
       "sleepingWithTatsuo",
       "morningStretch",
@@ -27,7 +27,7 @@ describe("scene collection", () => {
       "tatsuoTooComfortable",
       "mimizouVisit",
     ]);
-    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(28);
+    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(29);
     expect(entries.every((entry) => entry.imagePath.endsWith(".webp"))).toBe(true);
     expect(getCollectionImagePath("watchingStars")).toBe("assets/collection/watching-stars.webp");
     expect(getCollectionImagePath("sleepingWithTatsuo")).toBe("assets/collection/sleeping-with-tatsuo.webp");

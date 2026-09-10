@@ -17,6 +17,7 @@ export type SceneId =
   | "brushingMaineCoon"
   | "foundOldToy"
   | "windowNap"
+  | "masaruSunbeam"
   | "nappingOnMaineCoon"
   | "wateringPlants"
   | "muddyReturn"
