@@ -247,8 +247,8 @@ describe("values derived from the scene presentation table", () => {
             {
               "destination": {
                 "type": "point",
-                "x": 88,
-                "y": 197,
+                "x": 117,
+                "y": 187,
               },
               "pauseMs": 5000,
             },
@@ -898,7 +898,7 @@ describe("values derived from the scene presentation table", () => {
       brushingMaineCoon: "assets/collection/brushing-maine-coon.webp",
       foundOldToy: "assets/collection/found-old-toy.webp",
       windowNap: "assets/collection/window-nap.webp",
-      masaruSunbeam: "assets/collection/masaru-sunbeam.webp",
+      masaruSunbeam: "assets/collection/masaharu-sunbeam.webp",
       nappingOnMaineCoon: "assets/collection/napping-on-maine-coon.webp",
       wateringPlants: "assets/collection/watering-plants.webp",
       muddyReturn: "assets/collection/muddy-return.webp",
@@ -954,9 +954,9 @@ describe("values derived from the scene presentation table", () => {
           "stove": "温めたミルクの鍋が、コンロで静かに冷めている。",
         },
         "masaruSunbeam": {
-          "bed": "今日はベッドより、マサルの隣が気持ちよさそう。",
+          "bed": "今日はベッドより、マサハルの隣が気持ちよさそう。",
           "bookshelf": "本は棚にしまったまま。今は二人でのんびりする時間。",
-          "window": "窓から伸びる日だまりを、マサルとエトキチが半分こしている。",
+          "window": "窓から伸びる日だまりを、マサハルとエトキチが半分こしている。",
         },
         "mimizouFarewell": {
           "bed": "ベッドは空っぽ。エトキチは窓辺で手を振っている。",

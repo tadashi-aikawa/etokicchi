@@ -471,20 +471,28 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
   masaruSunbeam: {
     route: {
       movement: "nonWalking",
-      waypoints: [{ destination: point(88, 197), pauseMs: 5000 }],
+      waypoints: [{ destination: point(117, 187), pauseMs: 5000 }],
     },
     action: "none",
     observations: {
-      window: "窓から伸びる日だまりを、マサルとエトキチが半分こしている。",
-      bed: "今日はベッドより、マサルの隣が気持ちよさそう。",
+      window: "窓から伸びる日だまりを、マサハルとエトキチが半分こしている。",
+      bed: "今日はベッドより、マサハルの隣が気持ちよさそう。",
       bookshelf: "本は棚にしまったまま。今は二人でのんびりする時間。",
     },
-    collectionImage: "assets/collection/masaru-sunbeam.webp",
+    collectionImage: "assets/collection/masaharu-sunbeam.webp",
     room: {
       ...DEFAULT_ROOM,
-      sleeperAssetName: "etokichi-masaru-sleep-pixel.webp",
-      sleeperHeight: 72,
+      sleeperAssetName: "etokichi-sleep-leaning-pixel.webp",
+      sleeperHeight: 42,
       sleeperBreathing: "none",
+      companion: {
+        assetName: "masaharu-sleep-pixel.webp",
+        height: 56,
+        x: 72,
+        y: 190,
+        depth: "position",
+        speech: "すぅ……すぅ……",
+      },
       depthDecorationOverrides: {
         maineCoon: {
           type: "absolute",

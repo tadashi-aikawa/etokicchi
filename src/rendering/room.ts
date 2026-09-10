@@ -139,11 +139,9 @@ export async function renderRoom(
       callbacks.onCharacterTap();
     }
   };
-  const usesChromaKey = visit.scene.id === "sunagimoGrill" || visit.scene.id === "masaruSunbeam";
+  const usesChromaKey = visit.scene.id === "sunagimoGrill";
   const keyedGuestTexture = usesChromaKey && guestTexture ? createChromaKeyTexture(app, guestTexture) : undefined;
   const reactionTexture = usesChromaKey && actionTexture ? createChromaKeyTexture(app, actionTexture) : undefined;
-  const sleepingPairTexture =
-    visit.scene.id === "masaruSunbeam" ? createChromaKeyTexture(app, characterTexture) : undefined;
   const companion =
     guestTexture && presentation.companion
       ? createCompanion(
@@ -167,17 +165,15 @@ export async function renderRoom(
     enabled: visit.scene.characterPose !== "sleep" && route.length > 1,
     onWaypointArrival: (listener) => waypointArrivalListeners.push(listener),
   };
-  const characterCallbacks =
-    visit.scene.id === "masaruSunbeam" ? { ...callbacks, onCharacterTap: () => {} } : callbacks;
   const character =
     visit.scene.characterPose === "sleep"
       ? createSleeper(
           app,
-          sleepingPairTexture ?? characterTexture,
+          characterTexture,
           initialPosition,
           initialDepthY,
           presentation.sleeperHeight,
-          characterCallbacks,
+          callbacks,
           presentation.sleeperBreathing,
           presentation.sleeperRotation,
         )
@@ -188,7 +184,7 @@ export async function renderRoom(
           visit,
           route,
           sceneLayout,
-          characterCallbacks,
+          callbacks,
           presentation.hideCharacterShadow ?? false,
           (waypointIndex) => {
             for (const listener of waypointArrivalListeners) listener(waypointIndex);
@@ -197,14 +193,6 @@ export async function renderRoom(
             ? () => Math.max(0, companion.currentFrame - 1)
             : undefined,
         );
-  if (visit.scene.id === "masaruSunbeam") {
-    // 一枚の寝姿でも、左のマサルと右のエトキチで反応を分ける。
-    character.on("pointertap", (event) => {
-      const local = event.getLocalPosition(character);
-      const dogSide = local.x < (sleepingPairTexture?.width ?? 0) * 0.1;
-      speechBubble.show(dogSide ? "すぅ……すぅ……" : "むにゃ……マサル、あったかい……", SPEECH_DURATION_MS, character);
-    });
-  }
   const comfortingMaineCoon =
     comfortingMaineCoonTexture && presentation.comfortingMaineCoon && getThunderComfortFrame
       ? createComfortingMaineCoon(
@@ -343,7 +331,6 @@ export async function renderRoom(
       app.destroy({ removeView: true }, { children: true });
       keyedGuestTexture?.destroy(true);
       reactionTexture?.destroy(true);
-      sleepingPairTexture?.destroy(true);
     },
   };
 }

@@ -24,11 +24,14 @@ const outputDir = path.join(root, "public", "assets");
  * @property {number} height 目標のピクセル高さ
  * @property {"lanczos" | "nearest"} kernel 拡大はnearestの整数倍、縮小と非整数倍はlanczos
  * @property {string} note 表示論理寸法の出どころ
+ * @property {{left: number, top: number, width: number, height: number}} [extract] 原画から単体素材の領域を切り出す
+ * @property {boolean} [chromaKeyMagenta] 縮小前にマゼンタを透過させ、他シーンでも使える素材にする
  */
 
 /** @type {readonly Target[]} */
 const TARGETS = [
-  { name: "etokichi-masaru-sleep-pixel.webp", width: 216, height: 144, kernel: "lanczos", note: "マサルとエトキチの静止した寝姿 108×72" },
+  { name: "masaharu-sleep-pixel.webp", width: 144, height: 112, kernel: "lanczos", extract: { left: 32, top: 128, width: 1024, height: 800 }, chromaKeyMagenta: true, note: "マサハル単体の寝姿 72×56" },
+  { name: "etokichi-sleep-leaning-pixel.webp", width: 86, height: 84, kernel: "lanczos", extract: { left: 880, top: 288, width: 608, height: 592 }, chromaKeyMagenta: true, note: "寄りかかるエトキチ単体の寝姿 43×42" },
   { name: "etokichi-watching-sunagimo-pixel.webp", width: 360, height: 120, kernel: "nearest", note: "sunagimoを見守るリアクション 60×60 の3コマ" },
   { name: "sunagimo-grill-pixel.webp", width: 192, height: 192, kernel: "nearest", note: "sunagimo 48×48 の2列×2行" },
   // 背景と窓。room.ts が 195×347 へ引き伸ばして描く。
@@ -305,8 +308,16 @@ async function buildWalkSheet() {
 /** @param {Target} target */
 async function convert(target) {
   const input = path.join(sourceDir, target.name);
-  const image = sharp(input).ensureAlpha();
+  let image = sharp(input).ensureAlpha();
   const { width, height } = await image.metadata();
+  if (target.extract) image = image.extract(target.extract);
+  if (target.chromaKeyMagenta) {
+    const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
+    for (let i = 0; i < data.length; i += info.channels) {
+      if (Math.min(data[i], data[i + 2]) - data[i + 1] > 255 * 0.18) data[i + 3] = 0;
+    }
+    image = sharp(data, { raw: info });
+  }
   const resized = image.resize({
     width: target.width,
     height: target.height,

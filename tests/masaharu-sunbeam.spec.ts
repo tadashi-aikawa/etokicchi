@@ -5,7 +5,7 @@ import { getRoomPresentation } from "../src/rendering/room-presentation.ts";
 import { SCENE_PRESENTATIONS } from "../src/content/scene-presentations.ts";
 import { visitFor } from "./helpers/asset-references.ts";
 
-describe("マサルとひなたを半分こ", () => {
+describe("マサハルとひなたを半分こ", () => {
   it("最初から昼に出会える観察のみのシーン", () => {
     const scene = getScene("masaruSunbeam");
     expect(scene.band).toBe("daytime");
@@ -16,9 +16,11 @@ describe("マサルとひなたを半分こ", () => {
   it("最初から二人の寝姿を静止表示し、起きるコマや呼吸の伸縮を使わない", () => {
     expect(getScene("masaruSunbeam").characterPose).toBe("sleep");
     const presentation = getRoomPresentation(visitFor("masaruSunbeam"));
-    expect(presentation.sleeperAssetName).toBe("etokichi-masaru-sleep-pixel.webp");
+    expect(presentation.sleeperAssetName).toBe("etokichi-sleep-leaning-pixel.webp");
     expect(presentation.sleeperBreathing).toBe("none");
-    expect(presentation.companion).toBeUndefined();
+    expect(presentation.companion?.assetName).toBe("masaharu-sleep-pixel.webp");
+    expect(presentation.companion?.speech).toBe("すぅ……すぅ……");
+    expect(presentation.companion?.animation).toBeUndefined();
     expect(SCENE_PRESENTATIONS.masaruSunbeam.action).toBe("none");
   });
 });
