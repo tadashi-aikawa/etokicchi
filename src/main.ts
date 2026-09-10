@@ -104,13 +104,7 @@ function createSheetLabel(text: string): HTMLParagraphElement {
   return createParagraph("sheet-label", text);
 }
 
-function createShell(
-  root: HTMLElement,
-  visit: VisitView,
-  now: Date,
-  debugRandom: boolean,
-  state: GameState,
-): ShellElements {
+function createShell(root: HTMLElement, visit: VisitView, now: Date, state: GameState): ShellElements {
   const shell = document.createElement("section");
   shell.className = "game-shell";
   shell.style.setProperty("--scene-accent", visit.scene.accent);
@@ -120,13 +114,6 @@ function createShell(
 
   const topBar = document.createElement("header");
   topBar.className = "top-bar";
-  const brand = document.createElement("div");
-  brand.className = "brand";
-  const brandSmall = document.createElement("small");
-  brandSmall.textContent = debugRandom ? "DEBUG RANDOM" : "ETO LIFE";
-  const brandName = document.createElement("strong");
-  brandName.textContent = "エトキっち";
-  brand.append(brandSmall, brandName);
   const collectionButton = document.createElement("button");
   collectionButton.className = "collection-button";
   collectionButton.type = "button";
@@ -146,9 +133,6 @@ function createShell(
   const menuActions = document.createElement("div");
   menuActions.className = "top-menu-actions";
   menuActions.append(collectionButton, updatesButton);
-  const topMenu = document.createElement("div");
-  topMenu.className = "top-menu";
-  topMenu.append(brand, menuActions);
 
   const clock = document.createElement("div");
   clock.className = "clock";
@@ -156,7 +140,7 @@ function createShell(
   dateLabel.textContent = formatDateLabel(now);
   const time = document.createElement("time");
   clock.append(dateLabel, time);
-  topBar.append(topMenu, clock);
+  topBar.append(menuActions, clock);
 
   const hud = document.createElement("article");
   hud.className = "scene-hud";
@@ -458,7 +442,7 @@ async function bootstrap(): Promise<void> {
     currentRoom?.destroy();
     currentElements?.dispose();
     currentVisit = visit;
-    const elements = createShell(root, visit, now, options.debugRandom, state);
+    const elements = createShell(root, visit, now, state);
     currentElements = elements;
     let speechLine = visit.interaction?.immediate ?? visit.line;
     const roomCallbacks = {

@@ -220,12 +220,6 @@ button {
   pointer-events: none;
 }
 
-.top-menu {
-  display: grid;
-  gap: 5px;
-  justify-items: start;
-}
-
 .top-menu-actions {
   display: flex;
   gap: 5px;
@@ -240,7 +234,6 @@ button {
   font-size: 8px;
 }
 
-.brand,
 .clock {
   border: 2px solid #f8e7ca;
   border-radius: 8px;
@@ -250,19 +243,12 @@ button {
   color: #fff8e9;
 }
 
-.brand small,
 .clock small {
   display: block;
   font-size: 8px;
   font-weight: 800;
   letter-spacing: 0.11em;
   opacity: 0.78;
-}
-
-.brand strong {
-  display: block;
-  font-size: 14px;
-  line-height: 1.2;
 }
 
 .collection-button {
