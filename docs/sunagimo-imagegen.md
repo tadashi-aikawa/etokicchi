@@ -1,5 +1,7 @@
 # sunagimoの画像制作
 
+エトキチの外見では、腰を囲んで左右へ張り出す金色の輪っかを必ず保持する。新しい表情・ポーズを作る場合も全コマと図鑑で確認する。基準画像は `assets-src/etokichi-walk-pixel-v2.webp`。
+
 - 方式: imagegenスキルの組み込みツール
 - 参照: [sunagimo](https://minerva.mamansoft.net/Notes/sunagimo)
 - 原画: `assets-src/sunagimo-grill-pixel.webp`
@@ -27,6 +29,22 @@ Use case: stylized-concept. Make a NEW dedicated Etokichi reaction sprite sheet,
 
 ```text
 Use case: precise-object-edit. Edit this collectible pixel art illustration ONLY the yellow star Etokichi character: remove the wooden spoon from his hands, show him with empty hands together in delighted applause, turn his star face and joyful gaze toward sunagimo on his LEFT. Etokichi is watching his friend and reacting, not cooking. Preserve sunagimo exactly, its skewer with three meat pieces, whole room, pot, furniture, warm evening lighting, composition and pixel art style. No other changes, no text.
+```
+
+## 輪っかの復元
+
+専用リアクションの初回生成で欠けた腰の輪っかを、歩行シートを参照して全3コマと図鑑へ戻した。組み込みimagegenで修正し、同じ原画・部屋用・図鑑用パスへ反映した。
+
+### スプライト修正のプロンプト
+
+```text
+Use case: precise-object-edit. Image 1 is the EDIT TARGET, a three-cell Etokichi reaction sprite sheet. Image 2 is the REFERENCE for Etokichi's missing signature WAIST RING. Add the same thin golden yellow oval Saturn-like hoop encircling Etokichi horizontally around the WAIST in ALL THREE cells of image 1. The ring has a pale cream highlight and dark brown pixel outline, extends beyond both sides of torso, its front arc passes in front of lower belly and back arc behind body, exactly as shown in reference image 2. This is a waist orbit ring, NOT a halo above the head and NOT a belt tight against body. Keep ALL existing poses, leftward gaze, expressions, hands, feet, character size, cell layout, canvas aspect ratio and flat magenta #ff00ff background unchanged. Only add the missing waist ring. No other additions, no cookware, no text. Crisp matching pixel art.
+```
+
+### 図鑑修正のプロンプト
+
+```text
+Use case: precise-object-edit. Image 1 is the EDIT TARGET. Image 2 is reference for the yellow star Etokichi character's signature WAIST RING. Add ONLY the missing thin golden yellow oval ring encircling Etokichi's waist horizontally, as reference image 2: a Saturn-like hoop projecting beyond torso on both sides, creamy golden highlight and dark outline, front arc across lower belly, back arc behind body. NOT a head halo, not a tight belt. Preserve image 1 absolutely everywhere else: joyful Etokichi looking left and clapping with empty hands, sunagimo with 3-piece skewer, all furniture and pot and room lighting and pixel-art style. Do not reposition or resize characters. No other changes or text.
 ```
 
 ## 初回制作のプロンプト
