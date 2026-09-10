@@ -6,17 +6,42 @@
 - 参照: [sunagimo](https://minerva.mamansoft.net/Notes/sunagimo)
 - 原画: `assets-src/sunagimo-grill-pixel.webp`
 - 部屋用: `public/assets/sunagimo-grill-pixel.webp`、192×192、2列×2行、1コマ論理48×48
-- 図鑑用: `public/assets/collection/sunagimo-grill.webp`、512×512
+- 図鑑用: `public/assets/collection/sunagimo-grill.webp`、1024×1024
 
-透明背景を依頼した初回出力は、アルファのない市松模様だった。組み込みツールで背景だけをマゼンタへ変更した原画を保存し、部屋の生成時にGPUで背景を透過へ一度焼き込む。キャラクターの白い顔や灰紫色は保持する。4コマはこのテクスチャを共有し、部屋を閉じると破棄する。
+透明背景を依頼した初回出力は、アルファのない市松模様だった。原画にはマゼンタ背景を使う。現在は素材変換時に背景を透過してからLanczosで縮小し、白い顔や灰紫色を保持したアルファ付きWebPを保存する。
 
 ## エトキチのリアクションへの差し替え
 
-### 画質の確認
+### 画質の確認と改善
 
 2026-09-11に部屋表示と図鑑の拡大表示を確認した。部屋用は大きな原画をnearestで縮小しており、とくにエトキチの星の輪郭にギザつきがある。細かなマサハルの寝姿と比べると粗さが残る。
 
-図鑑は512×512で、検証時の拡大表示はスマホ360px、PC506px。顔・串・鍋の細部は判別でき、解像度不足による破綻は目立たない。一方、キャラクターの太い線と平坦な陰影は細かな背景より粗い画風に見える。統一感を改善する場合は部屋用を優先する。今回の依頼は品質確認のため、画像の再生成・差し替えは行っていない。
+旧図鑑は512×512で、スマホ360px・PC506px表示では細部を判別できたが、キャラクターの太い線と平坦な陰影に画風差があった。タダシの改善指示を受け、部屋用の2素材と図鑑を組み込みimagegenで再制作した。細い茶色の輪郭と細かな陰影へ揃え、部屋用は縮小前に透過してLanczos縮小、図鑑は1024×1024で保存する。ポーズ・コマ割り・串の3片・エトキチの腰の輪っかを保持した。
+### 部屋用エトキチの画質改善プロンプト
+
+参照: `assets-src/etokichi-watching-sunagimo-pixel.webp`、`public/assets/etokichi-sleep-leaning-pixel.webp`
+
+```text
+Edit image 1 sprite sheet. Preserve all THREE cells and poses, exact placement, scale, baseline, yellow five-point star identity, hands, feet, pink cheeks, and GOLDEN WAIST ORBIT RING in every frame. Refine rendering to the fine detailed small-pixel shading and thin warm brown contour of reference 2. Eliminate chunky black outlines and large flat pixel blocks; delicate gold shading with restrained fine pixel texture. Retain leftward gaze and empty hands, curious / delighted / closed eyes applauding reactions in same order. Canvas 3:1 horizontal, exactly three equal cells, no clipping. Keep pure flat #ff00ff background, no checkerboard, no text or other characters.
+```
+
+
+### 部屋用sunagimoの画質改善プロンプト
+
+参照: `assets-src/sunagimo-grill-pixel.webp`、`public/assets/masaharu-sleep-pixel.webp`
+
+```text
+Edit image 1 sprite sheet. Preserve exact sunagimo identity, round gray lavender grooved body, ivory face, brown eyes, blush cheeks, yellow feet and skewer with THREE meat pieces. Preserve all FOUR poses, same positions, baseline and size in 2x2 equal cells. Reference 2 is only fine pixel density and thin warm brown outline guidance; do not add the dog. Refine chunky outlines to thin nuanced contours, subtle small-pixel shading, finely shaded meat and body, no large flat pixel blocks. Keep all expressions and gestures and symbols as source. 1:1 square canvas, pure uniform #ff00ff background, no checkerboard or grid lines.
+```
+
+
+### 図鑑の画質改善プロンプト
+
+参照: `public/assets/collection/sunagimo-grill.webp`、`public/assets/collection/window-nap.webp`
+
+```text
+Refine image 1 collectible illustration into finely detailed pixel art at 1024x1024. Reference 2 shows desired small pixel grain and detailed room rendering. Preserve exact scene composition, characters, evening kitchen, stove, pot, furniture and lighting. Sunagimo gray lavender grooved round body and ivory face proudly shows a skewer with exactly THREE pieces, yellow star Etokichi looking toward friend applauding with EMPTY hands and complete GOLDEN WAIST ORBIT RING. Thin nuanced dark brown outlines matching background, fine small-pixel shading on characters and furnishings, eliminate large stair-step blocks and thick black character outlines. Match character rendering detail to the room. No text, no added characters or utensils. Do not just upscale chunky source; reconstruct finer details.
+```
 
 ### リアクション
 

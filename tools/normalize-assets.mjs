@@ -32,8 +32,8 @@ const outputDir = path.join(root, "public", "assets");
 const TARGETS = [
   { name: "masaharu-sleep-pixel.webp", width: 144, height: 112, kernel: "lanczos", extract: { left: 32, top: 128, width: 1024, height: 800 }, chromaKeyMagenta: true, note: "マサハル単体の寝姿 72×56" },
   { name: "etokichi-sleep-leaning-pixel.webp", width: 86, height: 84, kernel: "lanczos", extract: { left: 880, top: 288, width: 608, height: 592 }, chromaKeyMagenta: true, note: "寄りかかるエトキチ単体の寝姿 43×42" },
-  { name: "etokichi-watching-sunagimo-pixel.webp", width: 360, height: 120, kernel: "nearest", note: "sunagimoを見守るリアクション 60×60 の3コマ" },
-  { name: "sunagimo-grill-pixel.webp", width: 192, height: 192, kernel: "nearest", note: "sunagimo 48×48 の2列×2行" },
+  { name: "etokichi-watching-sunagimo-pixel.webp", width: 360, height: 120, kernel: "lanczos", chromaKeyMagenta: true, note: "sunagimoを見守るリアクション 60×60 の3コマ" },
+  { name: "sunagimo-grill-pixel.webp", width: 192, height: 192, kernel: "lanczos", chromaKeyMagenta: true, note: "sunagimo 48×48 の2列×2行" },
   // 背景と窓。room.ts が 195×347 へ引き伸ばして描く。
   { name: "room-base-empty-daytime-pixel.webp", width: 390, height: 694, kernel: "lanczos", note: "背景 195×347" },
   { name: "room-background-early-morning-pixel.webp", width: 390, height: 694, kernel: "lanczos", note: "窓 195×347" },

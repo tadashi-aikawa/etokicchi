@@ -6,7 +6,7 @@
 - エトキチ原画: `assets-src/etokichi-sleep-leaning-pixel.webp`
 - 部屋用マサハル: `public/assets/masaharu-sleep-pixel.webp`、144×112、論理72×56
 - 部屋用エトキチ: `public/assets/etokichi-sleep-leaning-pixel.webp`、86×84、論理43×42
-- 図鑑: `public/assets/collection/masaharu-sunbeam.webp`、512×512
+- 図鑑: `public/assets/collection/masaharu-sunbeam.webp`、1024×1024
 
 原画からの機械変換は `pnpm assets:normalize` を使う。背景を透過してから余白を除き、Lanczosで縮小する。部屋用WebPはアルファ付きで、そのまま他シーンへ流用できる。描画時はnearestでゲーム全体のドットを揃える。
 
@@ -39,6 +39,19 @@ Use case: stylized-concept. Create ONE stationary game sprite showing BOTH frien
 ```
 
 ## 図鑑イラストのプロンプト
+
+### 画質の改善
+
+初版は他の図鑑と同じ512×512だったが、元絵のドットと輪郭が大きく、毛並みと顔が粗く見えていた。窓辺の昼寝を粒度の基準にし、承認済みの単体寝姿を外見の基準にして組み込みimagegenで再制作した。細かな毛並み・輪郭・陰影を描き直し、図鑑は1024×1024で保存する。エトキチの口も閉じ、二人の静かな寝顔と腰の輪っかを保持する。
+### 図鑑の画質改善プロンプト
+
+参照: `public/assets/collection/masaharu-sunbeam.webp`、`public/assets/collection/window-nap.webp`、`assets-src/masaharu-sleep-pixel.webp`、`assets-src/etokichi-sleep-leaning-pixel.webp`
+
+```text
+Refine image 1 collectible illustration at 1024x1024. Reference 2 defines fine small-pixel grain and detailed cozy room rendering. References 3 and 4 define approved character appearances and closed sleeping expressions. Preserve image 1 warm midday room composition, green curtains, window light on wooden floor, bookshelf, dog LEFT and star RIGHT cuddled close. Draw BOTH peacefully sleeping with CLOSED eyes and small CLOSED relaxed smiles, no laughing open mouth. Masaharu tan and cream white dog with RED collar and curled fluffy tail, tiny detailed fur shading. Etokichi yellow FIVE POINT STAR, pink cheeks, little hands and feet, complete GOLDEN WAIST ORBIT RING. Refine coarse blocks and heavy outlines into small fine pixels, delicate fur, thin warm brown contours, subtle shading matching background detail. Full bodies, pillow retained. No text, no Z symbols, no added characters. Reconstruct fine details, not a simple enlargement of chunky source.
+```
+
+### 初版
 
 ```text
 Use case: illustration-story. Square collectible pixel art illustration for cozy room game, no text. Image 1 references ONLY LEFT dog Masaru: tan white Akita-like plush dog, white face muzzle chest paws, triangular ears, curled fluffy tail, RED collar. Do not include owl. Image 2 defines exact Etokichi yellow FIVE POINT STAR character, orange pink cheeks, tiny yellow limbs and thin golden oval SATURN WAIST RING extending outside both sides of torso; must visibly preserve waist ring. Image 3 room mood reference only; replace its book-reading action with requested moment. Scene: warm midday sun streams from a wooden window into a cozy wooden-floor room. Masaru is lying belly down on LEFT, closed gentle eyes, forepaws extended. Etokichi sits RIGHT closely beside Masaru, leaning slightly against fluffy shoulder, closed sleepy smiling eyes. They share one broad patch of sunshine, feeling safe and peaceful. Both full bodies readable, roughly equal importance, characters central foreground. Soft green cushion under Etokichi optional, no book, no toy, no food, no other characters, no speech bubbles, no Z symbols. Crisp coherent chunky pixel art with dark outlines and restrained warm shading. Warm green curtains, bookshelf in background, enough breathing space. Ring around waist, NOT halo.
