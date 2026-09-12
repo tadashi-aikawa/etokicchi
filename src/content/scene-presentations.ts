@@ -912,6 +912,44 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
     collectionImage: "assets/collection/mimizou-visit.webp",
     room: mimizouWindowRoom("こんばんはホー。のぞいてるホー。"),
   },
+  mimizouNightStroll: {
+    observations: { sofa: "クーンちゃんが、とことこ響く足音に耳だけを向けている。" },
+    thoughts: { maineCoon: "あの子、歩くときはとっても静かなの。" },
+    route: { movement: "walking", waypoints: [{ destination: point(144, 271), pauseMs: 5000 }] },
+    action: "none",
+    collectionImage: "assets/collection/mimizou-night-stroll.webp",
+    room: {
+      ...DEFAULT_ROOM,
+      companion: {
+        assetName: "mimizou-walk-pixel.webp",
+        height: 52,
+        speech: "……とことこ、ホー。",
+        x: 109,
+        y: 336,
+        walk: {
+          speed: 8,
+          waypoints: [
+            { x: 109, y: 336, pauseMs: 1400, facing: "left" },
+            { x: 92, y: 318, pauseMs: 600, facing: "right" },
+            { x: 111, y: 291, pauseMs: 2800, facing: "right" },
+            { x: 120, y: 316, pauseMs: 400, facing: "down" },
+          ],
+        },
+      },
+      depthDecorationOverrides: {
+        maineCoon: {
+          type: "furniture",
+          furnitureId: "sofa",
+          assetName: "decor-cat-sofa-curled-compact-pixel.webp",
+          offset: { x: 8, y: -14 },
+          width: 48,
+          height: 60,
+          rotation: -Math.PI / 12,
+          depthOffset: 1,
+        },
+      },
+    },
+  },
 };
 
 const SCENE_IDS = Object.keys(SCENE_PRESENTATIONS) as SceneId[];

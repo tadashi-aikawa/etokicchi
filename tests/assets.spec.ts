@@ -7,8 +7,8 @@ import { FURNITURE_DEFINITIONS } from "../src/rendering/room-furniture.ts";
 import { ACTION_ASSET_NAMES, WALK_ASSET_NAME } from "../src/rendering/scene-assets.ts";
 import { presentationAssetNames, VISITS } from "./helpers/asset-references.ts";
 
-// ロゴはfaviconやOGP向け。みみぞうの歩行シートは将来の移動用で、現行シーンは正面の静止素材を使う。
-const UNREFERENCED_ASSET_NAMES = new Set(["etokicchi-logo.png", "mimizou-walk-pixel.webp"]);
+// ロゴはfaviconやOGP向け。
+const UNREFERENCED_ASSET_NAMES = new Set(["etokicchi-logo.png"]);
 
 const referencedAssetNames = new Set<string>([
   ...Object.values(ACTION_ASSET_NAMES).filter((name): name is string => Boolean(name)),

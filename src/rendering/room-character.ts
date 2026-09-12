@@ -10,6 +10,7 @@ import {
 } from "pixi.js";
 import type { VisitView } from "../game/types.ts";
 import { getMimizouVisitFrame } from "./mimizou-visit.ts";
+import { getGuestWalkFrame } from "./guest-walk.ts";
 import type { ThunderComfortFrameProvider } from "./room-effects.ts";
 import type { FurnitureLayout } from "./room-furniture.ts";
 import { getDepthZIndex, isMovementSegmentValid, type RoomLayout } from "./room-layout.ts";
@@ -94,6 +95,7 @@ export function createWalker(
   character.scale.set(WALK_FRAME_HEIGHT / baseFrame.height);
   character.animationSpeed = 0.13;
   character.loop = true;
+  if (route.length === 1) character.gotoAndStop(1);
 
   const actionFrameRows = actionSheet
     ? createGridFrames(actionSheet, ACTION_FRAME_COLUMNS, ACTION_ROW_COUNTS[visit.scene.id] ?? 1)
@@ -316,7 +318,36 @@ export function createCompanion(
   sceneDepthY: number,
   furniture: FurnitureLayout,
   onTap: (target: Container) => void,
+  ticker?: Ticker,
 ): Sprite {
+  if ("walk" in presentation && presentation.walk) {
+    if (!ticker) throw new Error("歩く同席者にはTickerが必要です");
+    const walk = presentation.walk;
+    const frames = createDirectionFrames(texture);
+    const sprite = new Sprite(frames.down[1]);
+    sprite.anchor.set(0.5, 1);
+    sprite.scale.set(presentation.height / (texture.height / WALK_FRAME_ROWS));
+    sprite.eventMode = "dynamic";
+    sprite.cursor = "pointer";
+    sprite.on("pointertap", () => onTap(sprite));
+    let elapsed = 0;
+    const update = (deltaMs: number): void => {
+      elapsed += deltaMs;
+      const frame = getGuestWalkFrame(walk, elapsed);
+      const next = frames[frame.direction][frame.column];
+      if (next) sprite.texture = next;
+      sprite.position.set(frame.x, frame.y);
+      sprite.zIndex = getDepthZIndex(frame.y, 45);
+    };
+    const tick = (clock: Ticker): void => update(clock.deltaMS);
+    update(0);
+    ticker.add(tick);
+    sprite.on("destroyed", () => {
+      ticker.remove(tick);
+      for (const frame of Object.values(frames).flat()) frame.destroy();
+    });
+    return sprite;
+  }
   const animation = presentation.animation;
   const frames = animation ? createGridFrames(texture, animation.columns, animation.rows).flat() : [];
   if (animation && animation.frames.length !== frames.length) throw new Error("同席者のコマ数と台詞数が一致しません");

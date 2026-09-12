@@ -474,6 +474,17 @@ export const SCENES: readonly SceneDefinition[] = [
     characterPose: "active",
     accent: "#b4a56d",
   },
+  {
+    id: "mimizouNightStroll",
+    band: "night",
+    title: "みみぞうの夜のおさんぽ",
+    description: "ラグの上をとことこ歩くみみぞうが、ときどき足を止めてエトキチを見上げている。",
+    lines: ["歩くと、そんな音がするんだね。", "ゆっくりでいいよ。ここで待ってるキチ。"],
+    details: ["小さな黄色い足が、ラグの模様をひとつずつたどっている", "目が合うと、みみぞうが少しだけ首をかしげた"],
+    unlockRequirement: { kind: "sceneDiscovery", sceneId: "mimizouVisit" },
+    characterPose: "active",
+    accent: "#9d9bb8",
+  },
 ] as const;
 
 const sceneById = new Map<SceneId, SceneDefinition>(SCENES.map((scene) => [scene.id, scene]));

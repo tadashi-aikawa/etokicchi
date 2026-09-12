@@ -1,6 +1,7 @@
 import type { FurnitureId, Point } from "./room-furniture.ts";
 import type { FixtureHotspotId, FixtureId } from "./room-fixtures.ts";
 import type { RoomDepthDecorationId, RoomDepthDecorationOverride } from "./room-decor.ts";
+import type { GuestWalk } from "./guest-walk.ts";
 
 // 部屋の描画定義の型。シーン定義(content/scene-presentations.ts)と描画側の両方から読むので、
 // 値と手続きを持つ room-presentation.ts から型だけを切り離してある。
@@ -33,6 +34,7 @@ interface GuestPresentationCommon {
 }
 
 export interface PositionedGuestPresentation extends GuestPresentationCommon {
+  walk?: GuestWalk;
   x: number;
   y: number;
   depth?: "scene" | "position";

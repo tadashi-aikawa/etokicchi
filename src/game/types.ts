@@ -29,7 +29,8 @@ export type SceneId =
   | "packingTomorrow"
   | "littleNightSnack"
   | "readingComics"
-  | "mimizouVisit";
+  | "mimizouVisit"
+  | "mimizouNightStroll";
 
 export interface ChoiceDefinition {
   id: string;

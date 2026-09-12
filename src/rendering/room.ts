@@ -155,6 +155,7 @@ export async function renderRoom(
           initialDepthY,
           sceneLayout.furniture,
           onGuestTap,
+          app.ticker,
         )
       : undefined;
   const visitor =

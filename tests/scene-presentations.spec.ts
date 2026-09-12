@@ -32,8 +32,8 @@ describe("scene presentation table", () => {
     const activeWithoutAction = SCENES.filter(
       ({ id, characterPose }) => characterPose === "active" && SCENE_PRESENTATIONS[id].action === "none",
     ).map(({ id }) => id);
-    // 抱き合う姿は専用スプライトで描くので、行動アニメーションを持たない唯一の起きているシーン。
-    expect(activeWithoutAction).toEqual(["comfortingMaineCoon"]);
+    // 抱擁は専用スプライト。散歩を見守るエトキチは歩行シートの静止コマで描く。
+    expect(activeWithoutAction).toEqual(["comfortingMaineCoon", "mimizouNightStroll"]);
 
     const sleepingWithAction = SCENES.filter(
       ({ id, characterPose }) => characterPose === "sleep" && SCENE_PRESENTATIONS[id].action !== "none",
@@ -319,6 +319,19 @@ describe("values derived from the scene presentation table", () => {
                 "y": 145,
               },
               "pauseMs": 0,
+            },
+          ],
+        },
+        "mimizouNightStroll": {
+          "movement": "walking",
+          "waypoints": [
+            {
+              "destination": {
+                "type": "point",
+                "x": 144,
+                "y": 271,
+              },
+              "pauseMs": 5000,
             },
           ],
         },
@@ -912,6 +925,7 @@ describe("values derived from the scene presentation table", () => {
       littleNightSnack: "assets/collection/little-night-snack.webp",
       readingComics: "assets/collection/reading-comics.webp",
       mimizouVisit: "assets/collection/mimizou-visit.webp",
+      mimizouNightStroll: "assets/collection/mimizou-night-stroll.webp",
     });
   });
 
@@ -963,6 +977,9 @@ describe("values derived from the scene presentation table", () => {
           "bed": "ベッドは空っぽ。エトキチは窓辺で手を振っている。",
           "bookshelf": "棚の上のフクロウの置き物が、窓のほうを向いている。",
           "window": "窓台に灰色の小さな羽が一枚残っている。",
+        },
+        "mimizouNightStroll": {
+          "sofa": "クーンちゃんが、とことこ響く足音に耳だけを向けている。",
         },
         "mimizouVisit": {
           "bookshelf": "フクロウの図鑑が、棚の一番上に置いてある。",

@@ -10,9 +10,9 @@ describe("scene catalog", () => {
       const expectedCount =
         band === "evening"
           ? 6
-          : band === "earlyMorning" || band === "deepNight" || band === "daytime"
+          : band === "earlyMorning" || band === "deepNight" || band === "daytime" || band === "night"
             ? 5
-            : band === "night" || band === "morning"
+            : band === "morning"
               ? 4
               : 3;
       expect(scenes).toHaveLength(expectedCount);
