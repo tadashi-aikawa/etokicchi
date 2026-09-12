@@ -16,7 +16,7 @@ const singleSprites = [
 ];
 
 describe("character sprite transparency", () => {
-  it.each([...sheets, WALK_ASSET_NAME, ...singleSprites])(
+  it.each([...sheets, WALK_ASSET_NAME, "mimizou-walk-pixel.webp", ...singleSprites])(
     "removes the backing and keeps each frame inside its cell: %s",
     async (name) => {
       const { data, info } = await sharp(decodeURIComponent(new URL(name, assetDirectory).pathname))
@@ -24,7 +24,9 @@ describe("character sprite transparency", () => {
         .raw()
         .toBuffer({ resolveWithObject: true });
       const columns = singleSprites.includes(name) ? 1 : 3;
-      const rows = name === WALK_ASSET_NAME ? 4 : name === "etokichi-watering-directions-pixel.webp" ? 2 : 1;
+      const isWalkSheet = name === WALK_ASSET_NAME || name === "mimizou-walk-pixel.webp";
+      const rows = isWalkSheet ? 4 : name === "etokichi-watering-directions-pixel.webp" ? 2 : 1;
+      if (isWalkSheet) expect([info.width, info.height]).toEqual([288, 416]);
       const width = info.width / columns;
       const height = info.height / rows;
       const visibleByCell = Array<number>(columns * rows).fill(0);

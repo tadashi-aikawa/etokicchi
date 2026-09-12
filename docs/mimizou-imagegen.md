@@ -1,6 +1,51 @@
 # みみぞうの画像生成記録
 
-## 現行素材: オリジナルのフォルムを復元
+## 現行素材: 歩行用12コマと静止コマ
+
+外見の基準はタダシが新たに指定した [デザイン参照](assets/mimizou-design-reference.png)。大きな縦長の白目、下寄りの小さな瞳、丸い体、灰色の腹部の斑点、短い黄色の足を保持し、組み込みimagegenで4方向の歩行素材を制作した。
+
+| ファイル | 用途 |
+| --- | --- |
+| `assets-src/mimizou-pixel.png` | 1086×1448pxの原画。3列×4行、単色マゼンタ背景 |
+| `public/assets/mimizou-walk-pixel.webp` | 将来の歩行用。288×416px、各コマ96×104px |
+| `public/assets/mimizou-pixel.png` | 現行シーン用の正面静止コマ。93×97px |
+
+- 行は正面・左・右・後ろ。列は左足の一歩・静止・右足の一歩。
+- 歩行ループは列0→1→2→1。プレビューでは1コマ160ms。停止は各行の中央コマ。
+- 足元アンカーは中央下。歩行シートの足元はセル下端から4px上を基準とし、歩幅の差を残して行ごとに整列する。
+- `pnpm assets:normalize` は透過後に列ごとの4つの不透明帯を検出し、全12コマ共通倍率でセルへ収める。既存エトキチの変換倍率は変えない。
+- 静止PNGは同じ原画の正面中央コマから、左394・上41・幅298・高さ300を切り出して生成する。
+- 現行の訪問・見送り・星見は静止PNGを継続使用し、歩行アニメーションや移動経路は追加しない。歩行WebPは将来用として未使用素材チェックに明示的な例外を設けた。
+
+[歩行プレビュー](http://127.0.0.1:4173/etokicchi/docs/mimizou-walk-preview.html) は開発サーバー上で開く。4方向の歩行と各方向の静止を比較できる。
+
+### 生成プロンプト
+
+検証は12コマの境界・空白・透過検査と歩行プレビューの全方向全コマ、訪問・見送り・星見・ソファーのクーンを390px幅と1280px幅で確認した。星見のみみぞうのタップで本人のフキダシが出ることも確認。523テスト・型検査・整形・ビルド成功、既存Lint警告3件。素材変換を再実行して対象3素材と既存エトキチ歩行シートのSHA-256が一致した。
+
+画像1が新しいデザイン参照、画像2は `decor-cat-loaf-pixel.webp` を画風参照として使用。
+
+```text
+Use case: identity-preserve, game sprite sheet. Image 1 is the ONLY character design reference: Mimizou the grey round owl. Image 2 is ONLY desired fine pixel-art texture/density, not a subject. Create a production WALK CYCLE sheet of Mimizou: EXACTLY 3 equal COLUMNS by 4 equal ROWS, TWELVE full-body sprites, portrait 3:4 sheet. Row 1 facing FRONT/down. Row 2 pure LEFT side profile. Row 3 pure RIGHT side profile. Row 4 BACK view facing away. In EACH row columns are left-foot step, neutral standing with both feet level, right-foot step. Compact waddling terrestrial walk, wings stay folded against sides, slight alternating foot lift and tiny body sway, no flying or hopping. Keep consistent body size, proportions, center and foot baseline in every cell; generous equal clear margins within cells, no touching cell edges. Reference design MUST remain identifiable: broad near-round grey body with large charcoal-grey head/face, TWO BIG VERTICAL OVAL off-white eyes with very small black pupils low/inward, small leaf-shaped yellow beak, light-grey lower belly with sparse dark blue-grey oval feather spots, folded grey side wings, tiny yellow three-toed feet. Head/belly proportions, eye shape and placement, expression, grey palette and broad round outline MUST match image 1, not a generic owl. Back and side views use the same body proportions, dark grey back with subtle feathers, folded wings, no extra tail or accessories. Crown has only reference's small flat feather tips, no horns/ear tufts. Deliberate FINE PIXEL ART with tiny nuanced grey shade clusters and thin subtle charcoal contour matching detailed game assets; not smooth vector, not painterly blur, not chunky black borders. Single sprite sheet only, no text, labels, grid lines, shadows or extra characters. Every backdrop/gap is uniform pure RGB(255,0,255) #ff00ff MAGENTA for chroma key, including between toes. Front CENTER neutral sprite will also be used as the current static game character. Make that sprite especially faithful to the reference.
+```
+
+### 横向きの方向修正
+
+最初の生成では横向きの3列目が逆を向いたため修正した。
+
+```text
+Precise sprite sheet correction. Keep entire existing 3-column 4-row sheet EXACTLY unchanged except TWO cells: row 2 column 3 and row 3 column 3. Row 2 column 3 incorrectly faces RIGHT: redraw it facing LEFT, matching row 2 columns 1 and 2, as opposite walking foot phase to row 2 column 1. Row 3 column 3 incorrectly faces LEFT: redraw it facing RIGHT, matching row 3 columns 1 and 2, opposite walking foot phase to row 3 column 1. Every sprite in row 2 must look LEFT (beak on left). Every sprite in row 3 must look RIGHT (beak on right). Keep all other TEN cells exactly unchanged. Preserve the owl design, pixel art, body size, magenta background, all grid positions and margins. No added cells/text, no layout shifts. This is a WALK LOOP, each row's direction must stay constant through three frames.
+```
+
+### 左右の足の位相修正
+
+横向きの1列目と3列目が同じ足を上げていたため、3列目では反対側の足を上げるよう修正した。
+
+```text
+Surgical correction to FEET ONLY of two sprites in this 3-column, 4-row sheet. Row 2 column 3 faces LEFT: its LEFTMOST foot by beak must now be firmly planted LOWER on the shared floor baseline, while its RIGHTMOST foot near rump must be lifted UP visibly by about one foot-height. Row 3 column 3 faces RIGHT: its RIGHTMOST foot by beak must now be firmly planted LOWER on baseline, while its LEFTMOST foot by rump must be lifted UP visibly. These two cells currently repeat the first column's step and need the OPPOSITE foot lifted. DO NOT change bodies, eyes, wings, size, orientation, positions, spacing, colors or any pixels in other TEN cells. Keep pure #ff00ff background and exact 3x4 layout. The two corrected poses must clearly lift the BACK foot instead of the FRONT foot, without adding feet. Keep both feet attached beneath body, no shadows.
+```
+
+## 旧版: 小さいオリジナルからフォルムを復元
 
 前回は既存ドット絵を外見参照にしたため、オリジナルから形が離れていた。タダシから提供された [オリジナル画像](assets/mimizou-original.png) を外見の正本に切り替え、組み込みimagegenで描き直した。
 

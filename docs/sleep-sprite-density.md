@@ -10,7 +10,7 @@
 | `etokichi-sleep-covered-pixel.png` | 106×78 | 布団を掛け直した寝姿 |
 | `etokichi-sleep-kicked-pixel.png` | 112×78 | 布団を蹴った寝姿 |
 | `etokichi-window-nap-star-book-pixel.png` | 144×144 | 窓辺とクーン枕で共用 |
-| `decor-cat-sofa-curled-compact-pixel.webp` | 120×150 | ソファーで丸まるクーン |
+| `decor-cat-sofa-curled-compact-pixel.webp` | 96×120 | ソファーで丸まるクーン。原画承認後に表示寸法を48×60へ20％縮小 |
 | `etokichi-sleep-pixel.webp` | 126×84 | 既定の寝姿素材。現行の各寝姿シーンでは専用素材を使用 |
 
 外周の切れを避けるため、元絵が端まで達していた寝顔と掛け直しには約1pxの余白を確保した。ソファーのクーンは60×75pxの拡大から、高解像度原画の縮小へ切り替えた。

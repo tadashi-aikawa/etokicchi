@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ja">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>みみぞうの歩行素材プレビュー</title>
+  <style>
+    body { margin: 0; padding: 32px; font-family: system-ui, sans-serif; background: #ede6d7; color: #3c352c; }
+    main { max-width: 900px; margin: auto; }
+    h1 { font-size: 24px; }
+    p { line-height: 1.8; }
+    .directions { display: flex; flex-wrap: wrap; gap: 24px; }
+    figure { margin: 0; padding: 20px; border-radius: 12px; background: #fffaf0; text-align: center; }
+    .sprite { width: 96px; height: 104px; margin: auto; image-rendering: pixelated;
+      background-image: url('../assets/mimizou-walk-pixel.webp'); background-size: 288px 416px;
+      background-position-y: var(--row); animation: walk 640ms step-end infinite; }
+    figcaption { margin-top: 12px; }
+    .idle { width: 93px; height: 97px; image-rendering: pixelated; }
+    .paused .sprite { animation: none; background-position-x: -96px; }
+    button { padding: 10px 18px; font: inherit; margin: 20px 0; cursor: pointer; }
+    @keyframes walk { 0%,100% { background-position-x: 0; } 25%,75% { background-position-x: -96px; } 50% { background-position-x: -192px; } }
+    @media (prefers-reduced-motion: reduce) { .sprite { animation: none; background-position-x: -96px; } }
+  </style>
+  <main>
+    <h1>みみぞうの歩行素材プレビュー</h1>
+    <p>正面・左・右・後ろの4方向を収めた12コマの素材です。現在のゲームでは正面の静止コマを使っています。</p>
+    <button type="button" aria-pressed="false" onclick="const paused=document.body.classList.toggle('paused'); this.setAttribute('aria-pressed',String(paused)); this.textContent=paused?'歩行を再生':'静止コマで止める'">静止コマで止める</button>
+    <div class="directions">
+      <figure><div class="sprite" style="--row:0px" role="img" aria-label="正面の歩行"></div><figcaption>正面</figcaption></figure>
+      <figure><div class="sprite" style="--row:-104px" role="img" aria-label="左向きの歩行"></div><figcaption>左</figcaption></figure>
+      <figure><div class="sprite" style="--row:-208px" role="img" aria-label="右向きの歩行"></div><figcaption>右</figcaption></figure>
+      <figure><div class="sprite" style="--row:-312px" role="img" aria-label="後ろ向きの歩行"></div><figcaption>後ろ</figcaption></figure>
+    </div>
+    <h2>現在のシーンで使う静止素材</h2>
+    <img class="idle" src="../assets/mimizou-pixel.png" alt="正面で静止するみみぞう" />
+    <p>1コマは96×104px。列は左足・静止・右足、再生順は0→1→2→1です。ゲーム内の歩行機能はまだ追加していません。</p>
+  </main>
+</html>

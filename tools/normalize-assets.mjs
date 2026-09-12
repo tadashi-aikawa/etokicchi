@@ -78,11 +78,11 @@ const TARGETS = [
   },
   {
     name: "decor-cat-sofa-curled-compact-pixel.webp",
-    width: 120,
-    height: 150,
+    width: 96,
+    height: 120,
     kernel: "lanczos",
     chromaKeyMagenta: true,
-    note: "ソファーのクーン 60×75",
+    note: "ソファーのクーン 48×60",
   },
 
   // シーン小物。sceneProps の height と、素材の縦横比から決まる表示幅。
@@ -134,9 +134,9 @@ const TARGETS = [
     width: 93,
     height: 97,
     kernel: "lanczos",
-    extract: { left: 108, top: 102, width: 1038, height: 1048 },
+    extract: { left: 394, top: 41, width: 298, height: 300 },
     chromaKeyMagenta: true,
-    note: "みみぞう 46.5×48.5・細密原画から外周余白を除いて縮小",
+    note: "みみぞう 46.5×48.5・歩行原画の正面中央コマを静止表示",
   },
   { name: "tatsuo-sleeping-pixel.png", width: 112, height: 160, kernel: "nearest", note: "眠るタツヲ 56×80" },
   { name: "tatsuo-awake-pixel-v2.png", width: 180, height: 160, kernel: "nearest", note: "起こしにくるタツヲ 90×80" },
@@ -235,12 +235,12 @@ function findVerticalRuns(data, info, left, right) {
   return runs;
 }
 
-async function buildWalkSheet() {
-  const source = sharp(path.join(sourceDir, WALK_SOURCE_NAME)).ensureAlpha();
+async function buildWalkSheet(sourceName = WALK_SOURCE_NAME, outputName = sourceName, fitToCell = false) {
+  const source = sharp(path.join(sourceDir, sourceName)).ensureAlpha();
   const { data, info } = await source.raw().toBuffer({ resolveWithObject: true });
   // 新しい原画は単色背景。コマの検出と縮小より前に透過し、境界の残色も防ぐ。
   removeMagenta(data, info.channels);
-  const scale = WALK_CELL_HEIGHT / (info.height / WALK_ROWS);
+  let scale = WALK_CELL_HEIGHT / (info.height / WALK_ROWS);
 
   /** @type {{ row: number; column: number; box: { x0: number; y0: number; x1: number; y1: number }; centerX: number }[]} */
   const frames = [];
@@ -249,13 +249,20 @@ async function buildWalkSheet() {
     const right = Math.round(((column + 1) * info.width) / WALK_COLUMNS);
     const runs = findVerticalRuns(data, info, left, right);
     if (runs.length !== WALK_ROWS) {
-      throw new Error(`${WALK_SOURCE_NAME}の列${column}から${WALK_ROWS}コマを切り出せません(検出${runs.length})`);
+      throw new Error(`${sourceName}の列${column}から${WALK_ROWS}コマを切り出せません(検出${runs.length})`);
     }
     for (const [row, box] of runs.entries()) {
       frames.push({ row, column, box, centerX: (left + right) / 2 });
     }
   }
 
+  // 新規の歩行素材は全コマ共通倍率でセルへ収め、方向ごとの体格差を作らない。
+  if (fitToCell) {
+    scale = Math.min(
+      (WALK_CELL_WIDTH - 4) / Math.max(...frames.map(({ box }) => box.x1 - box.x0 + 1)),
+      (WALK_CELL_HEIGHT - WALK_FOOT_PADDING - 4) / Math.max(...frames.map(({ box }) => box.y1 - box.y0 + 1)),
+    );
+  }
   const footByRow = new Map();
   for (const frame of frames) {
     footByRow.set(frame.row, Math.max(footByRow.get(frame.row) ?? 0, frame.box.y1));
@@ -299,7 +306,7 @@ async function buildWalkSheet() {
     ].filter(Boolean);
     if (overflow.length === 0) continue;
     throw new Error(
-      `${WALK_SOURCE_NAME}の${WALK_ROW_DIRECTIONS[row]}${column}コマ目が` +
+      `${sourceName}の${WALK_ROW_DIRECTIONS[row]}${column}コマ目が` +
         `${WALK_CELL_WIDTH}x${WALK_CELL_HEIGHT}のセルからはみ出します: ${overflow.join("、")}`,
     );
   }
@@ -316,8 +323,8 @@ async function buildWalkSheet() {
     .composite(composites)
     .webp({ lossless: true })
     .toBuffer();
-  await writeFile(path.join(outputDir, WALK_SOURCE_NAME), sheet);
-  return `${WALK_SOURCE_NAME}: ${info.width}x${info.height} -> ${WALK_COLUMNS * WALK_CELL_WIDTH}x${WALK_ROWS * WALK_CELL_HEIGHT}(12コマ組み直し)`;
+  await writeFile(path.join(outputDir, outputName), sheet);
+  return `${outputName}: ${info.width}x${info.height} -> ${WALK_COLUMNS * WALK_CELL_WIDTH}x${WALK_ROWS * WALK_CELL_HEIGHT}(12コマ組み直し)`;
 }
 
 /** @param {Buffer} data @param {number} channels */
@@ -360,5 +367,6 @@ if (missing.length > 0) throw new Error(`目標寸法が未定義の素材があ
 
 const lines = await Promise.all(TARGETS.map(convert));
 lines.push(await buildWalkSheet());
+lines.push(await buildWalkSheet("mimizou-pixel.png", "mimizou-walk-pixel.webp", true));
 for (const line of lines.sort()) console.log(line);
 console.log(`\n${lines.length}件を ${path.relative(root, outputDir)} へ書き出しました。`);

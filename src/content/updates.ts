@@ -10,6 +10,14 @@ export interface UpdateEntry {
 /** 新しい更新を先頭に追加する。日付は変更をまとめた日。 */
 export const UPDATES: readonly UpdateEntry[] = [
   {
+    id: "2026-09-12-5",
+    date: "2026-09-12",
+    changes: [
+      "みみぞうの姿を、新しいイラストに合わせて整えました。",
+      "ソファーの上のクーンちゃんを、一回り小さくしました。",
+    ],
+  },
+  {
     id: "2026-09-12-4",
     date: "2026-09-12",
     changes: [
