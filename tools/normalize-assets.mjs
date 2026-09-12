@@ -81,6 +81,7 @@ const TARGETS = [
     width: 120,
     height: 150,
     kernel: "lanczos",
+    chromaKeyMagenta: true,
     note: "ソファーのクーン 60×75",
   },
 
@@ -93,15 +94,17 @@ const TARGETS = [
   { name: "scene-toy-box-pixel.webp", width: 57, height: 44, kernel: "lanczos", note: "おもちゃ箱 28.5×22" },
 
   // 寝姿・同席者。sleeperHeight / companion.height / visitor.height。
-  { name: "etokichi-sleep-pixel.webp", width: 126, height: 84, kernel: "lanczos", note: "既定の寝姿 63×42" },
-  { name: "etokichi-sleep-tucked-pixel.png", width: 84, height: 60, kernel: "nearest", note: "布団の寝姿 42×30" },
-  { name: "etokichi-sleep-covered-pixel.png", width: 106, height: 78, kernel: "nearest", note: "掛け直し 53×39" },
-  { name: "etokichi-sleep-kicked-pixel.png", width: 112, height: 78, kernel: "nearest", note: "布団蹴り 56×39" },
+  { name: "etokichi-sleep-pixel.webp", width: 126, height: 84, kernel: "lanczos", extract: { left: 156, top: 93, width: 1233, height: 800 }, chromaKeyMagenta: true, note: "既定の寝姿 63×42" },
+  { name: "etokichi-sleep-tucked-pixel.png", width: 84, height: 60, kernel: "lanczos", extract: { left: 223, top: 215, width: 955, height: 662 }, chromaKeyMagenta: true, note: "布団の寝姿 42×30" },
+  { name: "etokichi-sleep-covered-pixel.png", width: 106, height: 78, kernel: "lanczos", extract: { left: 8, top: 16, width: 1405, height: 1030 }, chromaKeyMagenta: true, note: "掛け直し 53×39" },
+  { name: "etokichi-sleep-kicked-pixel.png", width: 112, height: 78, kernel: "lanczos", extract: { left: 85, top: 43, width: 1417, height: 949 }, chromaKeyMagenta: true, note: "布団蹴り 56×39" },
   {
     name: "etokichi-window-nap-star-book-pixel.png",
     width: 144,
     height: 144,
     kernel: "lanczos",
+    extract: { left: 101, top: 82, width: 1071, height: 1123 },
+    chromaKeyMagenta: true,
     note: "窓辺の昼寝 72×72",
   },
   {
@@ -131,7 +134,7 @@ const TARGETS = [
     width: 93,
     height: 97,
     kernel: "lanczos",
-    extract: { left: 111, top: 109, width: 1030, height: 1039 },
+    extract: { left: 108, top: 102, width: 1038, height: 1048 },
     chromaKeyMagenta: true,
     note: "みみぞう 46.5×48.5・細密原画から外周余白を除いて縮小",
   },

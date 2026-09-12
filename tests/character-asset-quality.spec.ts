@@ -4,16 +4,26 @@ import { ACTION_ASSET_NAMES, WALK_ASSET_NAME } from "../src/rendering/scene-asse
 
 const assetDirectory = new URL("../public/assets/", import.meta.url);
 const sheets = [...new Set(Object.values(ACTION_ASSET_NAMES))].filter((name): name is string => Boolean(name));
+const singleSprites = [
+  "etokichi-comforting-maine-coon-pixel.webp",
+  "mimizou-pixel.png",
+  "etokichi-sleep-tucked-pixel.png",
+  "etokichi-sleep-covered-pixel.png",
+  "etokichi-sleep-kicked-pixel.png",
+  "etokichi-window-nap-star-book-pixel.png",
+  "decor-cat-sofa-curled-compact-pixel.webp",
+  "etokichi-sleep-pixel.webp",
+];
 
 describe("character sprite transparency", () => {
-  it.each([...sheets, WALK_ASSET_NAME, "etokichi-comforting-maine-coon-pixel.webp", "mimizou-pixel.png"])(
+  it.each([...sheets, WALK_ASSET_NAME, ...singleSprites])(
     "removes the backing and keeps each frame inside its cell: %s",
     async (name) => {
       const { data, info } = await sharp(decodeURIComponent(new URL(name, assetDirectory).pathname))
         .ensureAlpha()
         .raw()
         .toBuffer({ resolveWithObject: true });
-      const columns = name === "etokichi-comforting-maine-coon-pixel.webp" || name === "mimizou-pixel.png" ? 1 : 3;
+      const columns = singleSprites.includes(name) ? 1 : 3;
       const rows = name === WALK_ASSET_NAME ? 4 : name === "etokichi-watering-directions-pixel.webp" ? 2 : 1;
       const width = info.width / columns;
       const height = info.height / rows;

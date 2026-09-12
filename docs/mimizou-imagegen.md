@@ -1,6 +1,24 @@
 # みみぞうの画像生成記録
 
-## 現行素材: 細かな輪郭と羽の陰影
+## 現行素材: オリジナルのフォルムを復元
+
+前回は既存ドット絵を外見参照にしたため、オリジナルから形が離れていた。タダシから提供された [オリジナル画像](assets/mimizou-original.png) を外見の正本に切り替え、組み込みimagegenで描き直した。
+
+- 縦長の白目と下寄りの小さい瞳、大きな顔、浅い灰色のお腹、体の輪郭に沿った羽を優先した。
+- 丸い目、大きな白い胸、左右へ張り出す羽、目の光沢を加えない。
+- 原画は `assets-src/mimizou-pixel.png`。1254×1254px、マゼンタ背景。
+- 左108・上102から1038×1048pxを切り出し、既存処理で透過して93×97pxへLanczos縮小する。表示寸法と位置は維持する。
+- 最初にオリジナルの輪郭・目・腹部の比率を指定して形を再現し、その出力へ次の細密化を施した。
+
+### 最終の細密化プロンプト
+
+```text
+Style refinement of this EXACT sprite, preserve its geometry pixel-for-pixel in proportion: same compact egg silhouette, same two tall white eyes with small low pupils, tiny yellow beak, same shallow speckled grey belly and tiny flat yellow feet. Do not change any landmark, pose, expression, anatomy, placement or relative sizes. Replace the large coarse blocky pixel stair steps with MUCH FINER pixel-art clusters and thin subtle grey edges, delicately shaded grey feathers. The drawing should have fine detail at roughly six times current pixel density. NOT a generic owl redesign, not big circular eyes, no large white chest, no wing protrusions or ear tufts, no shiny eye highlights. Keep the muted greys, original small sparse belly spots, and uniform pure #ff00ff magenta background exactly. No grain, no blur, no added features. Same near-square composition and padding.
+```
+
+先に挙げた他素材の候補6点もタダシの依頼で対応した。詳細は [寝姿とソファーのクーンの細密化](sleep-sprite-density.md)。
+
+## 不採用版: 既存ドット絵を参照した細密化
 
 組み込みimagegenで描き直し、丸い頭・大きな白い目・灰白の体・黄色いくちばしと足を保った。旧素材の太い輪郭と大きな陰影の段差を、細かな羽の陰影へ置き換えた。
 
@@ -33,7 +51,7 @@ Precise background edit only. Keep owl EXACTLY unchanged, every feather, eyes, p
 
 ### 他素材の描き直し候補
 
-配信画像の目視比較による優先度。以下の画像は今回変更していない。
+当初の配信画像の目視比較による優先度。候補報告後に全6点の描き直しが承認され、別途対応した。
 
 | 優先度 | 素材 | 理由 |
 | --- | --- | --- |
