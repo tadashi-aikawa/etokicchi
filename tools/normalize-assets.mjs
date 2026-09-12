@@ -126,7 +126,15 @@ const TARGETS = [
     chromaKeyMagenta: true,
     note: "抱きしめ 71×52",
   },
-  { name: "mimizou-pixel.png", width: 93, height: 97, kernel: "nearest", note: "みみぞう 46.5×48.5・外周余白なし" },
+  {
+    name: "mimizou-pixel.png",
+    width: 93,
+    height: 97,
+    kernel: "lanczos",
+    extract: { left: 111, top: 109, width: 1030, height: 1039 },
+    chromaKeyMagenta: true,
+    note: "みみぞう 46.5×48.5・細密原画から外周余白を除いて縮小",
+  },
   { name: "tatsuo-sleeping-pixel.png", width: 112, height: 160, kernel: "nearest", note: "眠るタツヲ 56×80" },
   { name: "tatsuo-awake-pixel-v2.png", width: 180, height: 160, kernel: "nearest", note: "起こしにくるタツヲ 90×80" },
   {
