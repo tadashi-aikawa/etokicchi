@@ -122,8 +122,9 @@ const TARGETS = [
     name: "etokichi-comforting-maine-coon-pixel.webp",
     width: 142,
     height: 104,
-    kernel: "nearest",
-    note: "抱きしめ 71×52(原素材が既に2倍)",
+    kernel: "lanczos",
+    chromaKeyMagenta: true,
+    note: "抱きしめ 71×52",
   },
   { name: "mimizou-pixel.png", width: 93, height: 97, kernel: "nearest", note: "みみぞう 46.5×48.5・外周余白なし" },
   { name: "tatsuo-sleeping-pixel.png", width: 112, height: 160, kernel: "nearest", note: "眠るタツヲ 56×80" },
@@ -161,6 +162,7 @@ const TARGETS = [
     width: 360,
     height: 120,
     kernel: /** @type {const} */ ("lanczos"),
+    chromaKeyMagenta: true,
     note: "行動アニメ 60×60 の3コマ",
   })),
   // 水やりだけは向き違いの2行。
@@ -169,6 +171,7 @@ const TARGETS = [
     width: 360,
     height: 240,
     kernel: "lanczos",
+    chromaKeyMagenta: true,
     note: "行動アニメ 60×60 の3コマ×2行",
   },
 ];
@@ -224,6 +227,8 @@ function findVerticalRuns(data, info, left, right) {
 async function buildWalkSheet() {
   const source = sharp(path.join(sourceDir, WALK_SOURCE_NAME)).ensureAlpha();
   const { data, info } = await source.raw().toBuffer({ resolveWithObject: true });
+  // 新しい原画は単色背景。コマの検出と縮小より前に透過し、境界の残色も防ぐ。
+  removeMagenta(data, info.channels);
   const scale = WALK_CELL_HEIGHT / (info.height / WALK_ROWS);
 
   /** @type {{ row: number; column: number; box: { x0: number; y0: number; x1: number; y1: number }; centerX: number }[]} */
@@ -251,8 +256,7 @@ async function buildWalkSheet() {
       const sourceHeight = box.y1 - box.y0 + 1;
       const width = Math.max(1, Math.round(sourceWidth * scale));
       const height = Math.max(1, Math.round(sourceHeight * scale));
-      const input = await sharp(path.join(sourceDir, WALK_SOURCE_NAME))
-        .ensureAlpha()
+      const input = await sharp(data, { raw: info })
         .extract({ left: box.x0, top: box.y0, width: sourceWidth, height: sourceHeight })
         .resize({ width, height, kernel: "lanczos3", fit: "fill" })
         .png()
@@ -305,6 +309,13 @@ async function buildWalkSheet() {
   return `${WALK_SOURCE_NAME}: ${info.width}x${info.height} -> ${WALK_COLUMNS * WALK_CELL_WIDTH}x${WALK_ROWS * WALK_CELL_HEIGHT}(12コマ組み直し)`;
 }
 
+/** @param {Buffer} data @param {number} channels */
+function removeMagenta(data, channels) {
+  for (let i = 0; i < data.length; i += channels) {
+    if (Math.min(data[i], data[i + 2]) - data[i + 1] > 255 * 0.18) data[i + 3] = 0;
+  }
+}
+
 /** @param {Target} target */
 async function convert(target) {
   const input = path.join(sourceDir, target.name);
@@ -313,9 +324,7 @@ async function convert(target) {
   if (target.extract) image = image.extract(target.extract);
   if (target.chromaKeyMagenta) {
     const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });
-    for (let i = 0; i < data.length; i += info.channels) {
-      if (Math.min(data[i], data[i + 2]) - data[i + 1] > 255 * 0.18) data[i + 3] = 0;
-    }
+    removeMagenta(data, info.channels);
     image = sharp(data, { raw: info });
   }
   const resized = image.resize({
