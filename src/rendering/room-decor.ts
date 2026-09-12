@@ -25,6 +25,7 @@ interface RoomDepthDecorationOverrideCommon {
   assetName?: string;
   width?: number;
   height?: number;
+  rotation?: number;
   animation?: {
     columns: number;
     frameDurationsMs: readonly number[];

@@ -750,6 +750,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
           offset: { x: 8, y: -14 },
           width: 48,
           height: 60,
+          rotation: -Math.PI / 12,
           depthOffset: 1,
         },
       },

@@ -110,6 +110,7 @@ export function createDepthDecorationSprites(
     sprite.anchor.set(0.5, 1);
     sprite.width = override?.width ?? definition.width;
     sprite.height = override?.height ?? definition.height;
+    sprite.rotation = override?.rotation ?? 0;
     sprite.position.set(x, y);
     sprite.zIndex = getDepthZIndex(depthY, 20 + tieBreak);
     sprite.label = definition.displayName;
