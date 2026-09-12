@@ -1,6 +1,10 @@
 import type { SceneId, VisitView } from "../game/types.ts";
 import type { FurnitureAnchors } from "../rendering/room-furniture.ts";
-import type { ObservationOverrides, RoomPresentationCommon } from "../rendering/room-presentation-types.ts";
+import type {
+  DepthDecorationThoughts,
+  ObservationOverrides,
+  RoomPresentationCommon,
+} from "../rendering/room-presentation-types.ts";
 import { fixtureAction, furnitureAction, point, type SceneRoute } from "../rendering/route-definitions.ts";
 
 /** 行動アニメーションの素材。向きを変えて2度使うシーンだけ rows が2になる。 */
@@ -23,6 +27,8 @@ export interface ScenePresentationDefinition {
   action: SceneAction;
   /** シーンごとの観察文。ここに無い対象は家具・設備・時間帯別の既定文をそのまま使う。 */
   observations?: ObservationOverrides;
+  /** シーンごとの、クーンが頭の中で思っていること。ここに無いシーンは床上装飾の既定文を使う。 */
+  thoughts?: DepthDecorationThoughts;
   collectionImage: string;
   /** 選択肢や同席者で見た目が変わるシーンだけ関数にする。 */
   room: RoomPresentationCommon | ((visit: VisitView) => RoomPresentationCommon);
@@ -58,6 +64,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bedsideTable: "照明台の明かりは落とされ、コップの水だけが小さく光っている。",
       bookshelf: "読みかけの本が、棚から少しだけ引き出されたままになっている。",
     },
+    thoughts: { maineCoon: "夜はわたしの見回りの時間なの。……でも、眠いの。" },
     collectionImage: "assets/collection/sleeping.webp",
     room: {
       sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
@@ -75,6 +82,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bedsideTable: "枕元の水は、タツヲが持ってきてくれたものかもしれない。",
       sofa: "タツヲにはソファーより、エトキチのそばのほうが落ち着くらしい。",
     },
+    thoughts: { maineCoon: "大きいのが来た日は、床がちょっと揺れるの。" },
     collectionImage: "assets/collection/sleeping-with-tatsuo.webp",
     room: {
       sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
@@ -126,6 +134,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       window: "窓が少しだけ開いていて、冷たい夜風が入ってくる。",
       bedsideTable: "照明台の上には、まだ半分残った水のコップがある。",
     },
+    thoughts: { maineCoon: "蹴っちゃうなら、その布団わたしにちょうだいなの。" },
     collectionImage: "assets/collection/kicked-blanket.webp",
     room: (visit) => {
       const covered = visit.interaction?.choiceId === "cover";
@@ -177,6 +186,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bookshelf: "星座の本が、棚の一番手前に移されている。",
       bedsideTable: "照明は消してある。星を見るには暗いほうがいいらしい。",
     },
+    thoughts: { maineCoon: "お星さまより、動くもののほうが気になるの。" },
     collectionImage: "assets/collection/watching-stars.webp",
     room: (visit) => ({
       ...DEFAULT_ROOM,
@@ -205,6 +215,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bed: "布団の中で何度ももぞもぞ動いている。もうすぐ起きそうだ。",
       bedsideTable: "枕元の帽子に手が伸びかけて、また布団へ戻った。",
     },
+    thoughts: { maineCoon: "そろそろ起きる音なの。ごはんの時間なの。" },
     collectionImage: "assets/collection/almost-awake.webp",
     room: {
       sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
@@ -230,6 +241,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bed: "起きたばかりのベッドは、掛け布団がめくれたままだ。",
       bedsideTable: "窓のそばに、小さな水のコップが用意されている。",
     },
+    thoughts: { maineCoon: "伸びはね、こうやるの。見てる？" },
     collectionImage: "assets/collection/morning-stretch.webp",
     room: DEFAULT_ROOM,
   },
@@ -248,6 +260,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       diningSet: "食卓ではなく絨毯の上で書くのが、エトキチ流らしい。",
       window: "静かな朝の光が、開いた手帳のページを照らしている。",
     },
+    thoughts: { maineCoon: "予定？ 寝て、食べて、また寝るの。" },
     collectionImage: "assets/collection/planning-day.webp",
     room: DEFAULT_ROOM,
   },
@@ -262,6 +275,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bedsideTable: "枕元に朝の水が届いている。タツヲが運んできたらしい。",
       window: "タツヲが来るのは、いつも空が白み始めたころだ。",
     },
+    thoughts: { maineCoon: "起こすのは、わたしのお役目だったのに。" },
     collectionImage: "assets/collection/tatsuo-wake-up-v2.webp",
     room: {
       sleeperAssetName: "etokichi-sleep-tucked-pixel.png",
@@ -294,6 +308,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bed: "ベッドは空っぽ。エトキチは窓辺で手を振っている。",
       bookshelf: "棚の上のフクロウの置き物が、窓のほうを向いている。",
     },
+    thoughts: { maineCoon: "いってらっしゃいなの。窓は閉めてほしいの。" },
     collectionImage: "assets/collection/mimizou-farewell.webp",
     room: MIMIZOU_WINDOW_ROOM,
   },
@@ -317,6 +332,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       fridge: "冷蔵庫の中身が、今朝だけでだいぶ減った気がする。",
       sink: "流し台には、朝食に使ったボウルとフライパンが積まれている。",
     },
+    thoughts: { maineCoon: "そんなに多いなら、一皿はわたしのだと思うの。" },
     collectionImage: "assets/collection/too-much-breakfast.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -356,6 +372,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bookshelf: "鞄の中身を探した跡が、棚の前に散らばっている。",
       window: "窓の外はもうすっかり明るい。急がないと。",
     },
+    thoughts: { maineCoon: "そんなにあわてなくても、朝は逃げないの。" },
     collectionImage: "assets/collection/overslept.webp",
     room: DEFAULT_ROOM,
   },
@@ -377,6 +394,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       stove: "やかんを火にかけた跡が、コンロにまだ残っている。",
       sink: "茶葉の缶が、流し台の脇に出しっぱなしになっている。",
     },
+    thoughts: { maineCoon: "湯気はあったかそうなの。でも、飲まないの。" },
     collectionImage: "assets/collection/morning-tea.webp",
     room: DEFAULT_ROOM,
   },
@@ -390,6 +408,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       sofa: "ソファーの上に、抜け毛がふわふわと集まっている。",
       window: "朝の光で、クーンちゃんのしま模様までつやつやに見える。",
     },
+    thoughts: { maineCoon: "そこなの、そこ。もうちょっとだけ右なの。" },
     collectionImage: "assets/collection/brushing-maine-coon.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -401,7 +420,6 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
           depthY: 320,
           width: 68,
           height: 54,
-          observation: "クーンちゃんが、ブラシへ背中を預けて気持ちよさそうに目を細めている。",
         },
       },
     },
@@ -421,6 +439,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       diningSet: "掃除の途中のはずが、雑巾は食卓の上で止まっている。",
       sofa: "ソファーの下から、昔描いた絵が出てきた。",
     },
+    thoughts: { maineCoon: "その紐、たぶん元はわたしのなの。" },
     collectionImage: "assets/collection/found-old-toy.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -448,6 +467,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bed: "ベッドではなく、日なたの座布団を選んだらしい。",
       bookshelf: "読みかけの本は、胸の上で開いたままだ。",
     },
+    thoughts: { maineCoon: "日なたは早い者勝ちなの。ここは譲らないの。" },
     collectionImage: "assets/collection/window-nap.webp",
     room: {
       sleeperAssetName: "etokichi-window-nap-star-book-pixel.png",
@@ -463,7 +483,6 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
           x: 66,
           y: 300,
           depthY: 300,
-          observation: "クーンちゃんも、窓から差す日なたを選んで気持ちよさそうに眠っている。",
         },
       },
     },
@@ -479,6 +498,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bed: "今日はベッドより、マサハルの隣が気持ちよさそう。",
       bookshelf: "本は棚にしまったまま。今は二人でのんびりする時間。",
     },
+    thoughts: { maineCoon: "半分こするなら、わたしにもくれていいと思うの。" },
     collectionImage: "assets/collection/masaharu-sunbeam.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -499,7 +519,6 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
           x: 66,
           y: 300,
           depthY: 300,
-          observation: "クーンちゃんも、手前の絨毯で静かにくつろいでいる。",
         },
       },
     },
@@ -558,6 +577,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       window: "窓辺の緑が、水をもらって少し背伸びしたように見える。",
       sink: "じょうろに水を汲んだ跡が、流し台に残っている。",
     },
+    thoughts: { maineCoon: "お水の音がするの。ちょっとだけ気になるの。" },
     collectionImage: "assets/collection/watering-plants.webp",
     room: DEFAULT_ROOM,
   },
@@ -577,6 +597,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bed: "泥のついたまま、ベッドに飛び込まないでほしい。",
       sofa: "ソファーにも泥がつきそうで、ちょっとひやひやする。",
     },
+    thoughts: { maineCoon: "泥のにおいなの。毛づくろいが増えちゃうの。" },
     collectionImage: "assets/collection/muddy-return.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -614,6 +635,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       sink: "切り終えたまな板と包丁が、流し台で出番を終えている。",
       diningSet: "食卓にはもう二人分の器が並べてある。",
     },
+    thoughts: { maineCoon: "いいにおいなの。……これ、お肉なの。" },
     collectionImage: "assets/collection/simmering-dinner.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -656,6 +678,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       stove: "夕食の鍋がことこと煮えている。隣ではsunagimoが串の焼き色を真剣に確かめている。",
       diningSet: "二人分のお皿が、焼きたての串を待っている。",
     },
+    thoughts: { maineCoon: "焼けるまで、ここで待つの。動かないの。" },
     collectionImage: "assets/collection/sunagimo-grill.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -700,6 +723,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bed: "たたんだタオルは、あとでベッド脇へしまうつもりらしい。",
       window: "夕方の風で乾いた洗濯物は、太陽の匂いがする。",
     },
+    thoughts: { maineCoon: "たたんだ上に乗るのが、いちばん気持ちいいの。" },
     collectionImage: "assets/collection/folding-laundry.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -723,7 +747,6 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
           width: 60,
           height: 75,
           depthOffset: 1,
-          observation: "クーンちゃんが、長いソファーの座面でゆったり丸くなっている。",
         },
       },
     },
@@ -739,6 +762,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bed: "タツヲにはベッドも狭そうだけれど、ソファーよりはましかもしれない。",
       window: "夕焼けが、眠るタツヲの背中をオレンジに染めている。",
     },
+    thoughts: { maineCoon: "あの大きさで寝られたら、譲るしかないの。" },
     collectionImage: "assets/collection/tatsuo-too-comfortable.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -776,7 +800,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
         x: 96,
         y: 326,
         depthOffset: 20,
-        observation: "怖がるクーンちゃんを、エトキチが離さないようにやさしく抱きしめている。",
+        thought: "こわいの。……でも、この腕の中はあったかいの。",
       },
       thunderstorm: true,
       tint: { color: 0x364963, alpha: 0.32 },
@@ -793,6 +817,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       diningSet: "食卓に、明日の持ち物リストが置いてある。",
       fridge: "冷蔵庫から出したおやつが、鞄の半分を占めている。",
     },
+    thoughts: { maineCoon: "かばんの中も、ちゃんと見ておきたいの。" },
     collectionImage: "assets/collection/packing-tomorrow.webp",
     room: DEFAULT_ROOM,
   },
@@ -816,6 +841,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       stove: "温めたミルクの鍋が、コンロで静かに冷めている。",
       diningSet: "食卓の上に、小さなプリンの空き容器がひとつ。",
     },
+    thoughts: { maineCoon: "見てるの。まばたきのあいだも、ずっと見てるの。" },
     collectionImage: "assets/collection/little-night-snack.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -832,7 +858,6 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
             columns: 4,
             frameDurationsMs: [2600, 80, 110, 80],
           },
-          observation: "クーンちゃんが目をぱちぱちさせながら、エトキチの秘密の夜食を見つめている。",
         },
       },
     },
@@ -849,6 +874,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       bedsideTable: "照明台の明かりが、ページの上だけを照らしている。",
       window: "夜の窓に、漫画に夢中なエトキチが映っている。",
     },
+    thoughts: { maineCoon: "ページをめくる音って、眠くなるの。" },
     collectionImage: "assets/collection/reading-comics.webp",
     room: {
       ...DEFAULT_ROOM,
@@ -860,7 +886,6 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
           width: 54,
           height: 43,
           depthOffset: 1,
-          observation: "クーンちゃんが、ベッドの上で満足そうに丸くなっている。",
         },
       },
     },
@@ -877,6 +902,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       diningSet: "飲みかけのお茶が、食卓の上で湯気を立てている。",
       bookshelf: "フクロウの図鑑が、棚の一番上に置いてある。",
     },
+    thoughts: { maineCoon: "窓の外に、知ってるにおいの子がいるの。" },
     collectionImage: "assets/collection/mimizou-visit.webp",
     room: MIMIZOU_WINDOW_ROOM,
   },
@@ -924,6 +950,10 @@ export const SCENE_ACTION_ROW_COUNTS: Partial<Record<SceneId, number>> = collect
 
 export const SCENE_OBSERVATION_OVERRIDES: Partial<Record<SceneId, ObservationOverrides>> = collectSceneEntries(
   ({ observations }) => observations,
+);
+
+export const SCENE_DEPTH_DECORATION_THOUGHTS: Partial<Record<SceneId, DepthDecorationThoughts>> = collectSceneEntries(
+  ({ thoughts }) => thoughts,
 );
 
 export const SCENE_COLLECTION_IMAGE_PATHS: Readonly<Record<SceneId, string>> = Object.fromEntries(

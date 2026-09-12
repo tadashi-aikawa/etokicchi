@@ -170,6 +170,7 @@ describe("room presentation", () => {
         bedsideTable: "枕元の水は、タツヲが持ってきてくれたものかもしれない。",
         sofa: "タツヲにはソファーより、エトキチのそばのほうが落ち着くらしい。",
       },
+      depthDecorationThoughts: { maineCoon: "大きいのが来た日は、床がちょっと揺れるの。" },
       windowObservation: "街は眠り、窓には小さな星がいくつか見える。",
     });
   });
@@ -378,7 +379,6 @@ describe("room presentation", () => {
           width: 54,
           height: 43,
           depthOffset: 1,
-          observation: "クーンちゃんが、ベッドの上で満足そうに丸くなっている。",
         },
       },
     });

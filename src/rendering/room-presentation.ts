@@ -1,9 +1,14 @@
 import type { ColorMatrix } from "pixi.js";
-import { resolveScenePresentationRoom, SCENE_OBSERVATION_OVERRIDES } from "../content/scene-presentations.ts";
+import {
+  resolveScenePresentationRoom,
+  SCENE_DEPTH_DECORATION_THOUGHTS,
+  SCENE_OBSERVATION_OVERRIDES,
+} from "../content/scene-presentations.ts";
 import type { SceneId, TimeBand, VisitView } from "../game/types.ts";
 import { type FurnitureLayout, type Point, resolveFurnitureActionPoint } from "./room-furniture.ts";
 import type {
   AttachedSceneProp,
+  DepthDecorationThoughts,
   GuestPresentation,
   LayeredRoomPresentation,
   ObservationOverrides,
@@ -142,6 +147,10 @@ function layeredPresentation(visit: VisitView, character: RoomPresentationCommon
     ...SCENE_OBSERVATION_OVERRIDES[visit.scene.id],
     ...character.observationOverrides,
   };
+  const depthDecorationThoughts: DepthDecorationThoughts = {
+    ...SCENE_DEPTH_DECORATION_THOUGHTS[visit.scene.id],
+    ...character.depthDecorationThoughts,
+  };
   return {
     kind: "layered",
     baseAssetName: "room-base-empty-daytime-pixel.webp",
@@ -150,6 +159,7 @@ function layeredPresentation(visit: VisitView, character: RoomPresentationCommon
     tint: character.tint ?? getRoomTint(visit),
     furnitureAssetNames,
     observationOverrides,
+    depthDecorationThoughts,
     windowObservation: observationOverrides.window ?? WINDOW_OBSERVATIONS[visit.assignment.band],
   };
 }

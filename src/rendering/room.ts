@@ -44,7 +44,7 @@ import {
 } from "./room-layout.ts";
 import { createRoomLighting } from "./room-lighting-bake.ts";
 import { getRoomPresentation } from "./room-presentation.ts";
-import type { RoomCallbacks } from "./room-types.ts";
+import type { RoomCallbacks, RoomHostCallbacks } from "./room-types.ts";
 import { SPEECH_DURATION_MS } from "./room-speech.ts";
 import { ACTION_ASSET_NAMES, ASSET_PIXEL_RATIO, ROOM_HEIGHT, ROOM_WIDTH, WALK_ASSET_NAME } from "./scene-assets.ts";
 
@@ -63,10 +63,14 @@ export interface RenderedRoom {
 export async function renderRoom(
   host: HTMLElement,
   visit: VisitView,
-  callbacks: RoomCallbacks,
+  hostCallbacks: RoomHostCallbacks,
   now: Date,
   layout: RoomLayout = DEFAULT_ROOM_LAYOUT,
 ): Promise<RenderedRoom> {
+  const callbacks: RoomCallbacks = {
+    ...hostCallbacks,
+    onThought: (text, target) => speechBubble.show(text, SPEECH_DURATION_MS, target, "thought"),
+  };
   const layoutErrors = validateRoomLayout(layout);
   if (layoutErrors.length > 0) {
     throw new Error(`不正な家具配置は描画できません: ${layoutErrors.map(({ message }) => message).join("、")}`);
@@ -290,6 +294,7 @@ export async function renderRoom(
       presentation.depthDecorationOverrides,
       sceneLayout.furniture,
       presentation.hiddenDepthDecorationIds,
+      presentation.depthDecorationThoughts,
     ),
     ...createSceneProps(scenePropTextures, sceneProps, sceneLayout, lighting.bake, scenePropReveal),
   );

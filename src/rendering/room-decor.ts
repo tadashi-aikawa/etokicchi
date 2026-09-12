@@ -11,7 +11,8 @@ export interface RoomDepthDecoration {
   id: RoomDepthDecorationId;
   assetName: string;
   displayName: string;
-  observation: string;
+  /** タップしたとき頭上へ出す、本人が思っていること。シーンごとの差し替えは presentation 側で持つ */
+  thought: string;
   x: number;
   y: number;
   width: number;
@@ -24,7 +25,6 @@ interface RoomDepthDecorationOverrideCommon {
   assetName?: string;
   width?: number;
   height?: number;
-  observation?: string;
   animation?: {
     columns: number;
     frameDurationsMs: readonly number[];
@@ -76,7 +76,7 @@ export const DEPTH_DECORATIONS: readonly RoomDepthDecoration[] = [
     id: "maineCoon",
     assetName: "decor-cat-loaf-pixel.webp",
     displayName: "クーン",
-    observation: "クーンちゃんが、ソファー前の絨毯で満足そうに丸くなっている。",
+    thought: "ここがいちばん、あったかいの。",
     x: 82,
     y: 322,
     width: 60,

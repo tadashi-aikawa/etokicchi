@@ -70,6 +70,7 @@ export function createDepthDecorationSprites(
   overrides: RoomPresentationCommon["depthDecorationOverrides"],
   furniture: FurnitureLayout,
   hiddenIds: RoomPresentationCommon["hiddenDepthDecorationIds"],
+  thoughts: RoomPresentationCommon["depthDecorationThoughts"],
 ): readonly Sprite[] {
   const visibleDefinitions = definitions.filter((definition) => !hiddenIds?.includes(definition.id));
   return visibleDefinitions.map((definition, tieBreak) => {
@@ -114,9 +115,8 @@ export function createDepthDecorationSprites(
     sprite.label = definition.displayName;
     sprite.eventMode = "static";
     sprite.cursor = "pointer";
-    sprite.on("pointertap", () =>
-      callbacks.onObservation(override?.observation ?? definition.observation, definition.displayName),
-    );
+    // 床上装飾は本人なので、観察文ではなく頭の中で思っていることをフキダシで出す
+    sprite.on("pointertap", () => callbacks.onThought(thoughts?.[definition.id] ?? definition.thought, sprite));
     return sprite;
   });
 }

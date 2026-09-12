@@ -407,10 +407,13 @@ export function createComfortingMaineCoon(
   pair.label = "抱き合うエトキチとクーンちゃん";
   pair.eventMode = "static";
   pair.cursor = "pointer";
-  // 抱き合う姿はエトキチ本体でもあるので、クーンの観察文とセリフのフキダシを同時に出す
+  // 抱き合う姿はエトキチ本体でもある。フキダシは1つしか出せないので、
+  // タップのたびにエトキチのセリフとクーンの思考を交互に出す
+  let showsThought = false;
   pair.on("pointertap", () => {
-    callbacks.onObservation(presentation.observation, "クーン");
-    callbacks.onCharacterTap();
+    if (showsThought) callbacks.onThought(presentation.thought, pair);
+    else callbacks.onCharacterTap();
+    showsThought = !showsThought;
   });
 
   app.ticker.add(() => {

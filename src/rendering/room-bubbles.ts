@@ -25,13 +25,16 @@ export function createCharacterBubbleElement(
   return bubble;
 }
 
+/** セリフか、頭の中で思っていること(思考)か */
+export type SpeechBubbleKind = "speech" | "thought";
+
 export interface SpeechBubble {
   element: HTMLDivElement;
-  show: (text: string, durationMs: number, target?: Container) => void;
+  show: (text: string, durationMs: number, target?: Container, kind?: SpeechBubbleKind) => void;
   destroy: () => void;
 }
 
-/** タップに応じて出るセリフのフキダシ。表示中だけ位置を更新し、時間で自動的に消える。 */
+/** タップに応じて出るセリフ・思考のフキダシ。表示中だけ位置を更新し、時間で自動的に消える。 */
 export function createSpeechBubble(
   app: Application,
   host: HTMLElement,
@@ -95,9 +98,16 @@ export function createSpeechBubble(
     onVisibilityChange(false);
   };
 
-  const show = (text: string, durationMs: number, speaker: Container = defaultTarget): void => {
+  const show = (
+    text: string,
+    durationMs: number,
+    speaker: Container = defaultTarget,
+    kind: SpeechBubbleKind = "speech",
+  ): void => {
     target = speaker;
     label.textContent = text;
+    // 大きさを測る前に見た目を確定させる。思考は角丸と余白がセリフと違う
+    element.classList.toggle("is-thought", kind === "thought");
     // 見かけの大きさは描画後の座標系で測る。歩行中も使えるよう、上端は基準点からの相対位置で持つ
     const bounds = target.getBounds();
     characterTop = bounds.y - target.y;

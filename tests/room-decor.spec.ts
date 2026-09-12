@@ -23,7 +23,7 @@ describe("room decorations", () => {
       expect.objectContaining({
         assetName: "decor-cat-loaf-pixel.webp",
         displayName: "クーン",
-        observation: "クーンちゃんが、ソファー前の絨毯で満足そうに丸くなっている。",
+        thought: "ここがいちばん、あったかいの。",
         x: 82,
         y: 322,
         width: 60,

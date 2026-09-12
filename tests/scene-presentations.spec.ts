@@ -4,6 +4,7 @@ import {
   SCENE_ACTION_ASSET_NAMES,
   SCENE_ACTION_ROW_COUNTS,
   SCENE_COLLECTION_IMAGE_PATHS,
+  SCENE_DEPTH_DECORATION_THOUGHTS,
   SCENE_FURNITURE_ANCHORS,
   SCENE_OBSERVATION_OVERRIDES,
   SCENE_PRESENTATIONS,
@@ -1071,5 +1072,28 @@ describe("values derived from the scene presentation table", () => {
         },
       }
     `);
+  });
+
+  // クーンが絨毯や家具の上に見えるシーンでは、タップしたとき出す思考をそのシーン専用の一文にする。
+  it("gives Koon a scene-specific thought wherever she is visible", () => {
+    const visibleScenes = SCENE_IDS.filter(
+      (sceneId) => !resolveScenePresentationRoom(visitFor(sceneId)).hiddenDepthDecorationIds?.includes("maineCoon"),
+    );
+    for (const sceneId of visibleScenes) {
+      expect(SCENE_DEPTH_DECORATION_THOUGHTS[sceneId]?.maineCoon, sceneId).toBeTruthy();
+    }
+    const thoughts = visibleScenes.map((sceneId) => SCENE_DEPTH_DECORATION_THOUGHTS[sceneId]?.maineCoon);
+    expect(new Set(thoughts).size).toBe(thoughts.length);
+  });
+
+  // 姿が隠れるシーンは、クーンをタップできないので思考も持たない。
+  it("leaves out thoughts for the scenes where Koon is hidden or drawn into another sprite", () => {
+    const hiddenScenes = SCENE_IDS.filter((sceneId) =>
+      resolveScenePresentationRoom(visitFor(sceneId)).hiddenDepthDecorationIds?.includes("maineCoon"),
+    );
+    expect(hiddenScenes).toEqual(["tatsuoAtWindow", "nappingOnMaineCoon", "comfortingMaineCoon"]);
+    for (const sceneId of hiddenScenes) {
+      expect(SCENE_DEPTH_DECORATION_THOUGHTS[sceneId], sceneId).toBeUndefined();
+    }
   });
 });

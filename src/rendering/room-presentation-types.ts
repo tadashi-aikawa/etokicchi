@@ -15,6 +15,9 @@ export type ObservationTargetId = FurnitureId | FixtureHotspotId | FixtureId | "
 
 export type ObservationOverrides = Partial<Record<ObservationTargetId, string>>;
 
+/** タップしたとき床上装飾の頭上へ出す、思っていること */
+export type DepthDecorationThoughts = Partial<Record<RoomDepthDecorationId, string>>;
+
 interface GuestPresentationCommon {
   assetName: string;
   height: number;
@@ -97,7 +100,7 @@ export interface ComfortingMaineCoonPresentation {
   x: number;
   y: number;
   depthOffset: number;
-  observation: string;
+  thought: string;
 }
 
 // 窓のタツヲは素材の上からこの割合だけを切り出して顔として出す。
@@ -127,6 +130,8 @@ export interface RoomPresentationCommon {
   hiddenFurnitureIds?: readonly FurnitureId[];
   hiddenDepthDecorationIds?: readonly RoomDepthDecorationId[];
   depthDecorationOverrides?: Partial<Record<RoomDepthDecorationId, RoomDepthDecorationOverride>>;
+  /** シーンごとの思っていること。ここに無い対象は床上装飾の既定文をそのまま使う。 */
+  depthDecorationThoughts?: DepthDecorationThoughts;
   sceneProps?: readonly AttachedSceneProp[];
   hideCharacterShadow?: boolean;
   characterBubble?: CharacterBubblePresentation;
