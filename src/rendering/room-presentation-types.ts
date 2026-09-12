@@ -28,7 +28,8 @@ interface GuestPresentationCommon {
     rows: number;
     frames: readonly { durationMs: number; speech: string }[];
   };
-  observation?: { text: string; targetName: string };
+  /** 眠っているなど、声を出さない同席者がタップされたときに出す思考。セリフより優先度は低い。 */
+  thought?: string;
 }
 
 export interface PositionedGuestPresentation extends GuestPresentationCommon {

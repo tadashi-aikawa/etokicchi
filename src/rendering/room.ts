@@ -137,8 +137,9 @@ export async function renderRoom(
         : guestPresentation?.speech;
     if (speech) {
       speechBubble.show(speech, SPEECH_DURATION_MS, target);
-    } else if (guestPresentation?.observation) {
-      callbacks.onObservation(guestPresentation.observation.text, guestPresentation.observation.targetName);
+    } else if (guestPresentation?.thought) {
+      // 眠っている同席者は声を出さないので、思っていることをフキダシへ出す
+      callbacks.onThought(guestPresentation.thought, target);
     } else {
       callbacks.onCharacterTap();
     }

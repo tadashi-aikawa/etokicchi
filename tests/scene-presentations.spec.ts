@@ -1086,6 +1086,37 @@ describe("values derived from the scene presentation table", () => {
     expect(new Set(thoughts).size).toBe(thoughts.length);
   });
 
+  // 同席者・訪問者はタップに必ず反応する。声を出せる姿ならセリフ、眠っていれば思考。
+  it("lets every guest answer a tap with a line or a thought", () => {
+    for (const sceneId of SCENE_IDS) {
+      const room = resolveScenePresentationRoom(visitFor(sceneId, { mimizouPresent: true }));
+      for (const guest of [room.companion, room.visitor]) {
+        if (!guest) continue;
+        expect(guest.speech ?? guest.animation?.frames[0]?.speech ?? guest.thought, sceneId).toBeTruthy();
+      }
+    }
+  });
+
+  // タツヲは「ウホ」、みみぞうは「ホー」で話す。素材名で本人を見分ける。
+  it("keeps the sentence endings of Tatsuo and Mimizou", () => {
+    const endings = [
+      { assetPrefix: "tatsuo-", ending: "ウホ" },
+      { assetPrefix: "mimizou-", ending: "ホー" },
+    ];
+    for (const sceneId of SCENE_IDS) {
+      const room = resolveScenePresentationRoom(visitFor(sceneId, { mimizouPresent: true }));
+      for (const guest of [room.companion, room.visitor]) {
+        if (!guest) continue;
+        const ending = endings.find(({ assetPrefix }) => guest.assetName.startsWith(assetPrefix))?.ending;
+        if (!ending) continue;
+        const lines = [guest.speech, guest.thought, ...(guest.animation?.frames.map(({ speech }) => speech) ?? [])];
+        for (const line of lines.filter((text): text is string => Boolean(text))) {
+          expect(line, `${sceneId}: ${line}`).toContain(ending);
+        }
+      }
+    }
+  });
+
   // 姿が隠れるシーンは、クーンをタップできないので思考も持たない。
   it("leaves out thoughts for the scenes where Koon is hidden or drawn into another sprite", () => {
     const hiddenScenes = SCENE_IDS.filter((sceneId) =>

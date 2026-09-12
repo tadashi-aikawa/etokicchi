@@ -40,17 +40,19 @@ const DEFAULT_ROOM: RoomPresentationCommon = {
   sleeperHeight: 42,
 };
 
-/** 窓の外からみみぞうが覗くシーン。訪問と見送りで同じ絵を使う。 */
-const MIMIZOU_WINDOW_ROOM: RoomPresentationCommon = {
-  ...DEFAULT_ROOM,
-  visitor: {
-    assetName: "mimizou-pixel.png",
-    height: 48.5,
-    observation: { text: "窓の向こうから、みみぞうがこちらをのぞいている。", targetName: "みみぞう" },
-    x: 51.25,
-    y: 62.75,
-  },
-};
+/** 窓の外からみみぞうが覗くシーン。訪問と見送りで同じ絵を使い、セリフだけを変える。 */
+function mimizouWindowRoom(speech: string): RoomPresentationCommon {
+  return {
+    ...DEFAULT_ROOM,
+    visitor: {
+      assetName: "mimizou-pixel.png",
+      height: 48.5,
+      speech,
+      x: 51.25,
+      y: 62.75,
+    },
+  };
+}
 
 export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefinition>> = {
   sleeping: {
@@ -93,6 +95,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
         x: 61,
         y: 170,
         depth: "scene",
+        thought: "いい夢を見てるウホ……。",
       },
     },
   },
@@ -196,7 +199,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
             companion: {
               assetName: "mimizou-pixel.png",
               height: 48.5,
-              speech: "ホゥ……。",
+              speech: "お星さま、きれいだホー。",
               x: 102.25,
               y: 117,
             },
@@ -286,6 +289,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
         x: 76,
         y: 170,
         depth: "scene",
+        speech: "朝だウホ。そろそろ起きるウホ。",
       },
     },
   },
@@ -310,7 +314,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
     },
     thoughts: { maineCoon: "いってらっしゃいなの。窓は閉めてほしいの。" },
     collectionImage: "assets/collection/mimizou-farewell.webp",
-    room: MIMIZOU_WINDOW_ROOM,
+    room: mimizouWindowRoom("またあとで来るホー。"),
   },
   tooMuchBreakfast: {
     // 添字0のコンロ脇だけで料理の行動アニメーションを出し、添字2の食卓で
@@ -774,6 +778,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
         offset: { x: -2, y: 34 },
         depthActionPointId: "sit",
         depthOffset: 30,
+        thought: "このソファー、身体にちょうどいいウホ……。",
       },
     },
   },
@@ -904,7 +909,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
     },
     thoughts: { maineCoon: "窓の外に、知ってるにおいの子がいるの。" },
     collectionImage: "assets/collection/mimizou-visit.webp",
-    room: MIMIZOU_WINDOW_ROOM,
+    room: mimizouWindowRoom("こんばんはホー。のぞいてるホー。"),
   },
 };
 

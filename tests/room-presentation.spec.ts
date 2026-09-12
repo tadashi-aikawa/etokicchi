@@ -164,6 +164,7 @@ describe("room presentation", () => {
         x: 61,
         y: 170,
         depth: "scene",
+        thought: "いい夢を見てるウホ……。",
       },
       observationOverrides: {
         bed: "タツヲの大きな手が、ベッドの縁にそっと添えられている。",
@@ -344,7 +345,7 @@ describe("room presentation", () => {
       companion: {
         assetName: "mimizou-pixel.png",
         height: 48.5,
-        speech: "ホゥ……。",
+        speech: "お星さま、きれいだホー。",
         x: 102.25,
         y: 117,
       },
