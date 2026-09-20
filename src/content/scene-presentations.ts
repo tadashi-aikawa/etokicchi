@@ -543,10 +543,13 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
       sleeperHeight: 72,
       sleeperRotation: 0,
       sleeperBreathing: "alternating",
+      // 透明な画像領域が手前のクーンちゃんへのタップを遮らないよう、エトキチの描画部分へ絞る。
+      sleeperHitArea: { x: -48, y: -102, width: 96, height: 78 },
       sleeperBase: {
         assetName: "maine-coon-pillow-pixel.webp",
         height: 32,
         offset: { x: 10, y: -34 },
+        thought: "ふかふかの枕役なの。……わたしも眠くなってきたの。",
       },
       hiddenDepthDecorationIds: ["maineCoon"],
     },

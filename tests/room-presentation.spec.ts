@@ -478,10 +478,12 @@ describe("room presentation", () => {
       sleeperHeight: 72,
       sleeperRotation: 0,
       sleeperBreathing: "alternating",
+      sleeperHitArea: { x: -48, y: -102, width: 96, height: 78 },
       sleeperBase: {
         assetName: "maine-coon-pillow-pixel.webp",
         height: 32,
         offset: { x: 10, y: -34 },
+        thought: "ふかふかの枕役なの。……わたしも眠くなってきたの。",
       },
       hiddenDepthDecorationIds: ["maineCoon"],
     });

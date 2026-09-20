@@ -164,7 +164,13 @@ export async function renderRoom(
       : undefined;
   const sleeperBase =
     sleeperBaseTexture && presentation.sleeperBase
-      ? createSleeperBase(sleeperBaseTexture, initialPosition, initialDepthY, presentation.sleeperBase)
+      ? createSleeperBase(
+          sleeperBaseTexture,
+          initialPosition,
+          initialDepthY,
+          presentation.sleeperBase,
+          callbacks.onThought,
+        )
       : undefined;
   const waypointArrivalListeners: ((waypointIndex: number) => void)[] = [];
   const scenePropReveal: ScenePropRevealBinding = {
@@ -182,6 +188,7 @@ export async function renderRoom(
           callbacks,
           presentation.sleeperBreathing,
           presentation.sleeperRotation,
+          presentation.sleeperHitArea,
         )
       : createWalker(
           app,

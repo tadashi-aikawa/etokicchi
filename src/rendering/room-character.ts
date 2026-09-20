@@ -270,6 +270,7 @@ export function createSleeper(
   callbacks: RoomCallbacks,
   breathing: "smooth" | "subtle" | "alternating" | "none" = "smooth",
   rotation = 0,
+  hitArea?: { x: number; y: number; width: number; height: number },
 ): Sprite {
   const sleeper = new Sprite(texture);
   sleeper.anchor.set(0.5, 1);
@@ -278,6 +279,7 @@ export function createSleeper(
   sleeper.rotation = rotation;
   sleeper.zIndex = getDepthZIndex(depthY, 50);
   sleeper.eventMode = "dynamic";
+  if (hitArea) sleeper.hitArea = new Rectangle(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
   sleeper.cursor = "pointer";
   sleeper.on("pointertap", callbacks.onCharacterTap);
 
@@ -303,12 +305,19 @@ export function createSleeperBase(
   position: ResolvedWaypoint,
   depthY: number,
   presentation: NonNullable<RoomPresentationCommon["sleeperBase"]>,
+  onThought: (text: string, target: Container) => void,
 ): Sprite {
   const base = new Sprite(texture);
   base.anchor.set(0.5, 1);
   base.scale.set(presentation.height / texture.height);
   base.position.set(position.x + (presentation.offset?.x ?? 0), position.y + (presentation.offset?.y ?? 0));
   base.zIndex = getDepthZIndex(depthY, 40);
+  const thought = presentation.thought;
+  if (thought) {
+    base.eventMode = "static";
+    base.cursor = "pointer";
+    base.on("pointertap", () => onThought(thought, base));
+  }
   return base;
 }
 

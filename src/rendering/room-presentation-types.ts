@@ -122,10 +122,12 @@ export interface RoomPresentationCommon {
   sleeperHeight: number;
   sleeperRotation?: number;
   sleeperBreathing?: "smooth" | "subtle" | "alternating" | "none";
+  sleeperHitArea?: { x: number; y: number; width: number; height: number };
   sleeperBase?: {
     assetName: string;
     height: number;
     offset?: Point;
+    thought?: string;
   };
   companion?: GuestPresentation;
   visitor?: PositionedGuestPresentation;
