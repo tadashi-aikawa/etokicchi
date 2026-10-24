@@ -13,6 +13,8 @@ const singleSprites = [
   "etokichi-window-nap-star-book-pixel.png",
   "decor-cat-sofa-curled-compact-pixel.webp",
   "etokichi-sleep-pixel.webp",
+  "etokichi-pillow-cool-side-pixel.webp",
+  "etokichi-sleeping-with-plush-pixel.webp",
 ];
 
 describe("character sprite transparency", () => {

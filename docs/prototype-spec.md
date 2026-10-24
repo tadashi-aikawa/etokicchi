@@ -40,6 +40,7 @@
 | 夜<br>`night` | 19:00以上23:00未満 | `littleNightSnack` | 小さな夜食を楽しむ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T20:00:00&debug=random&scene=littleNightSnack) |
 | 夜<br>`night` | 19:00以上23:00未満 | `readingComics` | 漫画の続きに夢中 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T20:00:00&debug=random&scene=readingComics) |
 | 夜<br>`night` | 19:00以上23:00未満 | `mimizouVisit` | みみぞうが窓からのぞいている | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T20:00:00&debug=random&scene=mimizouVisit) |
+| 夜<br>`night` | 19:00以上23:00未満 | `mimizouNightStroll` | みみぞうの夜のおさんぽ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T20:00:00&debug=random&scene=mimizouNightStroll) |
 | 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `sleeping` | すやすや眠っている | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=sleeping) |
 | 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `sleepingWithTatsuo` | タツヲと眠る夜 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=sleepingWithTatsuo) |
 | 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `tatsuoAtWindow` | いま、窓にいた？ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-09-06T23:30:00&debug=random&scene=tatsuoAtWindow) |
@@ -72,6 +73,25 @@
 - 時間帯の境界を越えたら、新しいslotのシーンへ再読み込みなしで切り替える
 - 非表示タブから戻ったときは、バックグラウンド中のタイマー遅延に依存せず現在時刻へ同期する
 - 開発用の`time`クエリを指定した画面は、指定日時のまま固定する
+
+## 2026-10-24追加シーン
+
+6時間帯へ2件ずつ追加。すべて前提条件なしで抽選対象に入る。各シーンへ専用素材・図鑑イラスト・観察文を用意する。
+
+| 時間帯 | 時刻 | シーンID | 生活シーン | デバッグ |
+|---|---|---|---|---|
+| 早朝<br>`earlyMorning` | 5:30以上7:30未満 | `quietAlarm` | 目覚ましより早起き | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T06:00:00&debug=random&scene=quietAlarm) |
+| 早朝<br>`earlyMorning` | 5:30以上7:30未満 | `polishingShoes` | 朝いちばんの靴みがき | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T06:00:00&debug=random&scene=polishingShoes) |
+| 朝<br>`morning` | 7:30以上11:00未満 | `jamToast` | ジャムは端まで | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T08:00:00&debug=random&scene=jamToast) |
+| 朝<br>`morning` | 7:30以上11:00未満 | `washingDishes` | お皿も朝の身じたく | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T08:00:00&debug=random&scene=washingDishes) |
+| 昼<br>`daytime` | 11:00以上15:30未満 | `paperPlane` | 紙ひこうき試験飛行 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T12:00:00&debug=random&scene=paperPlane) |
+| 昼<br>`daytime` | 11:00以上15:30未満 | `drawingPortrait` | モデルさんはお昼寝中 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T12:00:00&debug=random&scene=drawingPortrait) |
+| 夕方<br>`evening` | 15:30以上19:00未満 | `leafBookmark` | 拾った葉っぱをしおりに | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T16:00:00&debug=random&scene=leafBookmark) |
+| 夕方<br>`evening` | 15:30以上19:00未満 | `rollingDumplings` | お団子、まんまる？ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T16:00:00&debug=random&scene=rollingDumplings) |
+| 夜<br>`night` | 19:00以上23:00未満 | `shadowPuppets` | 小さな影絵劇場 | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T20:00:00&debug=random&scene=shadowPuppets) |
+| 夜<br>`night` | 19:00以上23:00未満 | `mendingSock` | ほつれをちくちく | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T20:00:00&debug=random&scene=mendingSock) |
+| 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `pillowCoolSide` | 枕のひんやりしたほう | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T23:30:00&debug=random&scene=pillowCoolSide) |
+| 深夜<br>`deepNight` | 23:00以上翌5:30未満 | `sleepingWithPlush` | ぬいぐるみもおやすみ | [開く](http://127.0.0.1:4173/etokicchi/?time=2026-10-24T23:30:00&debug=random&scene=sleepingWithPlush) |
 
 ## シーン決定
 
@@ -250,7 +270,7 @@
 - 未発見シーンの状態を次の2種類に分ける
     - 現在も抽選対象のシーンは「未遭遇」とし、この時間帯で出会えることを示す
     - 前提条件を満たすまで抽選対象にならないシーンは「ロック中」とし、解放条件を示す
-- 図鑑はスマートフォン縦画面で2列表示し、時間帯ごとのグループと絞り込みで全29シーンを閲覧する
+- 図鑑はスマートフォン縦画面で2列表示し、時間帯ごとのグループと絞り込みで全42シーンを閲覧する
 - 各カードへシーン固有のドット絵イラストを使用し、未発見カードでは内容を判別できないよう暗くぼかす
 - 発見済みカードを選ぶと、シーン名と時間帯を添えて図鑑イラスト全体を拡大表示する。未発見カードは開けない
 - 各シーンの遭遇回数を、1回、2回、3回、5回、10回、25回、50回、100回の8段階の達成度として表示する

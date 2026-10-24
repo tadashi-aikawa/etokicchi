@@ -115,6 +115,20 @@ describe("values derived from the scene presentation table", () => {
             },
           ],
         },
+        "drawingPortrait": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 104,
+                "y": 292,
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
         "foldingLaundry": {
           "movement": "nonWalking",
           "waypoints": [
@@ -159,6 +173,20 @@ describe("values derived from the scene presentation table", () => {
             },
           ],
         },
+        "jamToast": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "actionPointId": "morningTea",
+                "furnitureId": "diningSet",
+                "type": "furnitureAction",
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
         "kickedBlanket": {
           "movement": "nonWalking",
           "waypoints": [
@@ -167,6 +195,20 @@ describe("values derived from the scene presentation table", () => {
                 "actionPointId": "kickedBlanket",
                 "furnitureId": "bed",
                 "type": "furnitureAction",
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
+        "leafBookmark": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 98,
+                "y": 176,
               },
               "pauseMs": 5000,
             },
@@ -250,6 +292,20 @@ describe("values derived from the scene presentation table", () => {
                 "type": "point",
                 "x": 117,
                 "y": 187,
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
+        "mendingSock": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 98,
+                "y": 176,
               },
               "pauseMs": 5000,
             },
@@ -557,6 +613,50 @@ describe("values derived from the scene presentation table", () => {
             },
           ],
         },
+        "paperPlane": {
+          "movement": "walking",
+          "waypoints": [
+            {
+              "action": true,
+              "actionOffsetY": 3,
+              "destination": {
+                "type": "point",
+                "x": 110,
+                "y": 224,
+              },
+              "pauseMs": 4800,
+            },
+            {
+              "destination": {
+                "type": "point",
+                "x": 110,
+                "y": 260,
+              },
+              "pauseMs": 1300,
+            },
+            {
+              "destination": {
+                "type": "point",
+                "x": 111,
+                "y": 194,
+              },
+              "pauseMs": 1100,
+            },
+          ],
+        },
+        "pillowCoolSide": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "destination": {
+                "actionPointId": "sleep",
+                "furnitureId": "bed",
+                "type": "furnitureAction",
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
         "planningDay": {
           "movement": "walking",
           "waypoints": [
@@ -587,6 +687,34 @@ describe("values derived from the scene presentation table", () => {
             },
           ],
         },
+        "polishingShoes": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 146,
+                "y": 145,
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
+        "quietAlarm": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 98,
+                "y": 176,
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
         "readingComics": {
           "movement": "nonWalking",
           "waypoints": [
@@ -597,6 +725,34 @@ describe("values derived from the scene presentation table", () => {
                 "actionPointId": "sit",
                 "furnitureId": "sofa",
                 "type": "furnitureAction",
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
+        "rollingDumplings": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 99,
+                "y": 292,
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
+        "shadowPuppets": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "type": "point",
+                "x": 99,
+                "y": 292,
               },
               "pauseMs": 5000,
             },
@@ -618,6 +774,19 @@ describe("values derived from the scene presentation table", () => {
           ],
         },
         "sleeping": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "destination": {
+                "actionPointId": "sleep",
+                "furnitureId": "bed",
+                "type": "furnitureAction",
+              },
+              "pauseMs": 5000,
+            },
+          ],
+        },
+        "sleepingWithPlush": {
           "movement": "nonWalking",
           "waypoints": [
             {
@@ -732,6 +901,20 @@ describe("values derived from the scene presentation table", () => {
                 "y": 254,
               },
               "pauseMs": 0,
+            },
+          ],
+        },
+        "washingDishes": {
+          "movement": "nonWalking",
+          "waypoints": [
+            {
+              "action": true,
+              "destination": {
+                "actionPointId": "sinkFront",
+                "fixtureId": "kitchenUnit",
+                "type": "fixtureAction",
+              },
+              "pauseMs": 5000,
             },
           ],
         },
@@ -887,6 +1070,16 @@ describe("values derived from the scene presentation table", () => {
       littleNightSnack: "etokichi-night-snack-pixel.webp",
       readingComics: "etokichi-reading-comics-sofa-right-pixel.webp",
       mimizouVisit: "etokichi-morning-tea-pixel.webp",
+      quietAlarm: "etokichi-quiet-alarm-pixel.webp",
+      polishingShoes: "etokichi-polishing-shoes-pixel.webp",
+      jamToast: "etokichi-jam-toast-pixel.webp",
+      washingDishes: "etokichi-washing-dishes-pixel.webp",
+      paperPlane: "etokichi-paper-plane-pixel.webp",
+      drawingPortrait: "etokichi-drawing-portrait-pixel.webp",
+      leafBookmark: "etokichi-leaf-bookmark-pixel.webp",
+      rollingDumplings: "etokichi-rolling-dumplings-pixel.webp",
+      shadowPuppets: "etokichi-shadow-puppets-pixel.webp",
+      mendingSock: "etokichi-mending-sock-pixel.webp",
     });
   });
 
@@ -926,6 +1119,18 @@ describe("values derived from the scene presentation table", () => {
       readingComics: "assets/collection/reading-comics.webp",
       mimizouVisit: "assets/collection/mimizou-visit.webp",
       mimizouNightStroll: "assets/collection/mimizou-night-stroll.webp",
+      quietAlarm: "assets/collection/quiet-alarm.webp",
+      polishingShoes: "assets/collection/polishing-shoes.webp",
+      jamToast: "assets/collection/jam-toast.webp",
+      washingDishes: "assets/collection/washing-dishes.webp",
+      paperPlane: "assets/collection/paper-plane.webp",
+      drawingPortrait: "assets/collection/drawing-portrait.webp",
+      leafBookmark: "assets/collection/leaf-bookmark.webp",
+      rollingDumplings: "assets/collection/rolling-dumplings.webp",
+      shadowPuppets: "assets/collection/shadow-puppets.webp",
+      mendingSock: "assets/collection/mending-sock.webp",
+      pillowCoolSide: "assets/collection/pillow-cool-side.webp",
+      sleepingWithPlush: "assets/collection/sleeping-with-plush.webp",
     });
   });
 
@@ -948,6 +1153,11 @@ describe("values derived from the scene presentation table", () => {
           "sofa": "いつもの丸まり場所は空っぽ。クーンちゃんはエトキチの腕の中だ。",
           "window": "稲光が走るたび、雨粒が窓を強く叩く。",
         },
+        "drawingPortrait": {
+          "bookshelf": "クレヨンの箱を出した場所だけ、棚に四角い隙間がある。",
+          "diningSet": "食卓の紙では足りず、大きな画用紙を絨毯へ運んだらしい。",
+          "window": "昼の光で見るクーンちゃんの毛色を、何色か混ぜて描いている。",
+        },
         "foldingLaundry": {
           "bed": "たたんだタオルは、あとでベッド脇へしまうつもりらしい。",
           "sofa": "ソファーの座面は、今日はクーンちゃんが占領している。",
@@ -958,10 +1168,20 @@ describe("values derived from the scene presentation table", () => {
           "diningSet": "掃除の途中のはずが、雑巾は食卓の上で止まっている。",
           "sofa": "ソファーの下から、昔描いた絵が出てきた。",
         },
+        "jamToast": {
+          "diningSet": "お皿を回しては、パンの四隅へ少しずつジャムを伸ばしている。",
+          "fridge": "いちごジャムの瓶が、今朝はもう食卓へ出ている。",
+          "stove": "焼いたパンの香りが、まだ台所に残っている。",
+        },
         "kickedBlanket": {
           "bed": "布団は足元から床へずり落ち、エトキチは大の字で眠っている。",
           "bedsideTable": "照明台の上には、まだ半分残った水のコップがある。",
           "window": "窓が少しだけ開いていて、冷たい夜風が入ってくる。",
+        },
+        "leafBookmark": {
+          "bedsideTable": "今夜読む本にも、できあがったしおりを挟むつもりらしい。",
+          "bookshelf": "厚い本を一冊借りて、葉っぱを平らにする重しにしている。",
+          "window": "赤い葉を夕日に透かすと、細かな葉脈までよく見える。",
         },
         "littleNightSnack": {
           "diningSet": "食卓の上に、小さなプリンの空き容器がひとつ。",
@@ -972,6 +1192,11 @@ describe("values derived from the scene presentation table", () => {
           "bed": "今日はベッドより、マサハルの隣が気持ちよさそう。",
           "bookshelf": "本は棚にしまったまま。今は二人でのんびりする時間。",
           "window": "窓から伸びる日だまりを、マサハルとエトキチが半分こしている。",
+        },
+        "mendingSock": {
+          "bed": "直した靴下は、明日の朝に履くつもりで枕元へ置くらしい。",
+          "bedsideTable": "手元を照らす明かりの下へ、何度も縫い目を近づけている。",
+          "bookshelf": "裁縫箱のふたが開いている。青い糸だけが持ち出されている。",
         },
         "mimizouFarewell": {
           "bed": "ベッドは空っぽ。エトキチは窓辺で手を振っている。",
@@ -1018,16 +1243,46 @@ describe("values derived from the scene presentation table", () => {
           "diningSet": "食卓に、明日の持ち物リストが置いてある。",
           "fridge": "冷蔵庫から出したおやつが、鞄の半分を占めている。",
         },
+        "paperPlane": {
+          "bookshelf": "折り紙の本が開いたまま。羽の折り方を何度も見直したらしい。",
+          "sofa": "ソファーの手前を、試験飛行の折り返し地点にしている。",
+          "window": "風の向きを確かめたいのか、ときどき窓を見上げている。",
+        },
+        "pillowCoolSide": {
+          "bed": "裏返した枕へ頬を寄せたまま、すっかり眠ってしまった。",
+          "bedsideTable": "コップの水には手を伸ばさず、枕だけで涼しさを見つけたらしい。",
+          "window": "夜風でカーテンが揺れても、今は気づく様子がない。",
+        },
         "planningDay": {
           "bookshelf": "棚の手帳置き場が空いている。今日の分は絨毯の上だ。",
           "diningSet": "食卓ではなく絨毯の上で書くのが、エトキチ流らしい。",
           "window": "静かな朝の光が、開いた手帳のページを照らしている。",
+        },
+        "polishingShoes": {
+          "bookshelf": "棚の端に、靴みがき用の小さな缶が戻されている。",
+          "diningSet": "朝食の前に、靴を一足仕上げるつもりらしい。",
+          "window": "細い朝日が、磨いたつま先へすっと映り込んだ。",
+        },
+        "quietAlarm": {
+          "bed": "目覚ましより先に起きた主を、空っぽの布団が待っている。",
+          "bedsideTable": "手に取った時計を、いつでも戻せるように場所を空けてある。",
+          "window": "窓の外はまだ静かで、ベルの音だけが大きく聞こえそうだ。",
         },
         "readingComics": {
           "bedsideTable": "照明台の明かりが、ページの上だけを照らしている。",
           "bookshelf": "棚の漫画の並びに、一冊分の隙間が空いている。",
           "sofa": "ソファーの脇に、読み終えた巻が積まれている。",
           "window": "夜の窓に、漫画に夢中なエトキチが映っている。",
+        },
+        "rollingDumplings": {
+          "diningSet": "お団子の粉を量った器が、食卓の上に残っている。",
+          "sink": "手を洗うたび、指の間から白い粉が流れていく。",
+          "stove": "丸めたお団子をゆでるお湯を、先に沸かしてある。",
+        },
+        "shadowPuppets": {
+          "bedsideTable": "照明を落として、懐中電灯ひとつで遊んでいる。",
+          "bookshelf": "影絵の本は、うさぎの作り方のところで開いている。",
+          "window": "暗い窓にも、指を動かすエトキチの姿がうっすら映っている。",
         },
         "simmeringDinner": {
           "diningSet": "食卓にはもう二人分の器が並べてある。",
@@ -1039,6 +1294,11 @@ describe("values derived from the scene presentation table", () => {
           "bed": "エトキチの寝息に合わせて、掛け布団がゆっくり上下している。",
           "bedsideTable": "照明台の明かりは落とされ、コップの水だけが小さく光っている。",
           "bookshelf": "読みかけの本が、棚から少しだけ引き出されたままになっている。",
+        },
+        "sleepingWithPlush": {
+          "bed": "小さなくまにも場所を空けて、自分は少し端へ寄って眠っている。",
+          "bedsideTable": "くまを起こさないように、明かりも早めに消したらしい。",
+          "bookshelf": "いつもくまを飾っている場所が、今夜だけ空いている。",
         },
         "sleepingWithTatsuo": {
           "bed": "タツヲの大きな手が、ベッドの縁にそっと添えられている。",
@@ -1069,6 +1329,11 @@ describe("values derived from the scene presentation table", () => {
           "fridge": "冷蔵庫の中身が、今朝だけでだいぶ減った気がする。",
           "sink": "流し台には、朝食に使ったボウルとフライパンが積まれている。",
           "stove": "コンロはまだ温かい。作りすぎた理由がここにある。",
+        },
+        "washingDishes": {
+          "diningSet": "朝食のお皿が片付き、食卓がいつもより広く見える。",
+          "sink": "白いお皿をくるくる回し、裏側までスポンジを当てている。",
+          "stove": "使った鍋も洗い終え、コンロの横で水を切っている。",
         },
         "watchingStars": {
           "bed": "ベッドは空っぽで、枕だけが窓辺の主を待っている。",

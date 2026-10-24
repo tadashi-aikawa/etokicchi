@@ -9,12 +9,12 @@ describe("scene catalog", () => {
       const scenes = getScenesForBand(band);
       const expectedCount =
         band === "evening"
-          ? 6
+          ? 8
           : band === "earlyMorning" || band === "deepNight" || band === "daytime" || band === "night"
-            ? 5
+            ? 7
             : band === "morning"
-              ? 4
-              : 3;
+              ? 6
+              : 5;
       expect(scenes).toHaveLength(expectedCount);
       expect(new Set(scenes.map((scene) => scene.id)).size).toBe(expectedCount);
     }

@@ -26,10 +26,30 @@ const outputDir = path.join(root, "public", "assets");
  * @property {string} note 表示論理寸法の出どころ
  * @property {{left: number, top: number, width: number, height: number}} [extract] 原画から単体素材の領域を切り出す
  * @property {boolean} [chromaKeyMagenta] 縮小前にマゼンタを透過させ、他シーンでも使える素材にする
+ * @property {number} [quality] 指定した素材は非可逆WebPで配信する。原本のアルファは維持する
  */
 
 /** @type {readonly Target[]} */
 const TARGETS = [
+  ...[
+    "quiet-alarm", "polishing-shoes", "jam-toast", "washing-dishes", "paper-plane",
+    "drawing-portrait", "leaf-bookmark", "rolling-dumplings", "shadow-puppets", "mending-sock",
+  ].map((name) => ({
+    name: `etokichi-${name}-pixel.webp`,
+    width: 360,
+    height: 120,
+    kernel: /** @type {const} */ ("lanczos"),
+    quality: 90,
+    note: "行動アニメ 60×60 の3コマ。原画の透過を維持する",
+  })),
+  ...["pillow-cool-side", "sleeping-with-plush"].map((name) => ({
+    name: `etokichi-${name}-pixel.webp`,
+    width: 106,
+    height: 78,
+    kernel: /** @type {const} */ ("lanczos"),
+    quality: 90,
+    note: "寝姿 53×39。原画の透過を維持する",
+  })),
   { name: "masaharu-sleep-pixel.webp", width: 144, height: 112, kernel: "lanczos", extract: { left: 32, top: 128, width: 1024, height: 800 }, chromaKeyMagenta: true, note: "マサハル単体の寝姿 72×56" },
   { name: "etokichi-sleep-leaning-pixel.webp", width: 86, height: 84, kernel: "lanczos", extract: { left: 880, top: 288, width: 608, height: 592 }, chromaKeyMagenta: true, note: "寄りかかるエトキチ単体の寝姿 43×42" },
   { name: "etokichi-watching-sunagimo-pixel.webp", width: 360, height: 120, kernel: "lanczos", chromaKeyMagenta: true, note: "sunagimoを見守るリアクション 60×60 の3コマ" },
@@ -353,7 +373,7 @@ async function convert(target) {
   });
   const encoded = target.name.endsWith(".png")
     ? await resized.png({ compressionLevel: 9 }).toBuffer()
-    : await resized.webp({ lossless: true }).toBuffer();
+    : await resized.webp(target.quality ? { quality: target.quality, alphaQuality: 100 } : { lossless: true }).toBuffer();
   await writeFile(path.join(outputDir, target.name), encoded);
   return `${target.name}: ${width}x${height} -> ${target.width}x${target.height} (${target.kernel}) ${target.note}`;
 }

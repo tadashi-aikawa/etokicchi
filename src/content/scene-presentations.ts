@@ -40,6 +40,15 @@ const DEFAULT_ROOM: RoomPresentationCommon = {
   sleeperHeight: 42,
 };
 
+// 手前の絨毯で作業する姿とクーンの頭が重ならないよう、クーンを同じ絨毯の手前へ寄せる。
+const FRONT_RUG_ROOM: RoomPresentationCommon = {
+  ...DEFAULT_ROOM,
+  hideCharacterShadow: true,
+  depthDecorationOverrides: {
+    maineCoon: { type: "absolute", x: 82, y: 338, width: 60, height: 48 },
+  },
+};
+
 /** 窓の外からみみぞうが覗くシーン。訪問と見送りで同じ絵を使い、セリフだけを変える。 */
 function mimizouWindowRoom(speech: string): RoomPresentationCommon {
   return {
@@ -952,6 +961,191 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
         },
       },
     },
+  },
+  quietAlarm: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: point(98, 176), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-quiet-alarm-pixel.webp" },
+    observations: {
+      bed: "目覚ましより先に起きた主を、空っぽの布団が待っている。",
+      bedsideTable: "手に取った時計を、いつでも戻せるように場所を空けてある。",
+      window: "窓の外はまだ静かで、ベルの音だけが大きく聞こえそうだ。",
+    },
+    thoughts: { maineCoon: "止めても、わたしはもう聞いちゃったの。" },
+    collectionImage: "assets/collection/quiet-alarm.webp",
+    room: DEFAULT_ROOM,
+  },
+  polishingShoes: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: point(146, 145), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-polishing-shoes-pixel.webp" },
+    observations: {
+      bookshelf: "棚の端に、靴みがき用の小さな缶が戻されている。",
+      window: "細い朝日が、磨いたつま先へすっと映り込んだ。",
+      diningSet: "朝食の前に、靴を一足仕上げるつもりらしい。",
+    },
+    thoughts: { maineCoon: "ぴかぴかでも、その靴ではわたしみたいに静かに歩けないの。" },
+    collectionImage: "assets/collection/polishing-shoes.webp",
+    room: { ...DEFAULT_ROOM, hideCharacterShadow: true },
+  },
+  jamToast: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: furnitureAction("diningSet", "morningTea"), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-jam-toast-pixel.webp" },
+    observations: {
+      diningSet: "お皿を回しては、パンの四隅へ少しずつジャムを伸ばしている。",
+      fridge: "いちごジャムの瓶が、今朝はもう食卓へ出ている。",
+      stove: "焼いたパンの香りが、まだ台所に残っている。",
+    },
+    thoughts: { maineCoon: "端っこまで塗る間に、パンが冷めちゃうの。" },
+    collectionImage: "assets/collection/jam-toast.webp",
+    room: DEFAULT_ROOM,
+  },
+  washingDishes: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: fixtureAction("kitchenUnit", "sinkFront"), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-washing-dishes-pixel.webp" },
+    observations: {
+      sink: "白いお皿をくるくる回し、裏側までスポンジを当てている。",
+      diningSet: "朝食のお皿が片付き、食卓がいつもより広く見える。",
+      stove: "使った鍋も洗い終え、コンロの横で水を切っている。",
+    },
+    thoughts: { maineCoon: "ぷくぷくする音は、聞いているだけで眠くなるの。" },
+    collectionImage: "assets/collection/washing-dishes.webp",
+    room: DEFAULT_ROOM,
+  },
+  paperPlane: {
+    route: {
+      movement: "walking",
+      waypoints: [
+        // 原画の透過余白による差を補い、行動アニメの足元を歩行姿に合わせる。
+        { destination: point(110, 224), pauseMs: 4800, action: true, actionOffsetY: 3 },
+        { destination: point(110, 260), pauseMs: 1300 },
+        { destination: point(111, 194), pauseMs: 1100 },
+      ],
+    },
+    action: { assetName: "etokichi-paper-plane-pixel.webp" },
+    observations: {
+      bookshelf: "折り紙の本が開いたまま。羽の折り方を何度も見直したらしい。",
+      sofa: "ソファーの手前を、試験飛行の折り返し地点にしている。",
+      window: "風の向きを確かめたいのか、ときどき窓を見上げている。",
+    },
+    thoughts: { maineCoon: "白いのが飛ぶたび、おひげが動いちゃうの。" },
+    collectionImage: "assets/collection/paper-plane.webp",
+    room: DEFAULT_ROOM,
+  },
+  drawingPortrait: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: point(104, 292), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-drawing-portrait-pixel.webp" },
+    observations: {
+      bookshelf: "クレヨンの箱を出した場所だけ、棚に四角い隙間がある。",
+      diningSet: "食卓の紙では足りず、大きな画用紙を絨毯へ運んだらしい。",
+      window: "昼の光で見るクーンちゃんの毛色を、何色か混ぜて描いている。",
+    },
+    thoughts: { maineCoon: "わたしのお耳、そんなに大きいかしら。" },
+    collectionImage: "assets/collection/drawing-portrait.webp",
+    room: FRONT_RUG_ROOM,
+  },
+  leafBookmark: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: point(98, 176), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-leaf-bookmark-pixel.webp" },
+    observations: {
+      bookshelf: "厚い本を一冊借りて、葉っぱを平らにする重しにしている。",
+      window: "赤い葉を夕日に透かすと、細かな葉脈までよく見える。",
+      bedsideTable: "今夜読む本にも、できあがったしおりを挟むつもりらしい。",
+    },
+    thoughts: { maineCoon: "葉っぱのにおいに、お外のことが書いてあるの。" },
+    collectionImage: "assets/collection/leaf-bookmark.webp",
+    room: DEFAULT_ROOM,
+  },
+  rollingDumplings: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: point(99, 292), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-rolling-dumplings-pixel.webp" },
+    observations: {
+      diningSet: "お団子の粉を量った器が、食卓の上に残っている。",
+      sink: "手を洗うたび、指の間から白い粉が流れていく。",
+      stove: "丸めたお団子をゆでるお湯を、先に沸かしてある。",
+    },
+    thoughts: { maineCoon: "その白い玉、転がして遊んでもいいのかしら。" },
+    collectionImage: "assets/collection/rolling-dumplings.webp",
+    room: FRONT_RUG_ROOM,
+  },
+  shadowPuppets: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: point(99, 292), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-shadow-puppets-pixel.webp" },
+    observations: {
+      bedsideTable: "照明を落として、懐中電灯ひとつで遊んでいる。",
+      window: "暗い窓にも、指を動かすエトキチの姿がうっすら映っている。",
+      bookshelf: "影絵の本は、うさぎの作り方のところで開いている。",
+    },
+    thoughts: { maineCoon: "夢でなら、うさぎにも追いつけるの。" },
+    collectionImage: "assets/collection/shadow-puppets.webp",
+    room: { ...FRONT_RUG_ROOM, lightsOff: true },
+  },
+  mendingSock: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: point(98, 176), pauseMs: 5000, action: true }],
+    },
+    action: { assetName: "etokichi-mending-sock-pixel.webp" },
+    observations: {
+      bookshelf: "裁縫箱のふたが開いている。青い糸だけが持ち出されている。",
+      bed: "直した靴下は、明日の朝に履くつもりで枕元へ置くらしい。",
+      bedsideTable: "手元を照らす明かりの下へ、何度も縫い目を近づけている。",
+    },
+    thoughts: { maineCoon: "糸が動いても、今だけはおててを出さないの。" },
+    collectionImage: "assets/collection/mending-sock.webp",
+    room: DEFAULT_ROOM,
+  },
+  pillowCoolSide: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: furnitureAction("bed", "sleep"), pauseMs: 5000 }],
+    },
+    action: "none",
+    observations: {
+      bed: "裏返した枕へ頬を寄せたまま、すっかり眠ってしまった。",
+      bedsideTable: "コップの水には手を伸ばさず、枕だけで涼しさを見つけたらしい。",
+      window: "夜風でカーテンが揺れても、今は気づく様子がない。",
+    },
+    thoughts: { maineCoon: "ひんやりする場所なら、床にもたくさんあるの。" },
+    collectionImage: "assets/collection/pillow-cool-side.webp",
+    room: { sleeperAssetName: "etokichi-pillow-cool-side-pixel.webp", sleeperHeight: 39 },
+  },
+  sleepingWithPlush: {
+    route: {
+      movement: "nonWalking",
+      waypoints: [{ destination: furnitureAction("bed", "sleep"), pauseMs: 5000 }],
+    },
+    action: "none",
+    observations: {
+      bed: "小さなくまにも場所を空けて、自分は少し端へ寄って眠っている。",
+      bookshelf: "いつもくまを飾っている場所が、今夜だけ空いている。",
+      bedsideTable: "くまを起こさないように、明かりも早めに消したらしい。",
+    },
+    thoughts: { maineCoon: "その子もふわふわだけど、わたしはあったかいの。" },
+    collectionImage: "assets/collection/sleeping-with-plush.webp",
+    room: { sleeperAssetName: "etokichi-sleeping-with-plush-pixel.webp", sleeperHeight: 39 },
   },
 };
 

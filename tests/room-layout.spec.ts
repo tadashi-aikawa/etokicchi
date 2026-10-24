@@ -159,7 +159,7 @@ describe("room layout adoption and scene routes", () => {
   it("accepts the default layout and every walking scene route", () => {
     // validateRoomLayoutは全シーンの経路も併せて検証するので、これだけで経路の妥当性まで見ている。
     expect(validateRoomLayout(DEFAULT_ROOM_LAYOUT)).toEqual([]);
-    expect(Object.keys(SCENE_ROUTES)).toHaveLength(30);
+    expect(Object.keys(SCENE_ROUTES)).toHaveLength(42);
   });
 
   it("rejects an invalid candidate and keeps the previous valid layout", () => {
@@ -236,6 +236,17 @@ describe("room layout adoption and scene routes", () => {
       "packingTomorrow",
       "readingComics",
       "mimizouVisit",
+      "quietAlarm",
+      "polishingShoes",
+      "jamToast",
+      "washingDishes",
+      "drawingPortrait",
+      "leafBookmark",
+      "rollingDumplings",
+      "shadowPuppets",
+      "mendingSock",
+      "pillowCoolSide",
+      "sleepingWithPlush",
     ];
     expect(
       Object.entries(SCENE_ROUTES)
