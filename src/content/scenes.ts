@@ -1,4 +1,5 @@
 import type { SceneDefinition, SceneId, TimeBand } from "../game/types.ts";
+import { HALLOWEEN_SCENES } from "./halloween.ts";
 
 export const SCENES: readonly SceneDefinition[] = [
   {
@@ -611,6 +612,7 @@ export const SCENES: readonly SceneDefinition[] = [
     characterPose: "sleep",
     accent: "#9683aa",
   },
+  ...HALLOWEEN_SCENES,
 ] as const;
 
 const sceneById = new Map<SceneId, SceneDefinition>(SCENES.map((scene) => [scene.id, scene]));
@@ -626,5 +628,10 @@ export function getScene(sceneId: SceneId): SceneDefinition {
 }
 
 export function getScenesForBand(band: TimeBand): readonly SceneDefinition[] {
-  return SCENES.filter((scene) => scene.band === band);
+  // 限定シーンは通常の抽選へ混ぜず、開催日の優先シーンとしてだけ選ぶ。
+  return SCENES.filter((scene) => scene.band === band && !scene.eventDate);
+}
+
+export function getEventScene(band: TimeBand, localDate: string): SceneDefinition | undefined {
+  return SCENES.find((scene) => scene.band === band && scene.eventDate === localDate);
 }

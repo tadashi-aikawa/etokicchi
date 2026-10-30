@@ -15,6 +15,13 @@ import { visitFor } from "./helpers/asset-references.ts";
 
 const SCENE_IDS = SCENES.map(({ id }) => id);
 
+// 移設時の42シーンだけをスナップショットで固定する。新しい限定シーンは全件検査の対象には含める。
+function regularSceneEntries<T>(entries: Partial<Record<(typeof SCENE_IDS)[number], T>>) {
+  return Object.fromEntries(
+    Object.entries(entries).filter(([id]) => !SCENES.find((scene) => scene.id === id)?.eventDate),
+  );
+}
+
 describe("scene presentation table", () => {
   it("defines every scene exactly once, in the order the scenes are written", () => {
     expect(Object.keys(SCENE_PRESENTATIONS)).toEqual(SCENE_IDS);
@@ -73,7 +80,7 @@ describe("values derived from the scene presentation table", () => {
   // 経路はwaypointの順序・行き先・停止時間・行動の指定・描画深度まで、集約前の SCENE_ROUTES と同じ値で固定する。
   it("keeps every scene route down to each waypoint value", () => {
     expect(Object.keys(SCENE_ROUTES)).toEqual(SCENE_IDS);
-    expect(SCENE_ROUTES).toMatchInlineSnapshot(`
+    expect(regularSceneEntries(SCENE_ROUTES)).toMatchInlineSnapshot(`
       {
         "almostAwake": {
           "movement": "nonWalking",
@@ -1050,7 +1057,7 @@ describe("values derived from the scene presentation table", () => {
   });
 
   it("lists the action sheet of every scene that has one", () => {
-    expect(SCENE_ACTION_ASSET_NAMES).toEqual({
+    expect(regularSceneEntries(SCENE_ACTION_ASSET_NAMES)).toEqual({
       watchingStars: "etokichi-watching-stars-pixel.webp",
       morningStretch: "etokichi-morning-stretch-pixel.webp",
       planningDay: "etokichi-planning-day-floor-pixel.webp",
@@ -1088,7 +1095,7 @@ describe("values derived from the scene presentation table", () => {
   });
 
   it("keeps the collection image of every scene", () => {
-    expect(SCENE_COLLECTION_IMAGE_PATHS).toEqual({
+    expect(regularSceneEntries(SCENE_COLLECTION_IMAGE_PATHS)).toEqual({
       sleeping: "assets/collection/sleeping.webp",
       sleepingWithTatsuo: "assets/collection/sleeping-with-tatsuo.webp",
       tatsuoAtWindow: "assets/collection/tatsuo-at-window.webp",
@@ -1137,7 +1144,7 @@ describe("values derived from the scene presentation table", () => {
   // 観察文は集約前の SCENE_OBSERVATION_OVERRIDES と全件一致で固定する。
   it("keeps the per-scene observations of every scene word for word", () => {
     expect(Object.keys(SCENE_OBSERVATION_OVERRIDES)).toEqual(SCENE_IDS);
-    expect(SCENE_OBSERVATION_OVERRIDES).toMatchInlineSnapshot(`
+    expect(regularSceneEntries(SCENE_OBSERVATION_OVERRIDES)).toMatchInlineSnapshot(`
       {
         "almostAwake": {
           "bed": "布団の中で何度ももぞもぞ動いている。もうすぐ起きそうだ。",
@@ -1404,7 +1411,7 @@ describe("values derived from the scene presentation table", () => {
     const hiddenScenes = SCENE_IDS.filter((sceneId) =>
       resolveScenePresentationRoom(visitFor(sceneId)).hiddenDepthDecorationIds?.includes("maineCoon"),
     );
-    expect(hiddenScenes).toEqual(["tatsuoAtWindow", "nappingOnMaineCoon", "comfortingMaineCoon"]);
+    expect(hiddenScenes).toEqual(["tatsuoAtWindow", "nappingOnMaineCoon", "comfortingMaineCoon", "halloweenWitchCat"]);
     for (const sceneId of hiddenScenes) {
       expect(SCENE_DEPTH_DECORATION_THOUGHTS[sceneId], sceneId).toBeUndefined();
     }

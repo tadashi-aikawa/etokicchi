@@ -11,10 +11,10 @@ import type { DiscoveryRecord, SceneId } from "../src/game/types.ts";
 
 describe("scene collection", () => {
   it("lists every scene as undiscovered for an empty history", () => {
-    const entries = getCollectionEntries({});
+    const entries = getCollectionEntries({}, new Date("2026-09-01T12:00:00"));
 
-    expect(entries).toHaveLength(42);
-    expect(SCENE_COUNT).toBe(42);
+    expect(entries).toHaveLength(48);
+    expect(SCENE_COUNT).toBe(48);
     expect(entries.every((entry) => entry.discovery === undefined)).toBe(true);
     expect(entries.filter((entry) => entry.status === "available")).toHaveLength(33);
     expect(entries.filter((entry) => entry.status === "locked").map((entry) => entry.scene.id)).toEqual([
@@ -28,7 +28,7 @@ describe("scene collection", () => {
       "mimizouVisit",
       "mimizouNightStroll",
     ]);
-    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(42);
+    expect(new Set(entries.map((entry) => entry.imagePath)).size).toBe(48);
     expect(entries.every((entry) => entry.imagePath.endsWith(".webp"))).toBe(true);
     expect(getCollectionImagePath("watchingStars")).toBe("assets/collection/watching-stars.webp");
     expect(getCollectionImagePath("sleepingWithTatsuo")).toBe("assets/collection/sleeping-with-tatsuo.webp");

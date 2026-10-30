@@ -46,13 +46,14 @@ function createAchievement(entry: CollectionEntry): HTMLElement {
   const heading = document.createElement("div");
   heading.className = "collection-achievement-heading";
   const label = document.createElement("span");
-  label.textContent = "達成度";
+  label.textContent = entry.scene.eventDate ? "限定の記録" : "達成度";
   const value = document.createElement("strong");
   value.textContent = `${entry.achievement.level}/${entry.achievement.totalLevels}`;
   heading.append(label, value);
 
   const meter = document.createElement("div");
   meter.className = "collection-achievement-meter";
+  meter.style.setProperty("--achievement-steps", String(entry.achievement.totalLevels));
   meter.setAttribute("role", "progressbar");
   const accessibleSceneName =
     entry.status === "discovered" ? entry.scene.title : `${TIME_BAND_LABELS[entry.scene.band]}の未発見シーン`;
@@ -60,7 +61,8 @@ function createAchievement(entry: CollectionEntry): HTMLElement {
   meter.setAttribute("aria-valuemin", "0");
   meter.setAttribute("aria-valuemax", String(entry.achievement.totalLevels));
   meter.setAttribute("aria-valuenow", String(entry.achievement.level));
-  for (const [index, threshold] of ACHIEVEMENT_THRESHOLDS.entries()) {
+  const thresholds = entry.scene.eventDate ? [1] : ACHIEVEMENT_THRESHOLDS;
+  for (const [index, threshold] of thresholds.entries()) {
     const step = document.createElement("span");
     step.className = index < entry.achievement.level ? "is-complete" : "";
     step.title = `${threshold}回`;
@@ -68,7 +70,8 @@ function createAchievement(entry: CollectionEntry): HTMLElement {
   }
 
   let note: string;
-  if (entry.status === "locked") note = "解放後に記録開始";
+  if (entry.scene.eventDate) note = "2026 ハロウィン";
+  else if (entry.status === "locked") note = "解放後に記録開始";
   else if (entry.status === "available") note = "最初の出会いで1段階目";
   else if (entry.achievement.nextThreshold) note = `次は${entry.achievement.nextThreshold}回`;
   else note = `${entry.discovery?.seenCount ?? 0}回・最高段階`;
@@ -114,7 +117,15 @@ function createCollectionCard(
 
   const stateLabel = createParagraph(
     "collection-state-label",
-    entry.status === "discovered" ? "発見済み" : entry.status === "locked" ? "ロック中" : "未遭遇",
+    entry.status === "discovered"
+      ? "発見済み"
+      : entry.status === "locked"
+        ? "ロック中"
+        : entry.status === "unavailable"
+          ? "開催期間外"
+          : entry.status === "ended"
+            ? "この時間帯は終了"
+            : "未遭遇",
   );
   const cardTitle = document.createElement("h4");
   cardTitle.textContent = entry.status === "discovered" ? entry.scene.title : "？？？";
@@ -133,18 +144,27 @@ function createCollectionCard(
     viewerButton.addEventListener("click", () => openViewer(entry, viewerButton, illustration.src));
     card.append(viewerButton);
   } else if (entry.status === "available") {
-    card.append(createParagraph("collection-state-detail", "この時間帯の抽選で出会える"));
+    card.append(
+      createParagraph(
+        "collection-state-detail",
+        entry.scene.eventDate ? "開催日のこの時間帯に出会える" : "この時間帯の抽選で出会える",
+      ),
+    );
+  } else if (entry.status === "unavailable") {
+    card.append(createParagraph("collection-state-detail", "10/31 5:30〜11/1 5:30限定"));
+  } else if (entry.status === "ended") {
+    card.append(createParagraph("collection-state-detail", "このシーンの開催時間は過ぎました"));
   }
 
   card.append(createAchievement(entry));
   return card;
 }
 
-export function createCollectionLayer(state: GameState): CollectionLayer {
-  const entries = getCollectionEntries(state.discoveries);
+export function createCollectionLayer(state: GameState, now: Date = new Date()): CollectionLayer {
+  const entries = getCollectionEntries(state.discoveries, now);
   const discoveredCount = countDiscoveries(state.discoveries);
   const achievedLevels = entries.reduce((total, entry) => total + entry.achievement.level, 0);
-  const totalLevels = entries.length * ACHIEVEMENT_THRESHOLDS.length;
+  const totalLevels = entries.reduce((total, entry) => total + entry.achievement.totalLevels, 0);
 
   const layer = document.createElement("section");
   layer.className = "collection-layer";

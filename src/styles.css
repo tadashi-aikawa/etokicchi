@@ -925,7 +925,9 @@ button {
   content: "";
 }
 
-.collection-card.is-available {
+.collection-card.is-available,
+.collection-card.is-unavailable,
+.collection-card.is-ended {
   border-style: dashed;
   border-color: #8a7a6a;
   background: #eee1cd;
@@ -992,7 +994,7 @@ button {
     inset 0 0 0 1px var(--reward-metal-light);
 }
 
-.collection-card.is-available::after {
+.collection-card:is(.is-available, .is-unavailable, .is-ended)::after {
   background: linear-gradient(to bottom, rgba(60, 48, 40, 0.72), rgba(239, 226, 205, 0.94) 58%, #efe2cd 72%);
 }
 
@@ -1059,6 +1061,12 @@ button {
   filter: saturate(0.55) brightness(0.52) blur(5px);
 }
 
+.is-unavailable .collection-illustration,
+.is-ended .collection-illustration {
+  transform: scale(1.08);
+  filter: grayscale(1) brightness(0.35) blur(7px);
+}
+
 .is-locked .collection-illustration {
   transform: scale(1.08);
   filter: grayscale(1) brightness(0.3) blur(7px);
@@ -1105,6 +1113,8 @@ button {
 }
 
 .is-available .collection-emblem,
+.is-unavailable .collection-emblem,
+.is-ended .collection-emblem,
 .is-locked .collection-emblem {
   background: #d9d0c5;
   box-shadow:
@@ -1216,7 +1226,9 @@ button {
   font-weight: 900;
 }
 
-.is-available .collection-state-label {
+.is-available .collection-state-label,
+.is-unavailable .collection-state-label,
+.is-ended .collection-state-label {
   border-color: #a08c7c;
   background: #fff4df;
   color: #6f5c4d;
@@ -1286,7 +1298,7 @@ button {
 
 .collection-achievement-meter {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(var(--achievement-steps, 8), 1fr);
   gap: 2px;
   margin-top: 4px;
 }
@@ -1316,7 +1328,9 @@ button {
   color: #625d59;
 }
 
-.is-available .collection-achievement-heading strong {
+.is-available .collection-achievement-heading strong,
+.is-unavailable .collection-achievement-heading strong,
+.is-ended .collection-achievement-heading strong {
   color: #6f5c4d;
 }
 

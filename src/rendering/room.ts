@@ -1,7 +1,9 @@
 import { AnimatedSprite, Application, Assets, Container, Graphics, type Texture, TextureSource } from "pixi.js";
 import "pixi.js/browser";
+import { HALLOWEEN_GHOST_REACTIONS } from "../content/halloween.ts";
 import type { VisitView } from "../game/types.ts";
 import { createChromaKeyTexture } from "./chroma-key-texture.ts";
+import { getHalloweenGhostFrame } from "./halloween-ghost.ts";
 import { createCharacterBubbleElement, createSpeechBubble } from "./room-bubbles.ts";
 import {
   createComfortingMaineCoon,
@@ -69,6 +71,20 @@ export async function renderRoom(
 ): Promise<RenderedRoom> {
   const callbacks: RoomCallbacks = {
     ...hostCallbacks,
+    onCharacterTap: () => {
+      if (!getGhostFrame) {
+        hostCallbacks.onCharacterTap();
+        return;
+      }
+      const phase = getGhostFrame().phase;
+      const text =
+        phase === "surprise"
+          ? HALLOWEEN_GHOST_REACTIONS.surprise
+          : phase === "relief" || phase === "return"
+            ? HALLOWEEN_GHOST_REACTIONS.relief
+            : HALLOWEEN_GHOST_REACTIONS.curious;
+      speechBubble.show(text, SPEECH_DURATION_MS, character);
+    },
     onThought: (text, target) => speechBubble.show(text, SPEECH_DURATION_MS, target, "thought"),
   };
   const layoutErrors = validateRoomLayout(layout);
@@ -102,6 +118,14 @@ export async function renderRoom(
   const route = resolveSceneRoute(visit.scene.id, sceneLayout);
   const initialPosition = route[0] ?? { x: 30, y: 154, pauseMs: 5000 };
   const initialDepthY = resolveSceneInitialDepthY(visit.scene.id, sceneLayout);
+  let ghostElapsed = 0;
+  let ghostReady = false;
+  const getGhostFrame =
+    visit.scene.id === "halloweenGentleGhost" ? () => getHalloweenGhostFrame(ghostElapsed, route) : undefined;
+  if (getGhostFrame)
+    app.ticker.add((ticker) => {
+      if (ghostReady) ghostElapsed += ticker.deltaMS;
+    });
   const guestPresentation = presentation.visitor ?? presentation.companion;
   const [
     characterTexture,
@@ -158,6 +182,20 @@ export async function renderRoom(
           app.ticker,
         )
       : undefined;
+  if (getGhostFrame && companion instanceof AnimatedSprite) {
+    companion.stop();
+    let previousFrame = 0;
+    const updateGhost = () => {
+      const frame = getGhostFrame().guestFrame;
+      companion.gotoAndStop(frame);
+      // 隠れている姿はベッド自体の盛り上がった掛け布団で表し、ゲストのセルは描かない。
+      companion.visible = frame !== 0;
+      if (frame === 0 && previousFrame !== 0) speechBubble.hide();
+      previousFrame = frame;
+    };
+    updateGhost();
+    app.ticker.add(updateGhost);
+  }
   const visitor =
     guestTexture && presentation.visitor
       ? createVisitor(app, guestTexture, presentation.visitor, onGuestTap)
@@ -205,6 +243,7 @@ export async function renderRoom(
           visit.scene.id === "sunagimoGrill" && companion instanceof AnimatedSprite
             ? () => Math.max(0, companion.currentFrame - 1)
             : undefined,
+          getGhostFrame,
         );
   const comfortingMaineCoon =
     comfortingMaineCoonTexture && presentation.comfortingMaineCoon && getThunderComfortFrame
@@ -286,15 +325,27 @@ export async function renderRoom(
   const depthContainer = new Container();
   depthContainer.label = "floorDepth";
   depthContainer.sortableChildren = true;
+  const furnitureSprites = createFurnitureSprites(
+    textureByFurnitureId,
+    sceneLayout.furniture,
+    lighting.bake,
+    callbacks,
+    presentation.observationOverrides,
+    presentation.hiddenFurnitureIds,
+  );
+  const scenePropSprites = createSceneProps(scenePropTextures, sceneProps, sceneLayout, lighting.bake, scenePropReveal);
+  if (getGhostFrame) {
+    const raisedQuilt = scenePropSprites[0];
+    if (!raisedQuilt) throw new Error("おばけのシーンには掛け布団が必要です");
+    // 観察のタップは下のベッドへ通し、余白で照明台のタップを遮らない。
+    raisedQuilt.eventMode = "none";
+    app.ticker.add(() => {
+      // ベッド枠は同じスプライトのまま固定し、掛け布団だけを引き上げる。
+      raisedQuilt.visible = getGhostFrame().guestFrame === 0;
+    });
+  }
   depthContainer.addChild(
-    ...createFurnitureSprites(
-      textureByFurnitureId,
-      sceneLayout.furniture,
-      lighting.bake,
-      callbacks,
-      presentation.observationOverrides,
-      presentation.hiddenFurnitureIds,
-    ),
+    ...furnitureSprites,
     ...createDepthDecorationSprites(
       DEPTH_DECORATIONS,
       textureByDecorationAsset,
@@ -305,7 +356,7 @@ export async function renderRoom(
       presentation.hiddenDepthDecorationIds,
       presentation.depthDecorationThoughts,
     ),
-    ...createSceneProps(scenePropTextures, sceneProps, sceneLayout, lighting.bake, scenePropReveal),
+    ...scenePropSprites,
   );
   if (sleeperBase) depthContainer.addChild(sleeperBase);
   if (companion) depthContainer.addChild(companion);
@@ -336,6 +387,7 @@ export async function renderRoom(
     characterBubble?.classList.toggle("is-muted", speechVisible);
   });
   host.replaceChildren(app.canvas, ...(characterBubble ? [characterBubble] : []), speechBubble.element);
+  ghostReady = true;
   return {
     updateClock: clockLayer.update,
     showSpeech: speechBubble.show,

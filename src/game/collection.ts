@@ -1,11 +1,12 @@
 import { SCENE_COLLECTION_IMAGE_PATHS } from "../content/scene-presentations.ts";
 import { SCENES } from "../content/scenes.ts";
 import { isSceneUnlocked } from "./scene-unlock.ts";
+import { formatSlotDate, getTimeBand, TIME_BANDS } from "./time.ts";
 import type { DiscoveryRecord, SceneDefinition, SceneId } from "./types.ts";
 
 export const ACHIEVEMENT_THRESHOLDS = [1, 2, 3, 5, 10, 25, 50, 100] as const;
 
-export type CollectionEntryStatus = "discovered" | "available" | "locked";
+export type CollectionEntryStatus = "discovered" | "available" | "locked" | "unavailable" | "ended";
 
 export interface SceneAchievement {
   level: number;
@@ -30,12 +31,15 @@ export function getCollectionImagePath(sceneId: SceneId): string {
   return SCENE_COLLECTION_IMAGE_PATHS[sceneId];
 }
 
-export function getSceneAchievement(seenCount: number): SceneAchievement {
-  const level = ACHIEVEMENT_THRESHOLDS.filter((threshold) => seenCount >= threshold).length;
+export function getSceneAchievement(
+  seenCount: number,
+  thresholds: readonly number[] = ACHIEVEMENT_THRESHOLDS,
+): SceneAchievement {
+  const level = thresholds.filter((threshold) => seenCount >= threshold).length;
   return {
     level,
-    totalLevels: ACHIEVEMENT_THRESHOLDS.length,
-    nextThreshold: ACHIEVEMENT_THRESHOLDS[level],
+    totalLevels: thresholds.length,
+    nextThreshold: thresholds[level],
   };
 }
 
@@ -64,10 +68,23 @@ export function getUnlockDepth(scene: SceneDefinition): number {
   return getRemainingUnlockSteps(scene, {});
 }
 
-export function getCollectionEntries(discoveries: Partial<Record<SceneId, DiscoveryRecord>>): CollectionEntry[] {
+export function getCollectionEntries(
+  discoveries: Partial<Record<SceneId, DiscoveryRecord>>,
+  now: Date = new Date(),
+): CollectionEntry[] {
+  const localDate = formatSlotDate(now);
+  const currentBandIndex = TIME_BANDS.indexOf(getTimeBand(now));
   return SCENES.map((scene) => {
     const discovery = discoveries[scene.id];
-    const status = discovery ? "discovered" : isSceneUnlocked(scene, discoveries) ? "available" : "locked";
+    const status = discovery
+      ? "discovered"
+      : scene.eventDate && scene.eventDate !== localDate
+        ? "unavailable"
+        : scene.eventDate && TIME_BANDS.indexOf(scene.band) < currentBandIndex
+          ? "ended"
+          : isSceneUnlocked(scene, discoveries)
+            ? "available"
+            : "locked";
     return {
       scene,
       discovery,
@@ -75,7 +92,8 @@ export function getCollectionEntries(discoveries: Partial<Record<SceneId, Discov
       status,
       unlockDepth: getUnlockDepth(scene),
       remainingUnlockSteps: status === "locked" ? getRemainingUnlockSteps(scene, discoveries) : 0,
-      achievement: getSceneAchievement(discovery?.seenCount ?? 0),
+      // 一度だけ出会える限定シーンは1段階で完了し、到達不能な再訪を目標にしない。
+      achievement: getSceneAchievement(discovery?.seenCount ?? 0, scene.eventDate ? [1] : ACHIEVEMENT_THRESHOLDS),
     };
   });
 }

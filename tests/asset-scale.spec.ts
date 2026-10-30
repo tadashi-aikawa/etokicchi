@@ -52,6 +52,8 @@ const PRIMARY_REQUIREMENT_SOURCES: Readonly<Record<string, string>> = {
   "furniture-round-stool-pixel.webp": "家具 roundStool",
   // 食卓の鉢へ向く姿だけ経路のactionScaleで1.18倍に見せている(拡大率0.59)。床の鉢は等倍。
   "etokichi-watering-directions-pixel.webp": "行動アニメ wateringPlants",
+  // かぼちゃを待つ姿の透明余白を補い、歩行時の体格へ合わせている。
+  "etokichi-halloween-pumpkin-play-pixel.webp": "行動アニメ halloweenPumpkinPup",
 };
 
 // 窓のタツヲは素材の上から切り出した顔だけを使うので、寸法の決まり方が他と違う。専用の検証を用意する。

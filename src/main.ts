@@ -259,7 +259,7 @@ function createShell(root: HTMLElement, visit: VisitView, now: Date, state: Game
   );
   sheetLayer.append(scrim, sheet);
 
-  const collection = createCollectionLayer(state);
+  const collection = createCollectionLayer(state, now);
   const updates = createUpdatesLayer();
   let currentNow = now;
 

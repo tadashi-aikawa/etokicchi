@@ -25,12 +25,33 @@ const outputDir = path.join(root, "public", "assets");
  * @property {"lanczos" | "nearest"} kernel 拡大はnearestの整数倍、縮小と非整数倍はlanczos
  * @property {string} note 表示論理寸法の出どころ
  * @property {{left: number, top: number, width: number, height: number}} [extract] 原画から単体素材の領域を切り出す
+ * @property {{columns: number, left: number, top: number, width: number, height: number}} [frameExtract] 各セルから同じ範囲を切り出し、ポーズの位置と体格を維持する
  * @property {boolean} [chromaKeyMagenta] 縮小前にマゼンタを透過させ、他シーンでも使える素材にする
  * @property {number} [quality] 指定した素材は非可逆WebPで配信する。原本のアルファは維持する
  */
 
 /** @type {readonly Target[]} */
 const TARGETS = [
+  ...["cat-chat", "pumpkin-play", "candy-receive", "ghost-reaction"].map((name) => ({
+    name: `etokichi-halloween-${name}-pixel.webp`,
+    width: 360, height: 120, kernel: /** @type {const} */ ("lanczos"), quality: 90,
+    note: "主役へ向くハロウィン専用リアクション 60×60 の3コマ",
+  })),
+  { name: "etokichi-halloween-garland-pixel.webp", width: 360, height: 120, kernel: "lanczos", quality: 90, note: "ハロウィンの飾り作り 60×60 の3コマ" },
+  { name: "masaharu-halloween-pumpkin-pixel.webp", width: 522, height: 122, kernel: "lanczos", quality: 90, frameExtract: { columns: 3, left: 90, top: 174, width: 560, height: 392 }, note: "マサハル 87×61 の3コマ。体格を維持し、吹き出しとタップを遠ざける透明余白を除く" },
+  ...[
+    ["maine-coon-halloween-witch-pixel.webp", 64],
+    ["sunagimo-halloween-pumpkin-pixel.webp", 54],
+    ["mimizou-halloween-candy-pixel.webp", 64],
+    ["tatsuo-halloween-ambush-pixel.webp", 72],
+  ].map(([name, height]) => ({
+    name,
+    width: height * 2 * 3,
+    height: height * 2,
+    kernel: /** @type {const} */ ("lanczos"),
+    quality: 90,
+    note: `ハロウィンの同席者 ${height}×${height} の3コマ`,
+  })),
   ...[
     "quiet-alarm", "polishing-shoes", "jam-toast", "washing-dishes", "paper-plane",
     "drawing-portrait", "leaf-bookmark", "rolling-dumplings", "shadow-puppets", "mending-sock",
@@ -65,6 +86,7 @@ const TARGETS = [
 
   // 家具。FURNITURE_DEFINITIONS の displayWidth × displayHeight。
   { name: "furniture-bed-pixel.webp", width: 108, height: 160, kernel: "lanczos", note: "bed 54×80" },
+  { name: "scene-halloween-raised-quilt-pixel.webp", width: 144, height: 156, kernel: "lanczos", quality: 90, note: "掛け布団 72×78。ベッド枠を含めず、タツヲの体格より大きく盛り上がる" },
   { name: "furniture-bed-bare-pixel.webp", width: 108, height: 160, kernel: "lanczos", note: "bed 54×80" },
   { name: "furniture-bookshelf-pixel.webp", width: 94, height: 134, kernel: "lanczos", note: "bookshelf 47×67" },
   { name: "furniture-dining-table-chair-pixel.webp", width: 194, height: 148, kernel: "lanczos", note: "diningSet 97×74" },
@@ -359,6 +381,27 @@ async function convert(target) {
   const input = path.join(sourceDir, target.name);
   let image = sharp(input).ensureAlpha();
   const { width, height } = await image.metadata();
+  if (target.frameExtract) {
+    const crop = target.frameExtract;
+    if (!width || width % crop.columns !== 0) throw new Error(`${target.name}のセル幅が整数ではありません`);
+    const cells = await Promise.all(Array.from({ length: crop.columns }, async (_, column) => ({
+      input: await sharp(input).extract({
+        left: column * (width / crop.columns) + crop.left,
+        top: crop.top,
+        width: crop.width,
+        height: crop.height,
+      }).png().toBuffer(),
+      left: column * crop.width,
+      top: 0,
+    })));
+    const cropped = await sharp({ create: {
+      width: crop.width * crop.columns,
+      height: crop.height,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    } }).composite(cells).png().toBuffer();
+    image = sharp(cropped);
+  }
   if (target.extract) image = image.extract(target.extract);
   if (target.chromaKeyMagenta) {
     const { data, info } = await image.raw().toBuffer({ resolveWithObject: true });

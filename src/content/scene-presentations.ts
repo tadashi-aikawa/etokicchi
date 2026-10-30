@@ -6,6 +6,7 @@ import type {
   RoomPresentationCommon,
 } from "../rendering/room-presentation-types.ts";
 import { fixtureAction, furnitureAction, point, type SceneRoute } from "../rendering/route-definitions.ts";
+import { HALLOWEEN_PRESENTATIONS } from "./halloween-presentations.ts";
 
 /** 行動アニメーションの素材。向きを変えて2度使うシーンだけ rows が2になる。 */
 export interface SceneActionAsset {
@@ -1147,6 +1148,7 @@ export const SCENE_PRESENTATIONS: Readonly<Record<SceneId, ScenePresentationDefi
     collectionImage: "assets/collection/sleeping-with-plush.webp",
     room: { sleeperAssetName: "etokichi-sleeping-with-plush-pixel.webp", sleeperHeight: 39 },
   },
+  ...HALLOWEEN_PRESENTATIONS,
 };
 
 const SCENE_IDS = Object.keys(SCENE_PRESENTATIONS) as SceneId[];

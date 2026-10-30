@@ -31,6 +31,7 @@ export type SpeechBubbleKind = "speech" | "thought";
 export interface SpeechBubble {
   element: HTMLDivElement;
   show: (text: string, durationMs: number, target?: Container, kind?: SpeechBubbleKind) => void;
+  hide: () => void;
   destroy: () => void;
 }
 
@@ -128,6 +129,7 @@ export function createSpeechBubble(
   return {
     element,
     show,
+    hide,
     destroy: () => {
       if (timerId !== undefined) window.clearTimeout(timerId);
       roomResize.disconnect();

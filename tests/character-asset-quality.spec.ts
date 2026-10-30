@@ -4,6 +4,13 @@ import { ACTION_ASSET_NAMES, WALK_ASSET_NAME } from "../src/rendering/scene-asse
 
 const assetDirectory = new URL("../public/assets/", import.meta.url);
 const sheets = [...new Set(Object.values(ACTION_ASSET_NAMES))].filter((name): name is string => Boolean(name));
+const guestSheets = [
+  "maine-coon-halloween-witch-pixel.webp",
+  "masaharu-halloween-pumpkin-pixel.webp",
+  "sunagimo-halloween-pumpkin-pixel.webp",
+  "mimizou-halloween-candy-pixel.webp",
+  "tatsuo-halloween-ambush-pixel.webp",
+];
 const singleSprites = [
   "etokichi-comforting-maine-coon-pixel.webp",
   "mimizou-pixel.png",
@@ -18,7 +25,7 @@ const singleSprites = [
 ];
 
 describe("character sprite transparency", () => {
-  it.each([...sheets, WALK_ASSET_NAME, "mimizou-walk-pixel.webp", ...singleSprites])(
+  it.each([...sheets, ...guestSheets, WALK_ASSET_NAME, "mimizou-walk-pixel.webp", ...singleSprites])(
     "removes the backing and keeps each frame inside its cell: %s",
     async (name) => {
       const { data, info } = await sharp(decodeURIComponent(new URL(name, assetDirectory).pathname))

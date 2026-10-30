@@ -42,7 +42,13 @@ export type SceneId =
   | "shadowPuppets"
   | "mendingSock"
   | "pillowCoolSide"
-  | "sleepingWithPlush";
+  | "sleepingWithPlush"
+  | "halloweenGarland"
+  | "halloweenWitchCat"
+  | "halloweenPumpkinPup"
+  | "halloweenPumpkinSkewer"
+  | "halloweenCandyOwl"
+  | "halloweenGentleGhost";
 
 export interface ChoiceDefinition {
   id: string;
@@ -61,6 +67,8 @@ export interface SceneUnlockRequirement {
 export interface SceneDefinition {
   id: SceneId;
   band: TimeBand;
+  /** 5:30に始まるローカルの生活日。この日だけ通常抽選より優先して表示する。 */
+  eventDate?: string;
   title: string;
   description: string;
   lines: readonly string[];

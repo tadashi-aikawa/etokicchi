@@ -1,4 +1,4 @@
-import { findScene, getScene, getScenesForBand } from "../content/scenes.ts";
+import { findScene, getEventScene, getScene, getScenesForBand } from "../content/scenes.ts";
 import { indexFromSeed } from "./random.ts";
 import { isSceneUnlocked } from "./scene-unlock.ts";
 import {
@@ -67,6 +67,8 @@ function chooseScene(
     }
     return forcedScene;
   }
+  const eventScene = getEventScene(band, localDate);
+  if (eventScene) return eventScene;
   // 抽選と図鑑で同じ解放判定を使い、表示上の「出会える」と実際の候補を食い違わせない。
   const candidates = getScenesForBand(band).filter((scene) => isSceneUnlocked(scene, discoveries));
   const seed = randomSeed ? `${randomSeed}:scene` : `${localDate}:${band}:scene`;
@@ -139,6 +141,15 @@ export function resolveVisit(
   const slotKey = makeSlotKey(localDate, band);
   let assignment = options.randomSeed || options.sceneId ? undefined : state.assignments[slotKey];
   let discoveredNow = false;
+
+  const eventScene = getEventScene(band, localDate);
+  if (assignment && eventScene && assignment.sceneId !== eventScene.id) {
+    // 当日の通常シーンを保存済みでも限定シーンへ切り替える。図鑑の既存記録は残し、
+    // 置換前の選択と、その選択から作られた後日の反応だけを取り除く。
+    assignment = undefined;
+    delete state.interactions[slotKey];
+    state.echoes = state.echoes.filter((echo) => echo.sourceSlotKey !== slotKey);
+  }
 
   if (!assignment) {
     assignment = createAssignment(now, state, options.randomSeed, options.sceneId);

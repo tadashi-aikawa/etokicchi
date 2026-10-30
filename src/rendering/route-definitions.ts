@@ -28,6 +28,7 @@ export interface RouteWaypoint {
   pauseMs: number;
   action?: boolean;
   actionFacing?: "left" | "right";
+  idleFacing?: "down" | "left" | "right" | "up";
   actionVariant?: number;
   actionOffsetY?: number;
   actionScale?: number;
@@ -43,6 +44,7 @@ export interface ResolvedWaypoint extends Point {
   pauseMs: number;
   action?: boolean;
   actionFacing?: "left" | "right";
+  idleFacing?: "down" | "left" | "right" | "up";
   actionVariant?: number;
   actionOffsetY?: number;
   actionScale?: number;

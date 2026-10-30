@@ -11,6 +11,7 @@ import {
 import type { VisitView } from "../game/types.ts";
 import { getMimizouVisitFrame } from "./mimizou-visit.ts";
 import { getGuestWalkFrame } from "./guest-walk.ts";
+import type { HalloweenGhostFrame } from "./halloween-ghost.ts";
 import type { ThunderComfortFrameProvider } from "./room-effects.ts";
 import type { FurnitureLayout } from "./room-furniture.ts";
 import { getDepthZIndex, isMovementSegmentValid, type RoomLayout } from "./room-layout.ts";
@@ -86,6 +87,7 @@ export function createWalker(
   hideShadow: boolean,
   onWaypointArrival: (waypointIndex: number) => void,
   getReactionFrame?: () => number,
+  getGhostFrame?: () => HalloweenGhostFrame,
 ): Container {
   const frames = createDirectionFrames(sheet);
   const character = new AnimatedSprite(frames.down);
@@ -173,6 +175,34 @@ export function createWalker(
     route[0]?.actionScale,
   );
 
+  if (route[0]?.idleFacing) {
+    direction = route[0].idleFacing;
+    character.textures = frames[direction];
+    character.gotoAndStop(1);
+  }
+
+  if (getGhostFrame && action) {
+    // タツヲの姿と同じ時計を読み、飛び出した瞬間に驚く。足元の深度はジャンプで変えない。
+    action.stop();
+    action.textures = actionFrameRows[0] ?? [];
+    const updateGhost = (): void => {
+      const frame = getGhostFrame();
+      actor.position.set(frame.x, frame.y - frame.jump);
+      actor.zIndex = getDepthZIndex(frame.depthY, 50);
+      character.visible = frame.walking;
+      action.visible = !frame.walking;
+      if (frame.walking) {
+        character.textures = frames[frame.direction];
+        character.gotoAndStop(frame.column);
+      } else {
+        action.gotoAndStop(frame.reaction);
+      }
+    };
+    updateGhost();
+    app.ticker.add(updateGhost);
+    return actor;
+  }
+
   if (action && getReactionFrame) {
     // 相手の姿を基準にすることで、別々のループの周期がずれるのを防ぐ。
     const reactionFrames = actionFrameRows[0] ?? [];
@@ -232,6 +262,11 @@ export function createWalker(
       targetIndex = (targetIndex + 1) % route.length;
       character.stop();
       character.gotoAndStop(1);
+      if (target.idleFacing) {
+        direction = target.idleFacing;
+        character.textures = frames[direction];
+        character.gotoAndStop(1);
+      }
       showAction(
         target.action ?? false,
         target.actionFacing,
