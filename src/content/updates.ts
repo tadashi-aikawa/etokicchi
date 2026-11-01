@@ -10,6 +10,11 @@ export interface UpdateEntry {
 /** 新しい更新を先頭に追加する。日付は変更をまとめた日。 */
 export const UPDATES: readonly UpdateEntry[] = [
   {
+    id: "2026-11-01-1",
+    date: "2026-11-01",
+    changes: ["2026年11月1日〜7日は、各時間帯で25%の確率でハロウィンのシーンに出会えます。"],
+  },
+  {
     id: "2026-10-31-1",
     date: "2026-10-31",
     addedScenes: 6,

@@ -1,4 +1,4 @@
-import { findScene, getEventScene, getScene, getScenesForBand } from "../content/scenes.ts";
+import { findScene, getEventScene, getEventSceneProbability, getScene, getScenesForBand } from "../content/scenes.ts";
 import { indexFromSeed } from "./random.ts";
 import { isSceneUnlocked } from "./scene-unlock.ts";
 import {
@@ -67,8 +67,6 @@ function chooseScene(
     }
     return forcedScene;
   }
-  const eventScene = getEventScene(band, localDate);
-  if (eventScene) return eventScene;
   // 抽選と図鑑で同じ解放判定を使い、表示上の「出会える」と実際の候補を食い違わせない。
   const candidates = getScenesForBand(band).filter((scene) => isSceneUnlocked(scene, discoveries));
   const seed = randomSeed ? `${randomSeed}:scene` : `${localDate}:${band}:scene`;
@@ -98,7 +96,10 @@ function createAssignment(now: Date, state: GameState, randomSeed?: string, forc
   const localDate = formatSlotDate(now);
   const band = getTimeBand(now);
   const slotKey = makeSlotKey(localDate, band);
-  const scene = chooseScene(band, localDate, state.histories[band], state.discoveries, randomSeed, forcedSceneId);
+  const scene = forcedSceneId
+    ? chooseScene(band, localDate, state.histories[band], state.discoveries, randomSeed, forcedSceneId)
+    : (getEventScene(now, randomSeed) ??
+      chooseScene(band, localDate, state.histories[band], state.discoveries, randomSeed));
   const variantSeed = randomSeed ?? slotKey;
   return {
     slotKey,
@@ -142,9 +143,12 @@ export function resolveVisit(
   let assignment = options.randomSeed || options.sceneId ? undefined : state.assignments[slotKey];
   let discoveredNow = false;
 
-  const eventScene = getEventScene(band, localDate);
-  if (assignment && eventScene && assignment.sceneId !== eventScene.id) {
-    // 当日の通常シーンを保存済みでも限定シーンへ切り替える。図鑑の既存記録は残し、
+  const eventScene = getEventScene(now);
+  const assignedScene = assignment ? getScene(assignment.sceneId) : undefined;
+  const eventEnded = assignedScene?.eventDate && getEventSceneProbability(assignedScene, now) === 0;
+  if (assignment && ((eventScene && assignment.sceneId !== eventScene.id) || eventEnded)) {
+    // 保存済みの通常シーンでも当選時は限定シーンへ切り替え、期間終了時は通常へ戻す。
+    // 図鑑の既存記録は残し、
     // 置換前の選択と、その選択から作られた後日の反応だけを取り除く。
     assignment = undefined;
     delete state.interactions[slotKey];

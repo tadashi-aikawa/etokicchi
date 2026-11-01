@@ -1,3 +1,5 @@
+import { indexFromSeed } from "../game/random.ts";
+import { formatLocalDate, formatSlotDate, getSlotKey, getTimeBand } from "../game/time.ts";
 import type { SceneDefinition, SceneId, TimeBand } from "../game/types.ts";
 import { HALLOWEEN_SCENES } from "./halloween.ts";
 
@@ -628,10 +630,26 @@ export function getScene(sceneId: SceneId): SceneDefinition {
 }
 
 export function getScenesForBand(band: TimeBand): readonly SceneDefinition[] {
-  // 限定シーンは通常の抽選へ混ぜず、開催日の優先シーンとしてだけ選ぶ。
+  // 限定シーンは通常の抽選へ混ぜず、開催期間の判定を通して選ぶ。
   return SCENES.filter((scene) => scene.band === band && !scene.eventDate);
 }
 
-export function getEventScene(band: TimeBand, localDate: string): SceneDefinition | undefined {
-  return SCENES.find((scene) => scene.band === band && scene.eventDate === localDate);
+export function getEventSceneProbability(scene: SceneDefinition, now: Date): number {
+  if (!scene.eventDate) return 0;
+  const calendarDate = formatLocalDate(now);
+  if (scene.eventDate === "2026-10-31" && calendarDate >= "2026-11-01" && calendarDate <= "2026-11-07") {
+    return 0.25;
+  }
+  return scene.eventDate === formatSlotDate(now) ? 1 : 0;
+}
+
+export function getEventScene(now: Date, randomSeed?: string): SceneDefinition | undefined {
+  const scene = SCENES.find((candidate) => candidate.band === getTimeBand(now) && candidate.eventDate);
+  if (!scene) return undefined;
+  const probability = getEventSceneProbability(scene, now);
+  if (probability === 1) return scene;
+  // 通常抽選とはseedを分け、再訪時も同じスロットなら当落を変えない。
+  return probability > 0 && indexFromSeed(`${randomSeed ?? getSlotKey(now)}:halloween-2026`, 4) === 0
+    ? scene
+    : undefined;
 }

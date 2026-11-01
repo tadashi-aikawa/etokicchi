@@ -1,8 +1,8 @@
 import {
   ACHIEVEMENT_THRESHOLDS,
+  type CollectionEntry,
   countDiscoveries,
   getCollectionEntries,
-  type CollectionEntry,
 } from "../game/collection.ts";
 import { getTimeBand, TIME_BAND_LABELS, TIME_BANDS } from "../game/time.ts";
 import type { GameState, TimeBand } from "../game/types.ts";
@@ -147,11 +147,11 @@ function createCollectionCard(
     card.append(
       createParagraph(
         "collection-state-detail",
-        entry.scene.eventDate ? "開催日のこの時間帯に出会える" : "この時間帯の抽選で出会える",
+        entry.scene.eventDate ? "10月31日は必ず、11月1日〜7日は25%で出会える" : "この時間帯の抽選で出会える",
       ),
     );
   } else if (entry.status === "unavailable") {
-    card.append(createParagraph("collection-state-detail", "10/31 5:30〜11/1 5:30限定"));
+    card.append(createParagraph("collection-state-detail", "2026年10月31日と11月1日〜7日限定"));
   } else if (entry.status === "ended") {
     card.append(createParagraph("collection-state-detail", "このシーンの開催時間は過ぎました"));
   }

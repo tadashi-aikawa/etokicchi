@@ -1,4 +1,5 @@
 import "./styles.css";
+import { getEventSceneProbability, SCENES } from "./content/scenes.ts";
 import { UPDATES } from "./content/updates.ts";
 import { countDiscoveries, getCollectionImagePath, SCENE_COUNT } from "./game/collection.ts";
 import { getDebugMimizouPresent, getDebugSceneId, isRandomDebugMode } from "./game/debug.ts";
@@ -10,11 +11,11 @@ import {
   IndexedDbStateRepository,
   MemoryStateRepository,
 } from "./persistence/indexed-db-repository.ts";
-import { renderRoom, type RenderedRoom } from "./rendering/room.ts";
+import { updateReadState } from "./persistence/update-read-state.ts";
+import { type RenderedRoom, renderRoom } from "./rendering/room.ts";
 import { SPEECH_DURATION_MS } from "./rendering/room-speech.ts";
 import { createCollectionLayer } from "./ui/collection.ts";
 import { createUpdatesLayer } from "./ui/updates.ts";
-import { updateReadState } from "./persistence/update-read-state.ts";
 import { resolveRoomViewport } from "./ui/viewport.ts";
 
 interface LaunchOptions {
@@ -396,6 +397,7 @@ async function bootstrap(): Promise<void> {
         showStorageWarning();
       });
   const initialNow = options.getNow();
+  let eventScheduleDate = initialNow;
   let state = pruneOldSlots(loaded.state, formatSlotDate(initialNow));
   const resolved = resolveVisit(initialNow, state, {
     randomSeed: options.debugRandom ? crypto.randomUUID() : undefined,
@@ -514,7 +516,11 @@ async function bootstrap(): Promise<void> {
   async function refreshAt(now: Date): Promise<void> {
     if (!currentVisit || !currentElements || !currentRoom) return;
     currentElements.updateClock(now);
-    if (getSlotKey(now) === currentVisit.assignment.slotKey) {
+    const eventScheduleChanged = SCENES.some(
+      (scene) =>
+        scene.eventDate && getEventSceneProbability(scene, now) !== getEventSceneProbability(scene, eventScheduleDate),
+    );
+    if (getSlotKey(now) === currentVisit.assignment.slotKey && !eventScheduleChanged) {
       currentRoom.updateClock(now);
       return;
     }
@@ -526,6 +532,7 @@ async function bootstrap(): Promise<void> {
     });
     state = next.state;
     await loaded.repository.save(state);
+    eventScheduleDate = now;
     await mountVisit(now, next.visit);
   }
 

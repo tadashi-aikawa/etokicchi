@@ -1,6 +1,6 @@
 import type { SceneDefinition } from "../game/types.ts";
 
-// 毎年の行事ではなく、2026年10月31日の生活日だけ開催する。
+// 毎年の行事ではない。11月1日〜7日の特例抽選はscenes.tsで判定する。
 const EVENT_DATE = "2026-10-31";
 
 export const HALLOWEEN_GHOST_REACTIONS = {
